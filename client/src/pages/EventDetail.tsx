@@ -253,17 +253,21 @@ export default function EventDetail() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className={event.sourceUrl ? "border-[#2ED3B7] bg-[#E6FAF7]/30" : ""}>
               <CardContent className="pt-6 space-y-3">
-                {event.sourceUrl && (
+                {event.sourceUrl ? (
                   <Button
-                    className="w-full gap-2"
+                    className="w-full gap-2 bg-[#2ED3B7] hover:bg-[#25B9A1] text-[#0F172A] font-semibold"
                     onClick={() => window.open(event.sourceUrl!, "_blank")}
-                    data-testid="button-register"
+                    data-testid="button-event-website"
                   >
                     <ExternalLink className="w-4 h-4" />
-                    Przejdź do rejestracji
+                    Przejdz do strony wydarzenia
                   </Button>
+                ) : (
+                  <div className="text-center py-2 text-muted-foreground text-sm">
+                    Brak linku do strony wydarzenia
+                  </div>
                 )}
 
                 <DropdownMenu>
@@ -292,17 +296,21 @@ export default function EventDetail() {
             </Card>
 
             {event.sourceUrl && (
-              <p className="text-xs text-center text-muted-foreground">
-                Źródło:{" "}
+              <div className="text-center space-y-1">
+                <p className="text-xs text-muted-foreground">
+                  Zrodlo informacji:
+                </p>
                 <a
                   href={event.sourceUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:underline"
+                  className="text-sm text-[#2ED3B7] hover:underline inline-flex items-center gap-1"
+                  data-testid="link-event-source"
                 >
                   {new URL(event.sourceUrl).hostname}
+                  <ExternalLink className="w-3 h-3" />
                 </a>
-              </p>
+              </div>
             )}
           </div>
         </div>
