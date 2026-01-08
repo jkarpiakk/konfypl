@@ -1,9 +1,11 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Navigation } from "@/components/Navigation";
 import { HeroSection } from "@/components/HeroSection";
 import { EventList } from "@/components/EventList";
 import { FiltersPanel } from "@/components/FiltersPanel";
+import { OnboardingModal } from "@/components/OnboardingModal";
+import { getStoredPreferences } from "@/lib/preferences";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { List, CalendarDays } from "lucide-react";
 import { CalendarView } from "@/components/CalendarView";
@@ -21,13 +23,26 @@ const defaultFilters: EventFilters = {
 };
 
 export default function Home() {
-  const [filters, setFilters] = useState<EventFilters>(defaultFilters);
+  const [filters, setFilters] = useState<EventFilters>(() => {
+    const storedSpecs = getStoredPreferences();
+    return {
+      ...defaultFilters,
+      specializations: storedSpecs,
+    };
+  });
   const [view, setView] = useState<"list" | "calendar">("list");
   const [heroSearch, setHeroSearch] = useState("");
 
   const { data: events = [], isLoading } = useQuery<Event[]>({
     queryKey: ["/api/events", { status: "published" }],
   });
+
+  const handleOnboardingComplete = (selectedSpecs: Specialization[]) => {
+    setFilters((prev) => ({
+      ...prev,
+      specializations: selectedSpecs,
+    }));
+  };
 
   const filteredEvents = useMemo(() => {
     return events.filter((event) => {
@@ -98,6 +113,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
+      <OnboardingModal onComplete={handleOnboardingComplete} />
       <Navigation onSearch={handleNavSearch} searchQuery={filters.search} />
       
       <HeroSection

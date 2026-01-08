@@ -4,6 +4,7 @@ import { serveStatic } from "./static";
 import { createServer } from "http";
 import { startScheduler } from "./scheduler";
 import { seedDatabase } from "./seed";
+import { setupAuth, registerAuthRoutes } from "./replit_integrations/auth";
 
 const app = express();
 const httpServer = createServer(app);
@@ -62,6 +63,10 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Setup Replit Auth BEFORE registering other routes
+  await setupAuth(app);
+  registerAuthRoutes(app);
+  
   await registerRoutes(httpServer, app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

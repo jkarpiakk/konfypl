@@ -1,9 +1,37 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertEventSchema, insertSourceSchema } from "@shared/schema";
+import { insertEventSchema, insertSourceSchema, SPECIALIZATIONS } from "@shared/schema";
 import { scanSingleSource, runScheduledScans } from "./scheduler";
 import { z } from "zod";
+import { isAuthenticated, authStorage } from "./replit_integrations/auth";
+import { users } from "@shared/models/auth";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
+
+const updatePreferencesSchema = z.object({
+  specializations: z.array(z.enum(SPECIALIZATIONS)).default([]),
+});
+
+import type { RequestHandler } from "express";
+
+const isAdmin: RequestHandler = async (req: any, res, next) => {
+  if (!req.isAuthenticated || !req.isAuthenticated()) {
+    return res.status(401).json({ error: "Authentication required" });
+  }
+  
+  const userId = req.user?.claims?.sub;
+  if (!userId) {
+    return res.status(401).json({ error: "Authentication required" });
+  }
+  
+  const user = await authStorage.getUser(userId);
+  if (!user?.isAdmin) {
+    return res.status(403).json({ error: "Admin access required" });
+  }
+  
+  next();
+};
 
 export async function registerRoutes(
   httpServer: Server,
@@ -37,7 +65,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/events", async (req, res) => {
+  app.post("/api/events", isAdmin, async (req, res) => {
     try {
       const parseResult = insertEventSchema.safeParse(req.body);
       if (!parseResult.success) {
@@ -51,7 +79,7 @@ export async function registerRoutes(
     }
   });
 
-  app.patch("/api/events/:id", async (req, res) => {
+  app.patch("/api/events/:id", isAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -68,7 +96,7 @@ export async function registerRoutes(
     }
   });
 
-  app.delete("/api/events/:id", async (req, res) => {
+  app.delete("/api/events/:id", isAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -82,7 +110,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/sources", async (req, res) => {
+  app.get("/api/sources", isAdmin, async (req, res) => {
     try {
       const sources = await storage.getSources();
       res.json(sources);
@@ -92,7 +120,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/sources/:id", async (req, res) => {
+  app.get("/api/sources/:id", isAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -109,7 +137,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/sources", async (req, res) => {
+  app.post("/api/sources", isAdmin, async (req, res) => {
     try {
       const parseResult = insertSourceSchema.safeParse(req.body);
       if (!parseResult.success) {
@@ -123,7 +151,7 @@ export async function registerRoutes(
     }
   });
 
-  app.patch("/api/sources/:id", async (req, res) => {
+  app.patch("/api/sources/:id", isAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -140,7 +168,7 @@ export async function registerRoutes(
     }
   });
 
-  app.delete("/api/sources/:id", async (req, res) => {
+  app.delete("/api/sources/:id", isAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -154,7 +182,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/sources/:id/scan", async (req, res) => {
+  app.post("/api/sources/:id/scan", isAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -172,7 +200,7 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/admin/run-scans", async (req, res) => {
+  app.post("/api/admin/run-scans", isAdmin, async (req, res) => {
     try {
       res.json({ message: "Scheduled scans started" });
       
@@ -185,7 +213,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/scan-logs", async (req, res) => {
+  app.get("/api/scan-logs", isAdmin, async (req, res) => {
     try {
       const limit = parseInt(req.query.limit as string) || 20;
       const logs = await storage.getRecentScanLogs(limit);
@@ -193,6 +221,59 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error fetching scan logs:", error);
       res.status(500).json({ error: "Failed to fetch scan logs" });
+    }
+  });
+
+  // User preferences endpoints
+  app.get("/api/user/preferences", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await authStorage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      res.json({
+        specializations: user.specializations || [],
+      });
+    } catch (error) {
+      console.error("Error fetching user preferences:", error);
+      res.status(500).json({ error: "Failed to fetch preferences" });
+    }
+  });
+
+  app.patch("/api/user/preferences", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const parseResult = updatePreferencesSchema.safeParse(req.body);
+      
+      if (!parseResult.success) {
+        return res.status(400).json({ 
+          error: "Invalid preferences data", 
+          details: parseResult.error.errors 
+        });
+      }
+      
+      const { specializations } = parseResult.data;
+      
+      const [updatedUser] = await db
+        .update(users)
+        .set({ 
+          specializations: specializations,
+          updatedAt: new Date() 
+        })
+        .where(eq(users.id, userId))
+        .returning();
+      
+      if (!updatedUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      res.json({
+        specializations: updatedUser.specializations || [],
+      });
+    } catch (error) {
+      console.error("Error updating user preferences:", error);
+      res.status(500).json({ error: "Failed to update preferences" });
     }
   });
 

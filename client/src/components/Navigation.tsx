@@ -1,9 +1,18 @@
 import { Link, useLocation } from "wouter";
-import { Calendar, Home, Settings, Search, Menu, X, Stethoscope } from "lucide-react";
+import { Calendar, Home, Settings, Search, Menu, X, Stethoscope, LogIn, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/use-auth";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 interface NavigationProps {
   onSearch?: (query: string) => void;
@@ -14,6 +23,15 @@ export function Navigation({ onSearch, searchQuery = "" }: NavigationProps) {
   const [location] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [localSearch, setLocalSearch] = useState(searchQuery);
+  const { user, isLoading, isAuthenticated, logout } = useAuth();
+
+  const getInitials = (firstName?: string | null, lastName?: string | null) => {
+    if (firstName && lastName) {
+      return `${firstName[0]}${lastName[0]}`.toUpperCase();
+    }
+    if (firstName) return firstName[0].toUpperCase();
+    return "U";
+  };
 
   const navLinks = [
     { href: "/", label: "Wydarzenia", icon: Home },
@@ -77,17 +95,74 @@ export function Navigation({ onSearch, searchQuery = "" }: NavigationProps) {
           </form>
 
           <div className="flex items-center gap-2">
-            <Link href="/admin">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="hidden sm:flex gap-2 rounded-full border-[#E2E8F0] text-[#475569] hover:border-[#2ED3B7] hover:text-[#2ED3B7]" 
-                data-testid="link-admin"
-              >
-                <Settings className="w-4 h-4" />
-                Admin
-              </Button>
-            </Link>
+            {user?.isAdmin && (
+              <Link href="/admin">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="hidden sm:flex gap-2 rounded-full border-[#E2E8F0] text-[#475569] hover:border-[#2ED3B7] hover:text-[#2ED3B7]" 
+                  data-testid="link-admin"
+                >
+                  <Settings className="w-4 h-4" />
+                  Admin
+                </Button>
+              </Link>
+            )}
+            
+            {isLoading ? (
+              <div className="w-9 h-9 rounded-full bg-[#F1F5F9] animate-pulse" />
+            ) : isAuthenticated && user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full" data-testid="button-user-menu">
+                    <Avatar className="w-8 h-8">
+                      <AvatarImage src={user.profileImageUrl || undefined} alt={user.firstName || "Profil"} />
+                      <AvatarFallback className="bg-[#2ED3B7] text-[#0F172A] text-sm font-medium">
+                        {getInitials(user.firstName, user.lastName)}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <div className="px-3 py-2">
+                    <p className="text-sm font-medium text-[#0F172A]">
+                      {user.firstName} {user.lastName}
+                    </p>
+                    <p className="text-xs text-[#64748B] truncate">{user.email}</p>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={() => logout()}
+                    className="text-[#EF4444] focus:text-[#EF4444]"
+                    data-testid="button-logout"
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Wyloguj
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <a href="/api/login">
+                <Button 
+                  variant="default" 
+                  size="sm" 
+                  className="hidden sm:flex gap-2 rounded-full bg-[#2ED3B7] text-[#0F172A] hover:bg-[#25B9A1]"
+                  data-testid="button-login"
+                >
+                  <LogIn className="w-4 h-4" />
+                  Zaloguj
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="sm:hidden text-[#475569]"
+                  data-testid="button-login-mobile"
+                >
+                  <LogIn className="w-5 h-5" />
+                </Button>
+              </a>
+            )}
+            
             <Button
               variant="ghost"
               size="icon"
@@ -134,17 +209,48 @@ export function Navigation({ onSearch, searchQuery = "" }: NavigationProps) {
                   </Button>
                 </Link>
               ))}
-              <Link href="/admin">
+              {user?.isAdmin && (
+                <Link href="/admin">
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start gap-2 text-[#475569]"
+                    onClick={() => setMobileMenuOpen(false)}
+                    data-testid="link-admin-mobile"
+                  >
+                    <Settings className="w-4 h-4" />
+                    Admin
+                  </Button>
+                </Link>
+              )}
+              
+              {!isAuthenticated && !isLoading && (
+                <a href="/api/login">
+                  <Button
+                    variant="default"
+                    className="w-full justify-start gap-2 rounded-lg bg-[#2ED3B7] text-[#0F172A]"
+                    onClick={() => setMobileMenuOpen(false)}
+                    data-testid="button-login-mobile-menu"
+                  >
+                    <LogIn className="w-4 h-4" />
+                    Zaloguj
+                  </Button>
+                </a>
+              )}
+              
+              {isAuthenticated && user && (
                 <Button
                   variant="ghost"
-                  className="w-full justify-start gap-2 text-[#475569]"
-                  onClick={() => setMobileMenuOpen(false)}
-                  data-testid="link-admin-mobile"
+                  className="w-full justify-start gap-2 text-[#EF4444]"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    logout();
+                  }}
+                  data-testid="button-logout-mobile"
                 >
-                  <Settings className="w-4 h-4" />
-                  Admin
+                  <LogOut className="w-4 h-4" />
+                  Wyloguj
                 </Button>
-              </Link>
+              )}
             </nav>
           </div>
         )}

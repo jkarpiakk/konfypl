@@ -93,6 +93,14 @@ The backend implements a RESTful API pattern with routes for events, sources, an
 - Removed dark mode toggle for streamlined experience
 - Updated all components (Navigation, HeroSection, EventCard, FiltersPanel, CalendarView, Admin)
 
+**January 2026 - User Authentication & Onboarding**
+- Integrated Replit Auth (OIDC) for user login with Google/GitHub/email
+- Added users table with specializations array and isAdmin flag
+- Implemented onboarding modal for first-time visitors to select medical specializations
+- User preferences sync between localStorage and database when authenticated
+- Navigation shows login button for guests, avatar dropdown for logged-in users
+- Added `/api/user/preferences` endpoints (GET/PATCH) protected by authentication
+
 ## Project Structure
 
 ```
@@ -135,13 +143,17 @@ The backend implements a RESTful API pattern with routes for events, sources, an
 
 ## Security Notes
 
-**Current Status**: Demo/MVP implementation without authentication.
+**Current Status**: User authentication implemented via Replit Auth (OIDC).
 
-**For Production**: Before deploying to production, implement:
-1. Authentication for admin endpoints (Replit Auth or custom auth)
-2. Authorization middleware to protect mutation endpoints
-3. Input validation on all PATCH/PUT endpoints
-4. CSRF protection for cookie-based sessions
+- Users can log in with Google/GitHub/email via Replit Auth
+- Session storage in PostgreSQL via connect-pg-simple
+- Protected endpoints use isAuthenticated middleware
+- User preferences endpoint protected by authentication
+
+**For Production**: Before deploying to production, consider:
+1. CSRF mitigation (SameSite=lax + token) for session-based auth
+2. Rate limiting for API endpoints
+3. Automated tests for admin authorization
 
 ## Running the Application
 

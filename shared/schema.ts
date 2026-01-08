@@ -4,6 +4,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 export * from "./models/chat";
+export * from "./models/auth";
 
 export const SPECIALIZATIONS = [
   "cardiology",
@@ -61,13 +62,7 @@ export const TAG_LABELS: Record<typeof EVENT_TAGS[number], string> = {
   conference: "Konferencja"
 };
 
-export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
-  isAdmin: boolean("is_admin").default(false).notNull(),
-  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
-});
+// Note: users table is defined in ./models/auth.ts
 
 export const events = pgTable("events", {
   id: serial("id").primaryKey(),
@@ -135,10 +130,7 @@ export const scanLogsRelations = relations(scanLogs, ({ one }) => ({
   }),
 }));
 
-export const insertUserSchema = createInsertSchema(users).omit({
-  id: true,
-  createdAt: true,
-});
+// Note: insertUserSchema and User types are in ./models/auth.ts
 
 export const insertEventSchema = createInsertSchema(events).omit({
   id: true,
@@ -160,8 +152,7 @@ export const insertScanLogSchema = createInsertSchema(scanLogs).omit({
 
 export type Specialization = typeof SPECIALIZATIONS[number];
 export type EventTag = typeof EVENT_TAGS[number];
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof users.$inferSelect;
+// Note: User and InsertUser types are exported from ./models/auth.ts
 export type InsertEvent = z.infer<typeof insertEventSchema>;
 export type Event = typeof events.$inferSelect;
 export type InsertSource = z.infer<typeof insertSourceSchema>;

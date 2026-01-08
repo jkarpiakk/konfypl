@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Konfy.pl Logo System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    :root {
+      --neo-mint: #2ED3B7;
+      --dark-slate: #0F172A;
+      --light-gray: #F8FAFC;
+      --border: #E2E8F0;
+    }
+    
+    body {
+      font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--light-gray);
+      min-height: 100vh;
+      padding: 60px 40px;
+      color: var(--dark-slate);
+    }
+    
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    
+    header {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+    
+    h1 {
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--neo-mint);
+      margin-bottom: 12px;
+    }
+    
+    .subtitle {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--dark-slate);
+      letter-spacing: -0.02em;
+    }
+    
+    .logo-section {
+      background: white;
+      border-radius: 20px;
+      padding: 48px;
+      margin-bottom: 32px;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+      border: 1px solid var(--border);
+    }
+    
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #94A3B8;
+      margin-bottom: 24px;
+    }
+    
+    .logo-display {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 120px;
+    }
+    
+    .logo-display.main {
+      min-height: 160px;
+    }
+    
+    /* Main Logo Styles */
+    .main-logo {
+      display: flex;
+      align-items: baseline;
+      gap: 0;
+    }
+    
+    .main-logo .wordmark {
+      font-size: 48px;
+      font-weight: 600;
+      color: var(--dark-slate);
+      letter-spacing: -0.03em;
+      position: relative;
+    }
+    
+    .main-logo .domain {
+      font-size: 48px;
+      font-weight: 600;
+      color: var(--neo-mint);
+      letter-spacing: -0.03em;
+    }
+    
+    .main-logo .accent-bar {
+      position: absolute;
+      bottom: -6px;
+      left: 0;
+      width: 24px;
+      height: 3px;
+      background: linear-gradient(90deg, var(--neo-mint), rgba(46, 211, 183, 0.5));
+      border-radius: 2px;
+    }
+    
+    /* Icon Styles */
+    .icon-grid {
+      display: flex;
+      gap: 40px;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .icon-item {
+      text-align: center;
+    }
+    
+    .icon-item span {
+      display: block;
+      font-size: 11px;
+      color: #94A3B8;
+      margin-top: 12px;
+      font-weight: 500;
+    }
+    
+    .icon-box {
+      width: 80px;
+      height: 80px;
+      background: white;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    }
+    
+    .icon-box.small {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+    }
+    
+    .icon-box.tiny {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+    }
+    
+    /* K Lettermark */
+    .k-mark {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    .k-mark .stem {
+      width: 8px;
+      height: 44px;
+      background: var(--dark-slate);
+      border-radius: 2px;
+    }
+    
+    .k-mark .arms {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    
+    .k-mark .arm {
+      width: 0;
+      height: 0;
+      border-style: solid;
+    }
+    
+    .k-mark .arm.top {
+      border-width: 0 0 20px 24px;
+      border-color: transparent transparent var(--dark-slate) transparent;
+      transform: scaleY(-1);
+    }
+    
+    .k-mark .arm.bottom {
+      border-width: 0 0 20px 24px;
+      border-color: transparent transparent var(--neo-mint) transparent;
+    }
+    
+    /* Compact K for smaller sizes */
+    .k-compact {
+      position: relative;
+      width: 36px;
+      height: 44px;
+    }
+    
+    .k-compact .stem {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 7px;
+      height: 100%;
+      background: var(--dark-slate);
+      border-radius: 1px;
+    }
+    
+    .k-compact .arm-top {
+      position: absolute;
+      left: 7px;
+      top: 0;
+      width: 0;
+      height: 0;
+      border-left: 8px solid transparent;
+      border-right: 21px solid var(--dark-slate);
+      border-bottom: 20px solid transparent;
+    }
+    
+    .k-compact .arm-bottom {
+      position: absolute;
+      left: 7px;
+      bottom: 0;
+      width: 0;
+      height: 0;
+      border-left: 8px solid transparent;
+      border-right: 21px solid var(--neo-mint);
+      border-top: 20px solid transparent;
+    }
+    
+    /* Color Palette */
+    .color-section {
+      display: flex;
+      gap: 24px;
+      justify-content: center;
+    }
+    
+    .color-swatch {
+      text-align: center;
+    }
+    
+    .swatch {
+      width: 80px;
+      height: 80px;
+      border-radius: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .swatch.mint {
+      background: var(--neo-mint);
+    }
+    
+    .swatch.slate {
+      background: var(--dark-slate);
+    }
+    
+    .swatch.white {
+      background: white;
+      border: 1px solid var(--border);
+    }
+    
+    .color-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--dark-slate);
+      margin-bottom: 4px;
+    }
+    
+    .color-hex {
+      font-size: 12px;
+      color: #94A3B8;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+    }
+    
+    /* Dark variant section */
+    .logo-section.dark {
+      background: var(--dark-slate);
+    }
+    
+    .logo-section.dark .section-label {
+      color: #64748B;
+    }
+    
+    .dark .main-logo .wordmark {
+      color: white;
+    }
+    
+    /* Footer */
+    footer {
+      text-align: center;
+      margin-top: 48px;
+      padding-top: 32px;
+      border-top: 1px solid var(--border);
+    }
+    
+    footer p {
+      font-size: 13px;
+      color: #94A3B8;
+    }
+    
+    footer strong {
+      color: var(--dark-slate);
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Brand Identity</h1>
+      <p class="subtitle">Konfy.pl Logo System</p>
+    </header>
+    
+    <!-- Main Horizontal Logo -->
+    <section class="logo-section">
+      <div class="section-label">Primary Logo — Light Mode</div>
+      <div class="logo-display main">
+        <div class="main-logo">
+          <span class="wordmark">
+            konfy
+            <span class="accent-bar"></span>
+          </span>
+          <span class="domain">.pl</span>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Dark Mode Variant -->
+    <section class="logo-section dark">
+      <div class="section-label">Primary Logo — Dark Mode</div>
+      <div class="logo-display main">
+        <div class="main-logo">
+          <span class="wordmark">
+            konfy
+            <span class="accent-bar"></span>
+          </span>
+          <span class="domain">.pl</span>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Icon Variants -->
+    <section class="logo-section">
+      <div class="section-label">Icon Variants — Favicon & App Icon</div>
+      <div class="logo-display">
+        <div class="icon-grid">
+          <div class="icon-item">
+            <div class="icon-box">
+              <div class="k-compact">
+                <div class="stem"></div>
+                <div class="arm-top"></div>
+                <div class="arm-bottom"></div>
+              </div>
+            </div>
+            <span>64×64</span>
+          </div>
+          <div class="icon-item">
+            <div class="icon-box small">
+              <svg width="28" height="28" viewBox="0 0 64 64" fill="none">
+                <g>
+                  <rect x="17" y="14" width="6" height="36" rx="1" fill="#0F172A"/>
+                  <polygon points="23,30 41,14 48,14 30,30" fill="#0F172A"/>
+                  <polygon points="23,34 41,50 48,50 30,34" fill="#2ED3B7"/>
+                </g>
+              </svg>
+            </div>
+            <span>48×48</span>
+          </div>
+          <div class="icon-item">
+            <div class="icon-box tiny">
+              <svg width="18" height="18" viewBox="0 0 32 32" fill="none">
+                <g>
+                  <rect x="8" y="7" width="3" height="18" rx="0.5" fill="#0F172A"/>
+                  <polygon points="11,15 20,7 24,7 15,15" fill="#0F172A"/>
+                  <polygon points="11,17 20,25 24,25 15,17" fill="#2ED3B7"/>
+                </g>
+              </svg>
+            </div>
+            <span>32×32</span>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Color Palette -->
+    <section class="logo-section">
+      <div class="section-label">Color Palette</div>
+      <div class="logo-display">
+        <div class="color-section">
+          <div class="color-swatch">
+            <div class="swatch mint"></div>
+            <div class="color-name">Neo Mint</div>
+            <div class="color-hex">#2ED3B7</div>
+          </div>
+          <div class="color-swatch">
+            <div class="swatch slate"></div>
+            <div class="color-name">Dark Slate</div>
+            <div class="color-hex">#0F172A</div>
+          </div>
+          <div class="color-swatch">
+            <div class="swatch white"></div>
+            <div class="color-name">White</div>
+            <div class="color-hex">#FFFFFF</div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Typography -->
+    <section class="logo-section">
+      <div class="section-label">Typography</div>
+      <div class="logo-display">
+        <div style="text-align: center;">
+          <p style="font-size: 32px; font-weight: 600; margin-bottom: 16px; letter-spacing: -0.02em;">Manrope</p>
+          <p style="font-size: 14px; color: #64748B; font-weight: 500;">Semi-bold 600 • Letter-spacing: -0.03em</p>
+        </div>
+      </div>
+    </section>
+    
+    <footer>
+      <p><strong>Konfy.pl</strong> — Polish Medical Events Platform</p>
+    </footer>
+  </div>
+</body>
+</html>
