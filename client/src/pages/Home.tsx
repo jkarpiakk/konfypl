@@ -1,10 +1,9 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Navigation } from "@/components/Navigation";
 import { HeroSection } from "@/components/HeroSection";
 import { EventList } from "@/components/EventList";
 import { FiltersPanel } from "@/components/FiltersPanel";
-import { OnboardingModal } from "@/components/OnboardingModal";
 import { SEOFooter } from "@/components/SEOFooter";
 import { OrganizerCTABlock } from "@/components/OrganizerCTABlock";
 import { getStoredPreferences } from "@/lib/preferences";
@@ -43,7 +42,7 @@ export default function Home() {
     queryKey: ["/api/sponsored-placements"],
   });
 
-  const handleOnboardingComplete = (selectedSpecs: Specialization[]) => {
+  const handleSpecsChange = (selectedSpecs: Specialization[]) => {
     setFilters((prev) => ({
       ...prev,
       specializations: selectedSpecs,
@@ -119,7 +118,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
-      <OnboardingModal onComplete={handleOnboardingComplete} />
       <Navigation onSearch={handleNavSearch} searchQuery={filters.search} />
       
       <HeroSection
@@ -127,6 +125,8 @@ export default function Home() {
         onSearchChange={setHeroSearch}
         onSearch={handleHeroSearch}
         eventCount={events.length}
+        selectedSpecs={filters.specializations}
+        onSpecsChange={handleSpecsChange}
       />
 
       <main className="max-w-7xl mx-auto px-4 md:px-6 py-8">

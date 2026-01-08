@@ -323,7 +323,7 @@ export function FiltersPanel({ filters, onFiltersChange, activeCount = 0 }: Filt
   return (
     <>
       <div className="hidden lg:block w-72 shrink-0">
-        <div className="sticky top-20 bg-white border border-[#E2E8F0] rounded-2xl p-5 shadow-card">
+        <div className="sticky top-20 bg-white/80 backdrop-blur-xl border border-[#E2E8F0]/50 rounded-2xl p-5 shadow-lg">
           <FilterContent filters={filters} onFiltersChange={onFiltersChange} />
         </div>
       </div>

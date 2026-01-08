@@ -3,6 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { CalendarX, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
 import type { Event } from "@/lib/types";
 
 interface EventListProps {
@@ -95,11 +96,25 @@ export function EventList({ events, isLoading, onClearFilters, showClearFilters,
 
   return (
     <div className="space-y-4" data-testid="event-list">
-      {sponsoredEvents.map((event) => (
-        <EventCard key={event.id} event={event} isSponsored />
+      {sponsoredEvents.map((event, index) => (
+        <motion.div
+          key={event.id}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: index * 0.1 }}
+        >
+          <EventCard event={event} isSponsored />
+        </motion.div>
       ))}
-      {regularEvents.map((event) => (
-        <EventCard key={event.id} event={event} />
+      {regularEvents.map((event, index) => (
+        <motion.div
+          key={event.id}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: (sponsoredEvents.length + index) * 0.08 }}
+        >
+          <EventCard event={event} />
+        </motion.div>
       ))}
     </div>
   );
