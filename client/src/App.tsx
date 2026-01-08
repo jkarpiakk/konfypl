@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { CookieBanner } from "@/components/CookieBanner";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import EventDetail from "@/pages/EventDetail";
@@ -13,6 +14,8 @@ import SpecializationHub from "@/pages/SpecializationHub";
 import PillarPage from "@/pages/PillarPage";
 import PromotePage from "@/pages/PromotePage";
 import AddEventPage from "@/pages/AddEventPage";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import Terms from "@/pages/Terms";
 
 function Router() {
   return (
@@ -23,6 +26,8 @@ function Router() {
       <Route path="/admin" component={Admin} />
       <Route path="/promuj" component={PromotePage} />
       <Route path="/dodaj-wydarzenie" component={AddEventPage} />
+      <Route path="/polityka-prywatnosci" component={PrivacyPolicy} />
+      <Route path="/regulamin" component={Terms} />
       
       <Route path="/konferencje-medyczne">
         {() => <PillarPage pageType="conferences" />}
@@ -66,6 +71,7 @@ function App() {
         <TooltipProvider>
           <Toaster />
           <Router />
+          <CookieBanner />
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>

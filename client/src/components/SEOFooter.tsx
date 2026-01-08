@@ -76,9 +76,34 @@ export function SEOFooter() {
           </div>
         </div>
         
-        <div className="pt-8 border-t border-[#1E293B] text-center text-sm text-[#64748B]">
-          <p>Konfy.pl - Wszystkie konferencje medyczne w jednym miejscu</p>
-          <p className="mt-2">Automatycznie aktualizowane co 48h. Dane pochodzą ze źródeł publicznych.</p>
+        <div className="pt-8 border-t border-[#1E293B]">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="text-center md:text-left text-sm text-[#64748B]">
+              <p>Konfy.pl - Wszystkie konferencje medyczne w jednym miejscu</p>
+              <p className="mt-1">Automatycznie aktualizowane co 48h. Dane pochodza ze zrodel publicznych.</p>
+            </div>
+            <div className="flex flex-wrap justify-center gap-4 text-sm">
+              <Link href="/polityka-prywatnosci" className="text-[#94A3B8] hover:text-[#2ED3B7] transition-colors">
+                Polityka Prywatnosci
+              </Link>
+              <Link href="/regulamin" className="text-[#94A3B8] hover:text-[#2ED3B7] transition-colors">
+                Regulamin
+              </Link>
+              <button
+                onClick={() => {
+                  localStorage.removeItem("konfy_cookie_consent");
+                  window.location.reload();
+                }}
+                className="text-[#94A3B8] hover:text-[#2ED3B7] transition-colors"
+                data-testid="button-cookie-settings-footer"
+              >
+                Ustawienia cookies
+              </button>
+              <a href="mailto:hello@konfy.pl" className="text-[#94A3B8] hover:text-[#2ED3B7] transition-colors">
+                Kontakt
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </footer>
