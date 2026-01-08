@@ -39,6 +39,10 @@ export default function Home() {
     queryKey: ["/api/events", { status: "published", upcoming: "true", limit: "50" }],
   });
 
+  const { data: sponsoredEventIds = [] } = useQuery<number[]>({
+    queryKey: ["/api/sponsored-placements"],
+  });
+
   const handleOnboardingComplete = (selectedSpecs: Specialization[]) => {
     setFilters((prev) => ({
       ...prev,
@@ -171,6 +175,7 @@ export default function Home() {
                 isLoading={isLoading}
                 onClearFilters={clearFilters}
                 showClearFilters={activeFiltersCount > 0 || !!filters.search}
+                sponsoredEventIds={sponsoredEventIds}
               />
             ) : (
               <CalendarView events={filteredEvents} isLoading={isLoading} />

@@ -10,6 +10,7 @@ interface EventListProps {
   isLoading?: boolean;
   onClearFilters?: () => void;
   showClearFilters?: boolean;
+  sponsoredEventIds?: number[];
 }
 
 function EventCardSkeleton() {
@@ -39,7 +40,7 @@ function EventCardSkeleton() {
   );
 }
 
-export function EventList({ events, isLoading, onClearFilters, showClearFilters }: EventListProps) {
+export function EventList({ events, isLoading, onClearFilters, showClearFilters, sponsoredEventIds = [] }: EventListProps) {
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -88,9 +89,16 @@ export function EventList({ events, isLoading, onClearFilters, showClearFilters 
     );
   }
 
+  const sponsoredSet = new Set(sponsoredEventIds);
+  const sponsoredEvents = events.filter(e => sponsoredSet.has(e.id));
+  const regularEvents = events.filter(e => !sponsoredSet.has(e.id));
+
   return (
     <div className="space-y-4" data-testid="event-list">
-      {events.map((event) => (
+      {sponsoredEvents.map((event) => (
+        <EventCard key={event.id} event={event} isSponsored />
+      ))}
+      {regularEvents.map((event) => (
         <EventCard key={event.id} event={event} />
       ))}
     </div>

@@ -42,6 +42,7 @@ const addUtmParams = (url: string, eventId: number): string => {
 interface EventCardProps {
   event: Event;
   compact?: boolean;
+  isSponsored?: boolean;
 }
 
 const TAG_LABELS: Record<string, string> = {
@@ -53,15 +54,24 @@ const TAG_LABELS: Record<string, string> = {
   symposium: "Sympozjum",
 };
 
-export function EventCard({ event, compact = false }: EventCardProps) {
+export function EventCard({ event, compact = false, isSponsored = false }: EventCardProps) {
   const { toast } = useToast();
   const startDate = new Date(event.startDate);
   const endDate = event.endDate ? new Date(event.endDate) : null;
+
+  const trackEvent = (action: string) => {
+    fetch("/api/track", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ eventId: event.id, action }),
+    }).catch(() => {});
+  };
 
   const handleShare = async () => {
     const eventUrl = `${window.location.origin}/event/${event.id}`;
     try {
       await navigator.clipboard.writeText(eventUrl);
+      trackEvent("share");
       toast({
         title: "Link skopiowany",
         description: "Link do wydarzenia zostal skopiowany do schowka",
@@ -77,8 +87,14 @@ export function EventCard({ event, compact = false }: EventCardProps) {
 
   const handleRegistrationClick = () => {
     if (event.sourceUrl) {
+      trackEvent("registration_click");
       window.open(addUtmParams(event.sourceUrl, event.id), "_blank");
     }
+  };
+
+  const handleCalendarAdd = (type: string, callback: () => void) => {
+    trackEvent("calendar_add");
+    callback();
   };
 
   const formatEventDate = () => {
@@ -105,9 +121,20 @@ export function EventCard({ event, compact = false }: EventCardProps) {
 
   return (
     <Card 
-      className="bg-white border border-[#E2E8F0] rounded-2xl shadow-card transition-all duration-200 hover:shadow-card-hover hover:border-[#2ED3B7] hover:-translate-y-0.5" 
+      className={cn(
+        "bg-white border rounded-2xl shadow-card transition-all duration-200 hover:shadow-card-hover hover:-translate-y-0.5",
+        isSponsored 
+          ? "border-[#2ED3B7] ring-2 ring-[#2ED3B7]/20 hover:border-[#25B9A1]" 
+          : "border-[#E2E8F0] hover:border-[#2ED3B7]"
+      )}
       data-testid={`card-event-${event.id}`}
     >
+      {isSponsored && (
+        <div className="bg-gradient-to-r from-[#2ED3B7] to-[#25B9A1] text-white text-xs font-medium px-3 py-1 rounded-t-2xl flex items-center gap-1.5">
+          <Sparkles className="w-3 h-3" />
+          Promowane
+        </div>
+      )}
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-2">
           <Link href={`/event/${event.id}`} className="flex-1 min-w-0">
@@ -231,21 +258,21 @@ export function EventCard({ event, compact = false }: EventCardProps) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="bg-white border-[#E2E8F0] shadow-lg rounded-lg">
             <DropdownMenuItem 
-              onClick={() => window.open(getGoogleCalendarUrl(event), "_blank")}
+              onClick={() => handleCalendarAdd("google", () => window.open(getGoogleCalendarUrl(event), "_blank"))}
               className="cursor-pointer hover:bg-[#F1F5F9]"
             >
               <SiGooglecalendar className="w-4 h-4 mr-2" />
               Google Calendar
             </DropdownMenuItem>
             <DropdownMenuItem 
-              onClick={() => window.open(getOutlookCalendarUrl(event), "_blank")}
+              onClick={() => handleCalendarAdd("outlook", () => window.open(getOutlookCalendarUrl(event), "_blank"))}
               className="cursor-pointer hover:bg-[#F1F5F9]"
             >
               <Calendar className="w-4 h-4 mr-2" />
               Outlook
             </DropdownMenuItem>
             <DropdownMenuItem 
-              onClick={() => downloadICSFile(event)}
+              onClick={() => handleCalendarAdd("ics", () => downloadICSFile(event))}
               className="cursor-pointer hover:bg-[#F1F5F9]"
             >
               <SiApple className="w-4 h-4 mr-2" />

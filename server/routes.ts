@@ -7,9 +7,9 @@ import { z } from "zod";
 import bcrypt from "bcrypt";
 import { isAuthenticated, authStorage } from "./replit_integrations/auth";
 import { users } from "@shared/models/auth";
-import { leads } from "@shared/schema";
+import { leads, eventMetrics, sponsoredPlacements } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, and, gte, lte, sql } from "drizzle-orm";
 
 const updatePreferencesSchema = z.object({
   specializations: z.array(z.enum(SPECIALIZATIONS)).default([]),
@@ -360,6 +360,71 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error updating user preferences:", error);
       res.status(500).json({ error: "Failed to update preferences" });
+    }
+  });
+
+  app.get("/api/sponsored-placements", async (req, res) => {
+    try {
+      const today = new Date().toISOString().split("T")[0];
+      const placements = await db
+        .select({ eventId: sponsoredPlacements.eventId })
+        .from(sponsoredPlacements)
+        .where(
+          and(
+            eq(sponsoredPlacements.status, "active"),
+            lte(sponsoredPlacements.startDate, today),
+            gte(sponsoredPlacements.endDate, today)
+          )
+        );
+      res.json(placements.map(p => p.eventId).filter(Boolean));
+    } catch (error) {
+      console.error("Error fetching sponsored placements:", error);
+      res.json([]);
+    }
+  });
+
+  app.post("/api/track", async (req, res) => {
+    try {
+      const { eventId, action } = req.body;
+      if (!eventId || !action) {
+        return res.status(400).json({ error: "Missing eventId or action" });
+      }
+      
+      const today = new Date().toISOString().split("T")[0];
+      const existingMetric = await db
+        .select()
+        .from(eventMetrics)
+        .where(and(eq(eventMetrics.eventId, eventId), eq(eventMetrics.date, today)))
+        .limit(1);
+
+      if (existingMetric.length > 0) {
+        const updateField = 
+          action === "view" ? { pageViews: sql`${eventMetrics.pageViews} + 1` } :
+          action === "registration_click" ? { registrationClicks: sql`${eventMetrics.registrationClicks} + 1` } :
+          action === "calendar_add" ? { calendarAdds: sql`${eventMetrics.calendarAdds} + 1` } :
+          action === "share" ? { shares: sql`${eventMetrics.shares} + 1` } :
+          null;
+        
+        if (updateField) {
+          await db.update(eventMetrics).set(updateField).where(eq(eventMetrics.id, existingMetric[0].id));
+        }
+      } else {
+        const initial = {
+          eventId,
+          date: today,
+          pageViews: action === "view" ? 1 : 0,
+          registrationClicks: action === "registration_click" ? 1 : 0,
+          calendarAdds: action === "calendar_add" ? 1 : 0,
+          shares: action === "share" ? 1 : 0,
+          reportedErrors: 0,
+        };
+        await db.insert(eventMetrics).values(initial);
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error tracking event:", error);
+      res.status(500).json({ error: "Failed to track event" });
     }
   });
 
