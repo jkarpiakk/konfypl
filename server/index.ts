@@ -2,6 +2,8 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+import { startScheduler } from "./scheduler";
+import { seedDatabase } from "./seed";
 
 const app = express();
 const httpServer = createServer(app);
@@ -79,6 +81,12 @@ app.use((req, res, next) => {
     const { setupVite } = await import("./vite");
     await setupVite(httpServer, app);
   }
+
+  // Seed database with sample data if empty
+  await seedDatabase();
+
+  // Start the background scheduler for periodic source scans
+  startScheduler();
 
   // ALWAYS serve the app on the port specified in the environment variable PORT
   // Other ports are firewalled. Default to 5000 if not specified.

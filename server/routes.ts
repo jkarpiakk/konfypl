@@ -1,16 +1,258 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { insertEventSchema, insertSourceSchema } from "@shared/schema";
+import { scanSingleSource, runScheduledScans } from "./scheduler";
+import { z } from "zod";
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
-  // put application routes here
-  // prefix all routes with /api
+  app.get("/api/events", async (req, res) => {
+    try {
+      const status = req.query.status as string | undefined;
+      const events = await storage.getEvents(status ? { status } : undefined);
+      res.json(events);
+    } catch (error) {
+      console.error("Error fetching events:", error);
+      res.status(500).json({ error: "Failed to fetch events" });
+    }
+  });
 
-  // use storage to perform CRUD operations on the storage interface
-  // e.g. storage.insertUser(user) or storage.getUserByUsername(username)
+  app.get("/api/events/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid event ID" });
+      }
+      const event = await storage.getEvent(id);
+      if (!event) {
+        return res.status(404).json({ error: "Event not found" });
+      }
+      res.json(event);
+    } catch (error) {
+      console.error("Error fetching event:", error);
+      res.status(500).json({ error: "Failed to fetch event" });
+    }
+  });
+
+  app.post("/api/events", async (req, res) => {
+    try {
+      const parseResult = insertEventSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ error: "Invalid event data", details: parseResult.error.errors });
+      }
+      const event = await storage.createEvent(parseResult.data);
+      res.status(201).json(event);
+    } catch (error) {
+      console.error("Error creating event:", error);
+      res.status(500).json({ error: "Failed to create event" });
+    }
+  });
+
+  app.patch("/api/events/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid event ID" });
+      }
+      const event = await storage.updateEvent(id, req.body);
+      if (!event) {
+        return res.status(404).json({ error: "Event not found" });
+      }
+      res.json(event);
+    } catch (error) {
+      console.error("Error updating event:", error);
+      res.status(500).json({ error: "Failed to update event" });
+    }
+  });
+
+  app.delete("/api/events/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid event ID" });
+      }
+      await storage.deleteEvent(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting event:", error);
+      res.status(500).json({ error: "Failed to delete event" });
+    }
+  });
+
+  app.get("/api/sources", async (req, res) => {
+    try {
+      const sources = await storage.getSources();
+      res.json(sources);
+    } catch (error) {
+      console.error("Error fetching sources:", error);
+      res.status(500).json({ error: "Failed to fetch sources" });
+    }
+  });
+
+  app.get("/api/sources/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid source ID" });
+      }
+      const source = await storage.getSource(id);
+      if (!source) {
+        return res.status(404).json({ error: "Source not found" });
+      }
+      res.json(source);
+    } catch (error) {
+      console.error("Error fetching source:", error);
+      res.status(500).json({ error: "Failed to fetch source" });
+    }
+  });
+
+  app.post("/api/sources", async (req, res) => {
+    try {
+      const parseResult = insertSourceSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ error: "Invalid source data", details: parseResult.error.errors });
+      }
+      const source = await storage.createSource(parseResult.data);
+      res.status(201).json(source);
+    } catch (error) {
+      console.error("Error creating source:", error);
+      res.status(500).json({ error: "Failed to create source" });
+    }
+  });
+
+  app.patch("/api/sources/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid source ID" });
+      }
+      const source = await storage.updateSource(id, req.body);
+      if (!source) {
+        return res.status(404).json({ error: "Source not found" });
+      }
+      res.json(source);
+    } catch (error) {
+      console.error("Error updating source:", error);
+      res.status(500).json({ error: "Failed to update source" });
+    }
+  });
+
+  app.delete("/api/sources/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid source ID" });
+      }
+      await storage.deleteSource(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting source:", error);
+      res.status(500).json({ error: "Failed to delete source" });
+    }
+  });
+
+  app.post("/api/sources/:id/scan", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid source ID" });
+      }
+      
+      res.json({ message: "Scan started", sourceId: id });
+      
+      scanSingleSource(id).catch((error) => {
+        console.error("Background scan error:", error);
+      });
+    } catch (error) {
+      console.error("Error starting scan:", error);
+      res.status(500).json({ error: "Failed to start scan" });
+    }
+  });
+
+  app.post("/api/admin/run-scans", async (req, res) => {
+    try {
+      res.json({ message: "Scheduled scans started" });
+      
+      runScheduledScans().catch((error) => {
+        console.error("Background scans error:", error);
+      });
+    } catch (error) {
+      console.error("Error running scans:", error);
+      res.status(500).json({ error: "Failed to run scans" });
+    }
+  });
+
+  app.get("/api/scan-logs", async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 20;
+      const logs = await storage.getRecentScanLogs(limit);
+      res.json(logs);
+    } catch (error) {
+      console.error("Error fetching scan logs:", error);
+      res.status(500).json({ error: "Failed to fetch scan logs" });
+    }
+  });
+
+  app.get("/api/calendar/:eventId.ics", async (req, res) => {
+    try {
+      const id = parseInt(req.params.eventId);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid event ID" });
+      }
+      
+      const event = await storage.getEvent(id);
+      if (!event) {
+        return res.status(404).json({ error: "Event not found" });
+      }
+
+      const formatDate = (dateStr: string) => {
+        const date = new Date(dateStr);
+        return date.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+      };
+
+      const escapeText = (text: string) => {
+        return text
+          .replace(/\\/g, "\\\\")
+          .replace(/;/g, "\\;")
+          .replace(/,/g, "\\,")
+          .replace(/\n/g, "\\n");
+      };
+
+      const uid = `event-${event.id}@medevents.pl`;
+      const dtstamp = formatDate(new Date().toISOString());
+      const dtstart = event.startDate.replace(/-/g, "");
+      const dtend = (event.endDate || event.startDate).replace(/-/g, "");
+
+      const icsContent = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//MedEvents.pl//Medical Events//PL",
+        "CALSCALE:GREGORIAN",
+        "METHOD:PUBLISH",
+        "BEGIN:VEVENT",
+        `UID:${uid}`,
+        `DTSTAMP:${dtstamp}`,
+        `DTSTART;VALUE=DATE:${dtstart}`,
+        `DTEND;VALUE=DATE:${dtend}`,
+        `SUMMARY:${escapeText(event.title)}`,
+        `DESCRIPTION:${escapeText(event.description || "")}`,
+        `LOCATION:${escapeText(event.isOnline ? "Online" : (event.location || ""))}`,
+        event.sourceUrl ? `URL:${event.sourceUrl}` : "",
+        "END:VEVENT",
+        "END:VCALENDAR"
+      ].filter(Boolean).join("\r\n");
+
+      res.setHeader("Content-Type", "text/calendar; charset=utf-8");
+      res.setHeader("Content-Disposition", `attachment; filename="${event.title.replace(/[^a-zA-Z0-9]/g, "_")}.ics"`);
+      res.send(icsContent);
+    } catch (error) {
+      console.error("Error generating ICS:", error);
+      res.status(500).json({ error: "Failed to generate calendar file" });
+    }
+  });
 
   return httpServer;
 }
