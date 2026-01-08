@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
@@ -18,8 +18,14 @@ import {
   Settings,
   FileText,
   Database,
+  Lock,
+  Mail,
+  Eye,
+  EyeOff,
+  LogOut,
 } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
+import { KonfyLogo } from "@/components/KonfyLogo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -328,6 +334,123 @@ function SourcesTable({
   );
 }
 
+function AdminLoginForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
+  const { toast } = useToast();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    try {
+      const response = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+        credentials: "include",
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        toast({ 
+          title: "Błąd logowania", 
+          description: data.error || "Nieprawidłowy email lub hasło",
+          variant: "destructive" 
+        });
+        return;
+      }
+      
+      toast({ title: "Zalogowano pomyślnie" });
+      onLoginSuccess();
+    } catch {
+      toast({ 
+        title: "Błąd połączenia", 
+        description: "Nie można połączyć się z serwerem",
+        variant: "destructive" 
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center pb-2">
+          <div className="mx-auto mb-4">
+            <KonfyLogo size="lg" />
+          </div>
+          <CardTitle className="text-2xl font-heading text-[#0F172A]">
+            Panel administracyjny
+          </CardTitle>
+          <CardDescription>
+            Zaloguj się, aby zarządzać wydarzeniami
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B]" />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="hello@konfy.pl"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="pl-10"
+                  required
+                  data-testid="input-admin-email"
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="password">Hasło</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B]" />
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Wprowadź hasło"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pl-10 pr-10"
+                  required
+                  data-testid="input-admin-password"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </Button>
+              </div>
+            </div>
+            
+            <Button 
+              type="submit" 
+              className="w-full bg-[#2ED3B7] hover:bg-[#25B9A1] text-[#0F172A]"
+              disabled={isLoading}
+              data-testid="button-admin-login"
+            >
+              {isLoading ? "Logowanie..." : "Zaloguj się"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 export default function Admin() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("pending");
@@ -337,17 +460,48 @@ export default function Admin() {
   const [isAddingSource, setIsAddingSource] = useState(false);
   const [deleteEventId, setDeleteEventId] = useState<number | null>(null);
   const [deleteSourceId, setDeleteSourceId] = useState<number | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [adminEmail, setAdminEmail] = useState<string>("");
+
+  useEffect(() => {
+    checkSession();
+  }, []);
+
+  const checkSession = async () => {
+    try {
+      const response = await fetch("/api/admin/session", { credentials: "include" });
+      const data = await response.json();
+      setIsAuthenticated(data.authenticated && data.isAdmin);
+      if (data.email) setAdminEmail(data.email);
+    } catch {
+      setIsAuthenticated(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/admin/logout", { method: "POST", credentials: "include" });
+      setIsAuthenticated(false);
+      setAdminEmail("");
+      toast({ title: "Wylogowano" });
+    } catch {
+      toast({ title: "Błąd", description: "Nie udało się wylogować", variant: "destructive" });
+    }
+  };
 
   const { data: pendingEvents = [], isLoading: loadingPending } = useQuery<Event[]>({
     queryKey: ["/api/events", { status: "pending" }],
+    enabled: isAuthenticated === true,
   });
 
   const { data: allEvents = [], isLoading: loadingAll } = useQuery<Event[]>({
     queryKey: ["/api/events"],
+    enabled: isAuthenticated === true,
   });
 
   const { data: sources = [], isLoading: loadingSources } = useQuery<Source[]>({
     queryKey: ["/api/sources"],
+    enabled: isAuthenticated === true,
   });
 
   const approveEvent = useMutation({
@@ -396,6 +550,21 @@ export default function Admin() {
     },
   });
 
+  if (isAuthenticated === null) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2ED3B7] mx-auto mb-4" />
+          <p className="text-[#64748B]">Sprawdzanie sesji...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <AdminLoginForm onLoginSuccess={() => { setIsAuthenticated(true); checkSession(); }} />;
+  }
+
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
       <Navigation />
@@ -410,6 +579,23 @@ export default function Admin() {
             <p className="text-[#64748B]">
               Zarządzaj wydarzeniami i źródłami danych
             </p>
+          </div>
+          <div className="flex items-center gap-3">
+            {adminEmail && (
+              <span className="text-sm text-[#64748B] hidden sm:block">
+                {adminEmail}
+              </span>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleLogout}
+              className="gap-2"
+              data-testid="button-admin-logout"
+            >
+              <LogOut className="w-4 h-4" />
+              Wyloguj
+            </Button>
           </div>
         </div>
 

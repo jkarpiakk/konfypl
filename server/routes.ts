@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { insertEventSchema, insertSourceSchema, SPECIALIZATIONS } from "@shared/schema";
 import { scanSingleSource, runScheduledScans } from "./scheduler";
 import { z } from "zod";
+import bcrypt from "bcrypt";
 import { isAuthenticated, authStorage } from "./replit_integrations/auth";
 import { users } from "@shared/models/auth";
 import { db } from "./db";
@@ -13,9 +14,18 @@ const updatePreferencesSchema = z.object({
   specializations: z.array(z.enum(SPECIALIZATIONS)).default([]),
 });
 
+const adminLoginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(1),
+});
+
 import type { RequestHandler } from "express";
 
 const isAdmin: RequestHandler = async (req: any, res, next) => {
+  if (req.session?.adminAuthenticated) {
+    return next();
+  }
+  
   if (!req.isAuthenticated || !req.isAuthenticated()) {
     return res.status(401).json({ error: "Authentication required" });
   }
@@ -37,6 +47,73 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  
+  app.post("/api/admin/login", async (req: any, res) => {
+    try {
+      const parseResult = adminLoginSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ error: "Invalid credentials format" });
+      }
+      
+      const { email, password } = parseResult.data;
+      const adminEmail = process.env.ADMIN_EMAIL;
+      const adminPassword = process.env.ADMIN_PASSWORD;
+      
+      if (!adminEmail || !adminPassword) {
+        console.error("Admin credentials not configured");
+        return res.status(500).json({ error: "Admin login not configured" });
+      }
+      
+      if (email.toLowerCase() !== adminEmail.toLowerCase()) {
+        return res.status(401).json({ error: "Invalid email or password" });
+      }
+      
+      if (password !== adminPassword) {
+        return res.status(401).json({ error: "Invalid email or password" });
+      }
+      
+      req.session.adminAuthenticated = true;
+      req.session.adminEmail = email;
+      
+      res.json({ success: true, email });
+    } catch (error) {
+      console.error("Admin login error:", error);
+      res.status(500).json({ error: "Login failed" });
+    }
+  });
+  
+  app.post("/api/admin/logout", async (req: any, res) => {
+    req.session.adminAuthenticated = false;
+    req.session.adminEmail = null;
+    res.json({ success: true });
+  });
+  
+  app.get("/api/admin/session", async (req: any, res) => {
+    if (req.session?.adminAuthenticated) {
+      return res.json({ 
+        authenticated: true, 
+        email: req.session.adminEmail,
+        isAdmin: true 
+      });
+    }
+    
+    if (req.isAuthenticated && req.isAuthenticated()) {
+      const userId = req.user?.claims?.sub;
+      if (userId) {
+        const user = await authStorage.getUser(userId);
+        if (user?.isAdmin) {
+          return res.json({ 
+            authenticated: true, 
+            email: user.email || user.firstName,
+            isAdmin: true 
+          });
+        }
+      }
+    }
+    
+    res.json({ authenticated: false, isAdmin: false });
+  });
+
   app.get("/api/events", async (req, res) => {
     try {
       const status = req.query.status as string | undefined;
