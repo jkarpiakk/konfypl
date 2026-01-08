@@ -1,0 +1,77 @@
+ROLE:
+You are a senior product engineer and monetization architect for an events aggregator (Next.js + DB).
+
+PROJECT:
+Konfy.pl – Polish medical conferences & webinars aggregator.
+
+GOAL:
+Maximize revenue by implementing a B2B organizer funnel, sponsored placements, conversion CTAs, and measurable analytics.
+
+CURRENT UI CONTEXT (must respect existing layout):
+- Top header with logo, navigation (Wydarzenia / Kalendarz), search bar, login/avatar
+- Events list with filters sidebar and event cards
+- Calendar month view + day modal listing events
+- Event detail page with right-side “Szczegóły” panel and “Dodaj do kalendarza” button
+
+IMPLEMENT:
+
+1) Organizer funnel entry points (critical):
+- Add persistent header CTA buttons:
+  - “Promuj wydarzenie” (outline mint)
+  - “Dodaj wydarzenie” (filled mint)
+- Add a small organizer CTA block above event list: “Jesteś organizatorem? Promuj swoje wydarzenie”.
+
+2) Monetizable ad inventory (sponsored placements):
+Create sponsored slots with scheduling (start/end date) and labels “Sponsorowane”:
+- Listing page:
+  - Pinned event at position #1 when active
+  - Featured strip above the list (3–6 cards)
+  - Inline sponsored card every N items (e.g., every 8), max 1 per viewport
+- Calendar:
+  - In day modal, a “Wyróżnione tego dnia” section (1–2 items)
+  - Optional calendar day highlight for sponsored weeks/days
+- Event detail page:
+  - Optional “Wyróżnione w tej specjalizacji” box (2–3 items)
+
+3) Conversion CTAs (increase measurable ROI):
+- On event cards and event detail page, add primary CTA:
+  - “Rejestracja / Strona wydarzenia” linking to source_url with UTM parameters
+- Keep “Dodaj do kalendarza” as secondary action.
+- Add “Udostępnij” (copy link) and “Zgłoś błąd” on event detail.
+
+4) Organizer profiles (SEO + upsell):
+- Make organizer name clickable.
+- Create /organizator/{slug} page:
+  - organizer logo/name/description
+  - list of their events
+  - “Zweryfikowany organizator” badge (paid option)
+
+5) Analytics that organizers will pay for:
+Track events:
+- page views
+- clicks on “Rejestracja / Strona wydarzenia”
+- clicks “Dodaj do kalendarza”
+- newsletter/reminder signups per event
+Store metrics per event and per organizer.
+Create organizer dashboard with KPIs + date range.
+
+6) Lead capture (user-side asset):
+- Extend “Dodaj do kalendarza” with optional checkbox:
+  - “Dodaj przypomnienie e-mail”
+- Add newsletter signup:
+  - choose specialization + city
+  - low-friction (email only)
+
+7) Payments (MVP):
+- Implement paid sponsored placements via Stripe Checkout:
+  - Basic / Pro / Max packages
+  - Admin approval optional, but support “pending/published” status
+- Create /promuj and /cennik pages showing packages + placement examples.
+
+DELIVERABLE:
+- DB schema changes (sponsored_placements, organizer, metrics, subscriptions)
+- API routes
+- UI components and placement logic
+- UTM strategy for outbound links
+- Admin tools to manage sponsorships and approvals
+- Keep the current Medical Neo-Mint light design consistent.

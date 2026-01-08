@@ -5,6 +5,7 @@ import { z } from "zod";
 
 export * from "./models/chat";
 export * from "./models/auth";
+import { users } from "./models/auth";
 
 export const SPECIALIZATIONS = [
   "cardiology",
@@ -130,6 +131,118 @@ export const scanLogsRelations = relations(scanLogs, ({ one }) => ({
   }),
 }));
 
+// Monetization tables
+
+export const PLACEMENT_TYPES = [
+  "pinned",
+  "featured_strip",
+  "inline",
+  "calendar_featured",
+  "detail_related"
+] as const;
+
+export const PLACEMENT_TYPE_LABELS: Record<typeof PLACEMENT_TYPES[number], string> = {
+  pinned: "Przypięte na górze",
+  featured_strip: "Wyróżniony pasek",
+  inline: "W treści listy",
+  calendar_featured: "Wyróżnione w kalendarzu",
+  detail_related: "Powiązane na stronie wydarzenia"
+};
+
+export const organizers = pgTable("organizers", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+  email: text("email"),
+  phone: text("phone"),
+  website: text("website"),
+  description: text("description"),
+  logoUrl: text("logo_url"),
+  isVerified: boolean("is_verified").default(false).notNull(),
+  tier: text("tier").default("free").notNull(),
+  userId: varchar("user_id"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
+export const sponsoredPlacements = pgTable("sponsored_placements", {
+  id: serial("id").primaryKey(),
+  eventId: integer("event_id").notNull(),
+  organizerId: integer("organizer_id"),
+  placementType: text("placement_type").notNull(),
+  position: integer("position").default(0).notNull(),
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date").notNull(),
+  priceAmount: integer("price_amount"),
+  priceCurrency: text("price_currency").default("PLN"),
+  stripePaymentId: text("stripe_payment_id"),
+  status: text("status").default("pending").notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
+export const eventMetrics = pgTable("event_metrics", {
+  id: serial("id").primaryKey(),
+  eventId: integer("event_id").notNull(),
+  date: date("date").notNull(),
+  pageViews: integer("page_views").default(0).notNull(),
+  registrationClicks: integer("registration_clicks").default(0).notNull(),
+  calendarAdds: integer("calendar_adds").default(0).notNull(),
+  shares: integer("shares").default(0).notNull(),
+  reportedErrors: integer("reported_errors").default(0).notNull(),
+});
+
+export const leads = pgTable("leads", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull(),
+  eventId: integer("event_id"),
+  organizerId: integer("organizer_id"),
+  type: text("type").notNull(),
+  specializations: text("specializations").array().default(sql`'{}'::text[]`),
+  city: text("city"),
+  utmSource: text("utm_source"),
+  utmMedium: text("utm_medium"),
+  utmCampaign: text("utm_campaign"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
+export const organizersRelations = relations(organizers, ({ many, one }) => ({
+  sponsoredPlacements: many(sponsoredPlacements),
+  leads: many(leads),
+  user: one(users, {
+    fields: [organizers.userId],
+    references: [users.id],
+  }),
+}));
+
+export const sponsoredPlacementsRelations = relations(sponsoredPlacements, ({ one }) => ({
+  event: one(events, {
+    fields: [sponsoredPlacements.eventId],
+    references: [events.id],
+  }),
+  organizer: one(organizers, {
+    fields: [sponsoredPlacements.organizerId],
+    references: [organizers.id],
+  }),
+}));
+
+export const eventMetricsRelations = relations(eventMetrics, ({ one }) => ({
+  event: one(events, {
+    fields: [eventMetrics.eventId],
+    references: [events.id],
+  }),
+}));
+
+export const leadsRelations = relations(leads, ({ one }) => ({
+  event: one(events, {
+    fields: [leads.eventId],
+    references: [events.id],
+  }),
+  organizer: one(organizers, {
+    fields: [leads.organizerId],
+    references: [organizers.id],
+  }),
+}));
+
 // Note: insertUserSchema and User types are in ./models/auth.ts
 
 export const insertEventSchema = createInsertSchema(events).omit({
@@ -150,8 +263,29 @@ export const insertScanLogSchema = createInsertSchema(scanLogs).omit({
   startedAt: true,
 });
 
+export const insertOrganizerSchema = createInsertSchema(organizers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertSponsoredPlacementSchema = createInsertSchema(sponsoredPlacements).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertEventMetricSchema = createInsertSchema(eventMetrics).omit({
+  id: true,
+});
+
+export const insertLeadSchema = createInsertSchema(leads).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type Specialization = typeof SPECIALIZATIONS[number];
 export type EventTag = typeof EVENT_TAGS[number];
+export type PlacementType = typeof PLACEMENT_TYPES[number];
 // Note: User and InsertUser types are exported from ./models/auth.ts
 export type InsertEvent = z.infer<typeof insertEventSchema>;
 export type Event = typeof events.$inferSelect;
@@ -159,3 +293,11 @@ export type InsertSource = z.infer<typeof insertSourceSchema>;
 export type Source = typeof sources.$inferSelect;
 export type InsertScanLog = z.infer<typeof insertScanLogSchema>;
 export type ScanLog = typeof scanLogs.$inferSelect;
+export type InsertOrganizer = z.infer<typeof insertOrganizerSchema>;
+export type Organizer = typeof organizers.$inferSelect;
+export type InsertSponsoredPlacement = z.infer<typeof insertSponsoredPlacementSchema>;
+export type SponsoredPlacement = typeof sponsoredPlacements.$inferSelect;
+export type InsertEventMetric = z.infer<typeof insertEventMetricSchema>;
+export type EventMetric = typeof eventMetrics.$inferSelect;
+export type InsertLead = z.infer<typeof insertLeadSchema>;
+export type Lead = typeof leads.$inferSelect;
