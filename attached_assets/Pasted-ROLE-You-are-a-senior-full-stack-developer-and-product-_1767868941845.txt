@@ -1,0 +1,104 @@
+ROLE:
+You are a senior full-stack developer and product architect.
+You are building a production-ready web application for doctors.
+
+PROJECT:
+Create a Polish medical events aggregator website.
+
+MAIN GOAL:
+Aggregate all medical conferences, congresses, webinars and educational events for doctors in Poland.
+The platform must update automatically using RSS feeds and AI-powered website monitoring.
+
+CORE FEATURES:
+1. Events types:
+   - On-site (conferences, congresses, workshops)
+   - Online (webinars, virtual conferences)
+
+2. Medical specializations taxonomy:
+   - Cardiology
+   - Family Medicine
+   - Internal Medicine
+   - Anesthesiology & Intensive Care
+   - Surgery
+   - Orthopedics
+   - Gynecology & Obstetrics
+   - Pediatrics
+   - Neurology
+   - Psychiatry
+   - Radiology
+   - Emergency Medicine
+   - Laboratory Diagnostics
+   - Interdisciplinary / Other
+
+3. Event data model:
+   - title
+   - description (short AI-generated summary)
+   - specialization (one or many)
+   - tags (webinar, points, free/paid, residents, workshop)
+   - start_date, end_date
+   - location (city / online)
+   - organizer
+   - educational_points (yes/no, number if available)
+   - price (free / paid / unknown)
+   - source_url
+   - last_checked_date
+   - status (pending / published)
+
+4. Automatic updates:
+   - RSS feed ingestion
+   - Website monitoring using OpenAI API:
+     - every 48–72 hours
+     - crawl predefined medical society and organizer websites
+     - detect new events
+     - extract structured data
+     - avoid duplicates
+     - mark events as "AI-added"
+
+5. Calendar integration:
+   - One-click export to:
+     - Google Calendar
+     - Apple Calendar
+     - Outlook
+   - Generate .ics files dynamically
+
+6. UI:
+   - Clean, modern medical design
+   - Filters:
+     - specialization
+     - online / on-site
+     - date range
+     - free / paid
+   - Views:
+     - list view (default)
+     - calendar view (monthly)
+
+7. Admin panel:
+   - approve / reject AI-added events
+   - manually add or edit events
+   - manage monitored sources
+   - view last AI scan results
+
+8. Notifications (MVP):
+   - email notifications for new events based on user preferences
+
+TECH STACK (suggest if better alternatives exist):
+- Frontend: Next.js + Tailwind
+- Backend: Node.js
+- Database: PostgreSQL
+- Auth: optional (start without login if simpler)
+- Cron jobs for scheduled scans
+- OpenAI API for extraction and classification
+
+DELIVERABLE:
+Generate:
+- project architecture
+- database schema
+- API routes
+- core UI pages
+- AI extraction logic (pseudo + real code)
+- calendar export logic
+- admin panel structure
+
+IMPORTANT:
+Focus on MVP first, but keep architecture scalable.
+Use clean, readable code and explain key decisions.
