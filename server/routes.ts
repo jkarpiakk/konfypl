@@ -10,6 +10,8 @@ import { users } from "@shared/models/auth";
 import { leads, eventMetrics, sponsoredPlacements } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, lte, sql } from "drizzle-orm";
+import { stripeService } from "./stripeService";
+import { getStripePublishableKey } from "./stripeClient";
 
 const updatePreferencesSchema = z.object({
   specializations: z.array(z.enum(SPECIALIZATIONS)).default([]),
@@ -498,6 +500,53 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error generating ICS:", error);
       res.status(500).json({ error: "Failed to generate calendar file" });
+    }
+  });
+
+  app.get("/api/stripe/publishable-key", async (req, res) => {
+    try {
+      const key = await getStripePublishableKey();
+      res.json({ publishableKey: key });
+    } catch (error) {
+      console.error("Error getting Stripe key:", error);
+      res.status(500).json({ error: "Stripe not configured" });
+    }
+  });
+
+  app.get("/api/stripe/products", async (req, res) => {
+    try {
+      const products = await stripeService.listProductsWithPrices();
+      res.json(products);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      res.status(500).json({ error: "Failed to fetch products" });
+    }
+  });
+
+  app.post("/api/stripe/checkout", async (req, res) => {
+    try {
+      const { priceId, email, eventId, packageName } = req.body;
+      if (!priceId || !email) {
+        return res.status(400).json({ error: "Missing priceId or email" });
+      }
+
+      const baseUrl = `https://${process.env.REPLIT_DOMAINS?.split(',')[0] || req.get('host')}`;
+      
+      const session = await stripeService.createCheckoutSession({
+        customerEmail: email,
+        priceId,
+        successUrl: `${baseUrl}/promuj?success=true`,
+        cancelUrl: `${baseUrl}/promuj?canceled=true`,
+        metadata: {
+          eventId: eventId?.toString() || '',
+          packageName: packageName || '',
+        },
+      });
+
+      res.json({ url: session.url });
+    } catch (error) {
+      console.error("Error creating checkout session:", error);
+      res.status(500).json({ error: "Failed to create checkout session" });
     }
   });
 

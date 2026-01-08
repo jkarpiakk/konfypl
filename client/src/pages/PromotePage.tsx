@@ -1,24 +1,36 @@
+import { useState, useEffect } from "react";
 import { Navigation } from "@/components/Navigation";
 import { SEOFooter } from "@/components/SEOFooter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { 
   Megaphone, 
   TrendingUp, 
-  Users, 
   BarChart3, 
   CheckCircle2,
   Star,
   ArrowRight,
-  Zap
+  Zap,
+  Loader2
 } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useSearch } from "wouter";
+import { useToast } from "@/hooks/use-toast";
 
 const packages = [
   {
     name: "Basic",
     price: "199",
+    priceId: "",
     period: "tydzien",
     description: "Idealne na poczatek",
     features: [
@@ -32,6 +44,7 @@ const packages = [
   {
     name: "Pro",
     price: "499",
+    priceId: "",
     period: "tydzien",
     description: "Najczesciej wybierane",
     features: [
@@ -47,6 +60,7 @@ const packages = [
   {
     name: "Max",
     price: "999",
+    priceId: "",
     period: "tydzien",
     description: "Maksymalna widocznosc",
     features: [
@@ -67,6 +81,84 @@ const stats = [
 ];
 
 export default function PromotePage() {
+  const { toast } = useToast();
+  const searchParams = useSearch();
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState<typeof packages[0] | null>(null);
+  const [email, setEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.includes("success=true")) {
+      toast({
+        title: "Platnosc zakonczona pomyslnie!",
+        description: "Skontaktujemy sie z Toba w ciagu 24 godzin, aby aktywowac promocje.",
+      });
+    } else if (searchParams.includes("canceled=true")) {
+      toast({
+        title: "Platnosc anulowana",
+        description: "Mozesz sprobowac ponownie w dowolnym momencie.",
+        variant: "destructive",
+      });
+    }
+  }, [searchParams, toast]);
+
+  const handleSelectPackage = (pkg: typeof packages[0]) => {
+    setSelectedPackage(pkg);
+    setIsCheckoutOpen(true);
+  };
+
+  const handleCheckout = async () => {
+    if (!email || !selectedPackage) return;
+    
+    setIsLoading(true);
+    try {
+      const checkoutResponse = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          priceId: selectedPackage.priceId,
+          email,
+          packageName: selectedPackage.name,
+        }),
+      });
+
+      if (checkoutResponse.ok) {
+        const { url } = await checkoutResponse.json();
+        if (url) {
+          window.location.href = url;
+          return;
+        }
+      }
+
+      await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          type: "promotion_purchase",
+          message: `Pakiet: ${selectedPackage.name} - ${selectedPackage.price} PLN`,
+          utmSource: "promote-page",
+        }),
+      });
+
+      toast({
+        title: "Dziekujemy za zainteresowanie!",
+        description: "Skontaktujemy sie z Toba w ciagu 24 godzin z informacjami o platnosci.",
+      });
+      setIsCheckoutOpen(false);
+      setEmail("");
+    } catch {
+      toast({
+        title: "Wystapil blad",
+        description: "Sprobuj ponownie lub napisz na hello@konfy.pl",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
       <Navigation />
@@ -158,14 +250,14 @@ export default function PromotePage() {
                   </ul>
                 </CardContent>
                 <CardFooter>
-                  <a href="mailto:hello@konfy.pl?subject=Pakiet%20promocji%20-%20${pkg.name}" className="w-full">
-                    <Button 
-                      className={`w-full rounded-full ${pkg.highlighted ? 'bg-[#2ED3B7] text-[#0F172A] hover:bg-[#25B9A1]' : ''}`}
-                      variant={pkg.highlighted ? "default" : "outline"}
-                    >
-                      Wybierz {pkg.name}
-                    </Button>
-                  </a>
+                  <Button 
+                    className={`w-full rounded-full ${pkg.highlighted ? 'bg-[#2ED3B7] text-[#0F172A] hover:bg-[#25B9A1]' : ''}`}
+                    variant={pkg.highlighted ? "default" : "outline"}
+                    onClick={() => handleSelectPackage(pkg)}
+                    data-testid={`button-select-${pkg.name.toLowerCase()}`}
+                  >
+                    Wybierz {pkg.name}
+                  </Button>
                 </CardFooter>
               </Card>
             ))}
@@ -235,6 +327,51 @@ export default function PromotePage() {
       </section>
 
       <SEOFooter />
+
+      <Dialog open={isCheckoutOpen} onOpenChange={setIsCheckoutOpen}>
+        <DialogContent className="bg-white">
+          <DialogHeader>
+            <DialogTitle className="font-heading">
+              {selectedPackage ? `Pakiet ${selectedPackage.name}` : 'Zamow pakiet'}
+            </DialogTitle>
+            <DialogDescription>
+              {selectedPackage && `${selectedPackage.price} PLN / ${selectedPackage.period}`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="checkout-email">Adres email</Label>
+              <Input
+                id="checkout-email"
+                type="email"
+                placeholder="twoj@email.pl"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                data-testid="input-checkout-email"
+              />
+            </div>
+            <p className="text-sm text-[#64748B]">
+              Po zgloszeniu skontaktujemy sie z Toba, aby omowic szczegoly promocji 
+              i przeslac link do platnosci.
+            </p>
+            <Button
+              className="w-full rounded-full bg-[#2ED3B7] text-[#0F172A] hover:bg-[#25B9A1]"
+              onClick={handleCheckout}
+              disabled={!email || isLoading}
+              data-testid="button-confirm-checkout"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Przetwarzanie...
+                </>
+              ) : (
+                'Zamow pakiet'
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
