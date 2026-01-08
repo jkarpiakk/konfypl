@@ -1,6 +1,6 @@
 interface KonfyLogoProps {
   className?: string;
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "xl";
   showIcon?: boolean;
 }
 
@@ -9,13 +9,14 @@ export function KonfyLogo({ className = "", size = "md", showIcon = false }: Kon
     sm: "text-lg",
     md: "text-xl",
     lg: "text-3xl",
+    xl: "text-5xl",
   };
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>
       {showIcon && (
         <div className="flex items-center justify-center">
-          <KonfyIcon size={size === "sm" ? 24 : size === "md" ? 32 : 40} />
+          <KonfyIcon size={size === "sm" ? 24 : size === "md" ? 32 : size === "lg" ? 40 : 56} />
         </div>
       )}
       <div className="flex items-baseline">

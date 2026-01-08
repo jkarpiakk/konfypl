@@ -1,6 +1,7 @@
 import { Search, Calendar, GraduationCap, Bell } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { KonfyLogo } from "@/components/KonfyLogo";
 
 interface HeroSectionProps {
   searchQuery: string;
@@ -21,6 +22,9 @@ export function HeroSection({ searchQuery, onSearchChange, onSearch, eventCount 
       
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-12 md:py-20 relative">
         <div className="max-w-3xl mx-auto text-center">
+          <div className="flex justify-center mb-6">
+            <KonfyLogo size="xl" />
+          </div>
           <h1 className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold mb-4 tracking-tight text-[#0F172A]" data-testid="text-hero-title">
             Wszystkie wydarzenia medyczne
             <span className="block text-[#2ED3B7] mt-1">w jednym miejscu</span>
