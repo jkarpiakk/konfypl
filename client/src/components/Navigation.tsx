@@ -1,5 +1,6 @@
 import { Link, useLocation } from "wouter";
-import { Calendar, Home, Settings, Search, Menu, X, Stethoscope, LogIn, User, LogOut } from "lucide-react";
+import { Calendar, Home, Settings, Search, Menu, X, LogIn, LogOut } from "lucide-react";
+import { KonfyLogo, KonfyIcon } from "@/components/KonfyLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
@@ -47,13 +48,13 @@ export function Navigation({ onSearch, searchQuery = "" }: NavigationProps) {
     <header className="sticky top-0 z-50 bg-white border-b border-[#E2E8F0] shadow-sm">
       <div className="max-w-7xl mx-auto px-4 md:px-6">
         <div className="flex items-center justify-between h-16 gap-4">
-          <Link href="/" className="flex items-center gap-2.5 shrink-0">
-            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-[#2ED3B7] text-[#0F172A]">
-              <Stethoscope className="w-5 h-5" />
+          <Link href="/" className="flex items-center gap-2 shrink-0" data-testid="link-logo">
+            <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-white shadow-sm border border-[#E2E8F0]">
+              <KonfyIcon size={24} />
             </div>
-            <span className="font-heading font-bold text-xl text-[#0F172A] hidden sm:block" data-testid="text-logo">
-              MedEvents.pl
-            </span>
+            <div className="hidden sm:block">
+              <KonfyLogo size="md" />
+            </div>
           </Link>
 
           <nav className="hidden md:flex items-center gap-1">

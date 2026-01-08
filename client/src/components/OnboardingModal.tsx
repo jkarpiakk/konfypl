@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Stethoscope, ChevronRight, Check } from "lucide-react";
+import { ChevronRight, Check } from "lucide-react";
+import { KonfyIcon } from "@/components/KonfyLogo";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -86,12 +87,12 @@ export function OnboardingModal({ onComplete }: OnboardingModalProps) {
     <Dialog open={open} onOpenChange={(o) => { if (!o) handleSkip(); }}>
       <DialogContent className="max-w-lg bg-white border-[#E2E8F0] rounded-2xl p-0 overflow-hidden" aria-describedby={undefined}>
         <div className="bg-gradient-to-br from-[#2ED3B7] to-[#25B9A1] p-6 text-center">
-          <div className="w-16 h-16 mx-auto mb-4 bg-white/20 rounded-full flex items-center justify-center">
-            <Stethoscope className="w-8 h-8 text-white" />
+          <div className="w-16 h-16 mx-auto mb-4 bg-white rounded-2xl flex items-center justify-center shadow-lg">
+            <KonfyIcon size={40} />
           </div>
           <DialogHeader className="space-y-2">
             <DialogTitle className="font-heading text-2xl text-white">
-              Witaj w MedEvents.pl
+              Witaj w Konfy.pl
             </DialogTitle>
             <DialogDescription className="text-white/90 text-base">
               Wybierz swoje specjalizacje, aby zobaczyc najbardziej interesujace Cie wydarzenia

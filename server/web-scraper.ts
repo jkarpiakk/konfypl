@@ -5,7 +5,7 @@ export async function fetchWebpageContent(url: string): Promise<string> {
   try {
     const response = await axios.get(url, {
       headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; MedEventsBot/1.0; +https://medevents.pl)",
+        "User-Agent": "Mozilla/5.0 (compatible; KonfyBot/1.0; +https://konfy.pl)",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "pl,en;q=0.5",
       },

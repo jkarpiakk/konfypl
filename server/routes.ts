@@ -310,7 +310,7 @@ export async function registerRoutes(
       const icsContent = [
         "BEGIN:VCALENDAR",
         "VERSION:2.0",
-        "PRODID:-//MedEvents.pl//Medical Events//PL",
+        "PRODID:-//Konfy.pl//Medical Events//PL",
         "CALSCALE:GREGORIAN",
         "METHOD:PUBLISH",
         "BEGIN:VEVENT",

@@ -15,7 +15,7 @@ export function generateICSContent(event: Event): string {
       .replace(/\n/g, "\\n");
   };
 
-  const uid = `event-${event.id}@medevents.pl`;
+  const uid = `event-${event.id}@konfy.pl`;
   const dtstamp = format(new Date(), "yyyyMMdd'T'HHmmss'Z'");
   const dtstart = formatDate(event.startDate);
   const dtend = event.endDate ? formatDate(event.endDate) : dtstart;
@@ -26,7 +26,7 @@ export function generateICSContent(event: Event): string {
   const icsContent = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//MedEvents.pl//Medical Events//PL",
+    "PRODID:-//Konfy.pl//Medical Events//PL",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
     "BEGIN:VEVENT",

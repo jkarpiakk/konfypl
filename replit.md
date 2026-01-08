@@ -1,8 +1,8 @@
-# MedEvents.pl - Polish Medical Events Aggregator
+# Konfy.pl - Polish Medical Events Aggregator
 
 ## Overview
 
-MedEvents.pl is a production-ready web application for doctors in Poland that aggregates medical conferences, congresses, webinars, and educational events. The platform automatically updates using RSS feeds and AI-powered website monitoring (OpenAI API) to extract event data from various sources.
+Konfy.pl is a production-ready web application for doctors in Poland that aggregates medical conferences, congresses, webinars, and educational events. The platform automatically updates using RSS feeds and AI-powered website monitoring (OpenAI API) to extract event data from various sources.
 
 Key capabilities:
 - Event aggregation from multiple sources (RSS feeds and web scraping)
@@ -100,6 +100,15 @@ The backend implements a RESTful API pattern with routes for events, sources, an
 - User preferences sync between localStorage and database when authenticated
 - Navigation shows login button for guests, avatar dropdown for logged-in users
 - Added `/api/user/preferences` endpoints (GET/PATCH) protected by authentication
+
+**January 2026 - Rebrand to Konfy.pl**
+- Rebranded from MedEvents.pl to Konfy.pl
+- Created KonfyLogo component with "konfy" (dark slate) + ".pl" (neo-mint) wordmark
+- Created KonfyIcon component with K lettermark for favicon and app icon
+- Updated Navigation, OnboardingModal, meta tags, and all references
+- New favicon.svg with K lettermark design
+- Color palette: Neo-Mint #2ED3B7, Dark Slate #0F172A, White #FFFFFF
+- Typography: Manrope font, semi-bold 600, letter-spacing -0.03em
 
 ## Project Structure
 
