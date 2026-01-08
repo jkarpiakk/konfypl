@@ -1,0 +1,103 @@
+ROLE:
+You are a senior UI/UX designer and frontend engineer specializing in medical and healthcare web platforms.
+
+OBJECTIVE:
+Refactor and unify the entire UI of the application using a premium design system called “Medical Neo-Mint”.
+The interface must feel modern, medical-professional, AI-powered, and optimized for doctors.
+
+DESIGN PHILOSOPHY:
+- Dark-mode first
+- Clean, calm, high-contrast
+- Scannable and fast
+- Zero visual noise
+- Premium medical + AI vibe
+
+COLOR SYSTEM (MANDATORY):
+Primary (Neo-Mint):        #2ED3B7
+Primary Hover:             #25B9A1
+Background (main):         #0F172A
+Surface / Cards:           #111827
+Surface Hover:             #1F2933
+Text Primary:              #E5E7EB
+Text Secondary:            #9CA3AF
+Text Muted:                #6B7280
+Accent / CTA:              #FACC15
+Accent Hover:              #EAB308
+Borders / Dividers:        #1F2937
+Focus / Active Ring:       #2ED3B7
+
+TYPOGRAPHY:
+Primary UI & Headings Font: Manrope
+Body Text Font: Inter
+Font rendering optimized for dark mode.
+
+FONT SCALE:
+H1 (Hero):        42px / 700 / Manrope
+H2 (Section):     32px / 600 / Manrope
+H3 (Card title):  24px / 600 / Manrope
+H4 (Subheading):  20px / 500 / Manrope
+
+Body (main):      16px / 400 / Inter
+Body small:       14px / 400 / Inter
+Caption / Meta:   12px / 400 / Inter
+
+Line height:
+- Headings: 1.2
+- Body: 1.6
+
+LAYOUT & SPACING:
+- Generous spacing, no clutter
+- Consistent vertical rhythm
+- Cards-based layout
+- Max content width optimized for readability
+
+COMPONENT RULES:
+Event Cards:
+- Background: #111827
+- Border: 1px solid #1F2937
+- Border-radius: 16px
+- Hover:
+  - subtle lift (translateY -2px)
+  - border color → #2ED3B7
+  - soft shadow only on hover
+
+Buttons:
+Primary CTA:
+- Background: #2ED3B7
+- Text: #0F172A
+- Border-radius: 999px
+- Hover: #25B9A1
+
+Secondary Button:
+- Transparent background
+- Border: 1px solid #2ED3B7
+- Text: #2ED3B7
+
+BADGES:
+Online:        bg #134E4A / text #5EEAD4
+On-site:       bg #1E293B / text #93C5FD
+Free:          bg #14532D / text #86EFAC
+Paid:          bg #7C2D12 / text #FDBA74
+Points:        bg #422006 / text #FACC15
+
+UX RULES:
+- Dark mode only (no light theme)
+- Avoid pure black (#000000)
+- Use color only to convey meaning
+- Prioritize scannability:
+  date → title → specialization → tags → CTA
+- Clear focus states for accessibility
+
+IMPLEMENTATION:
+- Refactor all existing components to match this design system
+- Create reusable UI components
+- Apply styles consistently across all pages
+- Ensure full responsiveness (mobile-first)
+- Keep code clean and scalable
+
+DELIVERABLE:
+Return:
+- Updated UI components
+- Unified design system implementation
+- Improved typography and spacing
+- Consistent, premium medical-tech interface
