@@ -5,6 +5,7 @@ import { HeroSection } from "@/components/HeroSection";
 import { EventList } from "@/components/EventList";
 import { FiltersPanel } from "@/components/FiltersPanel";
 import { OnboardingModal } from "@/components/OnboardingModal";
+import { SEOFooter } from "@/components/SEOFooter";
 import { getStoredPreferences } from "@/lib/preferences";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { List, CalendarDays } from "lucide-react";
@@ -175,6 +176,8 @@ export default function Home() {
           </div>
         </div>
       </main>
+      
+      <SEOFooter />
     </div>
   );
 }

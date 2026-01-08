@@ -9,6 +9,8 @@ import Home from "@/pages/Home";
 import EventDetail from "@/pages/EventDetail";
 import CalendarPage from "@/pages/CalendarPage";
 import Admin from "@/pages/Admin";
+import SpecializationHub from "@/pages/SpecializationHub";
+import PillarPage from "@/pages/PillarPage";
 
 function Router() {
   return (
@@ -17,6 +19,37 @@ function Router() {
       <Route path="/event/:id" component={EventDetail} />
       <Route path="/calendar" component={CalendarPage} />
       <Route path="/admin" component={Admin} />
+      
+      <Route path="/konferencje-medyczne">
+        {() => <PillarPage pageType="conferences" />}
+      </Route>
+      <Route path="/webinary-medyczne">
+        {() => <PillarPage pageType="webinars" />}
+      </Route>
+      <Route path="/szkolenia-medyczne">
+        {() => <PillarPage pageType="trainings" />}
+      </Route>
+      <Route path="/kalendarz-konferencji-medycznych">
+        {() => <PillarPage pageType="calendar" />}
+      </Route>
+      
+      <Route path="/kardiologia" component={SpecializationHub} />
+      <Route path="/medycyna-rodzinna" component={SpecializationHub} />
+      <Route path="/interna" component={SpecializationHub} />
+      <Route path="/anestezjologia" component={SpecializationHub} />
+      <Route path="/chirurgia" component={SpecializationHub} />
+      <Route path="/ortopedia" component={SpecializationHub} />
+      <Route path="/ginekologia" component={SpecializationHub} />
+      <Route path="/pediatria" component={SpecializationHub} />
+      <Route path="/neurologia" component={SpecializationHub} />
+      <Route path="/psychiatria" component={SpecializationHub} />
+      <Route path="/radiologia" component={SpecializationHub} />
+      <Route path="/medycyna-ratunkowa" component={SpecializationHub} />
+      <Route path="/diagnostyka-laboratoryjna" component={SpecializationHub} />
+      <Route path="/interdyscyplinarne" component={SpecializationHub} />
+      
+      <Route path="/:slug" component={SpecializationHub} />
+      
       <Route component={NotFound} />
     </Switch>
   );
