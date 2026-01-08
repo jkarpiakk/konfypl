@@ -82,7 +82,16 @@ The backend implements a RESTful API pattern with routes for events, sources, an
 - Admin panel with pending/published event workflow
 - Calendar export functionality (Google Calendar, Outlook, Apple ICS)
 - Background scheduler running every 6 hours
-- Responsive design with dark mode support
+
+**January 2026 - UI Redesign: Medical Neo-Mint Design System**
+- Implemented premium light-mode only design system
+- Color palette: Neo-Mint primary (#2ED3B7), clean backgrounds (#F8FAFC), white cards
+- Typography: Manrope for headings, Inter for body text
+- 16px border radius on cards with subtle shadows
+- Pill-shaped primary CTAs with mint color
+- Pastel badge system for status indicators
+- Removed dark mode toggle for streamlined experience
+- Updated all components (Navigation, HeroSection, EventCard, FiltersPanel, CalendarView, Admin)
 
 ## Project Structure
 

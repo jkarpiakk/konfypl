@@ -20,7 +20,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { SPECIALIZATION_LABELS, SPECIALIZATION_COLORS, TAG_LABELS } from "@/lib/constants";
+import { SPECIALIZATION_LABELS } from "@/lib/constants";
 import { downloadICSFile, getGoogleCalendarUrl, getOutlookCalendarUrl } from "@/lib/calendar";
 import type { Event, Specialization, EventTag } from "@/lib/types";
 import { Link } from "wouter";
@@ -29,6 +29,15 @@ interface EventCardProps {
   event: Event;
   compact?: boolean;
 }
+
+const TAG_LABELS: Record<string, string> = {
+  congress: "Kongres",
+  conference: "Konferencja",
+  webinar: "Webinar",
+  workshop: "Warsztaty",
+  course: "Kurs",
+  symposium: "Sympozjum",
+};
 
 export function EventCard({ event, compact = false }: EventCardProps) {
   const startDate = new Date(event.startDate);
@@ -46,30 +55,33 @@ export function EventCard({ event, compact = false }: EventCardProps) {
   const getPriceLabel = () => {
     switch (event.price) {
       case "free":
-        return { label: "Bezpłatne", variant: "default" as const };
+        return { label: "Bezpłatne", className: "bg-emerald-50 text-emerald-700 border-emerald-200" };
       case "paid":
-        return { label: "Płatne", variant: "secondary" as const };
+        return { label: "Płatne", className: "bg-amber-50 text-amber-700 border-amber-200" };
       default:
-        return { label: "Cena nieznana", variant: "outline" as const };
+        return { label: "Cena nieznana", className: "bg-slate-100 text-slate-600 border-slate-200" };
     }
   };
 
   const priceInfo = getPriceLabel();
 
   return (
-    <Card className="hover-elevate transition-all duration-150" data-testid={`card-event-${event.id}`}>
+    <Card 
+      className="bg-white border border-[#E2E8F0] rounded-2xl shadow-card transition-all duration-200 hover:shadow-card-hover hover:border-[#2ED3B7] hover:-translate-y-0.5" 
+      data-testid={`card-event-${event.id}`}
+    >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-2">
           <Link href={`/event/${event.id}`} className="flex-1 min-w-0">
             <h3 
-              className="font-semibold text-lg leading-tight line-clamp-2 hover:text-primary transition-colors cursor-pointer"
+              className="font-heading font-semibold text-lg leading-tight line-clamp-2 text-[#0F172A] hover:text-[#2ED3B7] transition-colors cursor-pointer"
               data-testid={`text-event-title-${event.id}`}
             >
               {event.title}
             </h3>
           </Link>
           {event.isAiAdded && (
-            <Badge variant="outline" className="shrink-0 gap-1 text-xs">
+            <Badge variant="outline" className="shrink-0 gap-1 text-xs border-[#2ED3B7] text-[#2ED3B7] bg-[#E6FAF7]">
               <Sparkles className="w-3 h-3" />
               AI
             </Badge>
@@ -77,12 +89,20 @@ export function EventCard({ event, compact = false }: EventCardProps) {
         </div>
 
         <div className="flex flex-wrap items-center gap-2 mt-2">
-          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            <Calendar className="w-4 h-4" />
+          <div className="flex items-center gap-1.5 text-sm text-[#475569]">
+            <Calendar className="w-4 h-4 text-[#2ED3B7]" />
             <span data-testid={`text-event-date-${event.id}`}>{formatEventDate()}</span>
           </div>
           
-          <Badge variant={event.isOnline ? "default" : "secondary"} className="text-xs">
+          <Badge 
+            variant="secondary" 
+            className={cn(
+              "text-xs border",
+              event.isOnline 
+                ? "bg-teal-50 text-teal-700 border-teal-200" 
+                : "bg-slate-100 text-slate-600 border-slate-200"
+            )}
+          >
             {event.isOnline ? (
               <>
                 <Globe className="w-3 h-3 mr-1" />
@@ -105,23 +125,20 @@ export function EventCard({ event, compact = false }: EventCardProps) {
               <Badge
                 key={spec}
                 variant="secondary"
-                className={cn(
-                  "text-xs",
-                  SPECIALIZATION_COLORS[spec as Specialization]
-                )}
+                className="text-xs bg-[#E6FAF7] text-[#0F766E] border border-[#99F6E4]"
               >
                 {SPECIALIZATION_LABELS[spec as Specialization] || spec}
               </Badge>
             ))}
             {event.specializations.length > 3 && (
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs text-[#64748B] border-[#E2E8F0]">
                 +{event.specializations.length - 3}
               </Badge>
             )}
           </div>
 
           {event.description && (
-            <p className="text-sm text-muted-foreground line-clamp-2" data-testid={`text-event-desc-${event.id}`}>
+            <p className="text-sm text-[#64748B] line-clamp-2 leading-relaxed" data-testid={`text-event-desc-${event.id}`}>
               {event.description}
             </p>
           )}
@@ -130,7 +147,7 @@ export function EventCard({ event, compact = false }: EventCardProps) {
 
       <CardFooter className="pt-0 flex flex-wrap items-center gap-2">
         {event.hasEducationalPoints && (
-          <Badge variant="secondary" className="gap-1 text-xs">
+          <Badge variant="secondary" className="gap-1 text-xs bg-yellow-50 text-yellow-700 border border-yellow-200">
             <GraduationCap className="w-3 h-3" />
             {event.educationalPoints 
               ? `${event.educationalPoints} pkt` 
@@ -139,12 +156,12 @@ export function EventCard({ event, compact = false }: EventCardProps) {
           </Badge>
         )}
         
-        <Badge variant={priceInfo.variant} size="sm">
+        <Badge variant="secondary" className={cn("text-xs border", priceInfo.className)}>
           {priceInfo.label}
         </Badge>
 
         {event.tags?.slice(0, 2).map((tag) => (
-          <Badge key={tag} variant="outline" className="text-xs">
+          <Badge key={tag} variant="outline" className="text-xs text-[#64748B] border-[#E2E8F0]">
             {TAG_LABELS[tag as EventTag] || tag}
           </Badge>
         ))}
@@ -153,22 +170,36 @@ export function EventCard({ event, compact = false }: EventCardProps) {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-1" data-testid={`button-add-calendar-${event.id}`}>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="gap-1 rounded-full border-[#E2E8F0] text-[#475569] hover:border-[#2ED3B7] hover:text-[#2ED3B7]" 
+              data-testid={`button-add-calendar-${event.id}`}
+            >
               <Calendar className="w-4 h-4" />
               Kalendarz
               <ChevronDown className="w-3 h-3" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => window.open(getGoogleCalendarUrl(event), "_blank")}>
+          <DropdownMenuContent align="end" className="bg-white border-[#E2E8F0] shadow-lg rounded-lg">
+            <DropdownMenuItem 
+              onClick={() => window.open(getGoogleCalendarUrl(event), "_blank")}
+              className="cursor-pointer hover:bg-[#F1F5F9]"
+            >
               <SiGooglecalendar className="w-4 h-4 mr-2" />
               Google Calendar
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => window.open(getOutlookCalendarUrl(event), "_blank")}>
+            <DropdownMenuItem 
+              onClick={() => window.open(getOutlookCalendarUrl(event), "_blank")}
+              className="cursor-pointer hover:bg-[#F1F5F9]"
+            >
               <Calendar className="w-4 h-4 mr-2" />
               Outlook
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => downloadICSFile(event)}>
+            <DropdownMenuItem 
+              onClick={() => downloadICSFile(event)}
+              className="cursor-pointer hover:bg-[#F1F5F9]"
+            >
               <SiApple className="w-4 h-4 mr-2" />
               Apple Calendar (.ics)
             </DropdownMenuItem>
@@ -178,7 +209,8 @@ export function EventCard({ event, compact = false }: EventCardProps) {
         {event.sourceUrl && (
           <Button 
             variant="ghost" 
-            size="sm"
+            size="icon"
+            className="text-[#64748B] hover:text-[#2ED3B7] hover:bg-[#E6FAF7]"
             onClick={() => window.open(event.sourceUrl!, "_blank")}
             data-testid={`link-event-source-${event.id}`}
           >

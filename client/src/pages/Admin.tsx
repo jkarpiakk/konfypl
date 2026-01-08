@@ -397,17 +397,17 @@ export default function Admin() {
   });
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#F8FAFC]">
       <Navigation />
 
       <main className="max-w-7xl mx-auto px-4 md:px-6 py-8">
         <div className="flex items-center justify-between mb-6 gap-4">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
-              <Settings className="w-7 h-7" />
+            <h1 className="font-heading text-2xl md:text-3xl font-bold flex items-center gap-2 text-[#0F172A]">
+              <Settings className="w-7 h-7 text-[#2ED3B7]" />
               Panel administracyjny
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-[#64748B]">
               Zarządzaj wydarzeniami i źródłami danych
             </p>
           </div>

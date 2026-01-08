@@ -1,167 +1,165 @@
-# Design Guidelines: Polish Medical Events Aggregator
+# Design Guidelines: Medical Neo-Mint Design System
 
-## Design Approach
-**Selected System**: Hybrid approach combining Material Design's information density with healthcare platform best practices (inspired by professional medical portals like Medscape, UpToDate)
+## Design Philosophy
+- **Light mode only** - Optimized for long reading sessions
+- **Clean, calm, medical-professional** aesthetic
+- **High readability** with clear visual hierarchy
+- **Zero visual noise** - Scannable and fast
+- **Modern but conservative** - Appropriate for medical professionals
 
-**Rationale**: Medical professionals require efficient, scannable interfaces with clear information hierarchy. The design prioritizes data density, quick filtering, and professional credibility over visual flair.
+## Color System
 
-## Core Design Principles
-1. **Professional Medical Aesthetic**: Clean, trustworthy, and credible
-2. **Information Efficiency**: Maximum relevant data with minimal scrolling
-3. **Scan-ability**: Doctors need to quickly find relevant events
-4. **Accessibility**: WCAG 2.1 AA compliance throughout
+### Primary Colors
+| Color | Hex | Usage |
+|-------|-----|-------|
+| Neo-Mint | #2ED3B7 | Primary actions, links, focus states |
+| Neo-Mint Hover | #25B9A1 | Hover states for primary elements |
+| Accent Yellow | #FACC15 | CTAs, highlights, important notices |
+| Accent Hover | #EAB308 | Hover states for accent elements |
 
-## Typography System
+### Backgrounds
+| Color | Hex | Usage |
+|-------|-----|-------|
+| Background | #F8FAFC | Main page background |
+| Surface | #FFFFFF | Cards, modals, elevated surfaces |
+| Surface Subtle | #F1F5F9 | Secondary backgrounds, sidebar |
 
-**Font Families**:
-- Primary: Inter (via Google Fonts) - clean, modern, highly legible
-- Headings: Inter Semi-Bold/Bold
-- Body: Inter Regular
-- Data/Metadata: Inter Medium (for dates, locations, tags)
+### Text Colors
+| Color | Hex | Usage |
+|-------|-----|-------|
+| Text Primary | #0F172A | Headings, important text |
+| Text Secondary | #475569 | Body text, descriptions |
+| Text Muted | #64748B | Captions, metadata, placeholders |
 
-**Hierarchy**:
-- Page Titles: text-3xl md:text-4xl font-bold
-- Section Headers: text-2xl font-semibold
-- Event Titles: text-xl font-semibold
-- Subsections: text-lg font-medium
-- Body Text: text-base
-- Metadata/Labels: text-sm font-medium
-- Helper Text: text-xs
+### Borders & Dividers
+| Color | Hex | Usage |
+|-------|-----|-------|
+| Border | #E2E8F0 | Card borders, dividers, inputs |
+| Focus Ring | #2ED3B7 | Focus states, active elements |
 
-## Layout System
+## Typography
 
-**Spacing Primitives**: Use Tailwind units of 2, 4, 6, 8, 12, 16
-- Tight spacing: p-2, gap-2 (tags, badges)
-- Standard spacing: p-4, gap-4 (cards, forms)
-- Section spacing: p-6, py-8 (content blocks)
-- Page margins: p-8, py-12, py-16 (major sections)
+### Font Families
+- **Headings**: Manrope (weight 500-700)
+- **Body**: Inter (weight 400-600)
+- **Code**: JetBrains Mono
 
-**Grid System**:
-- Container: max-w-7xl mx-auto px-4 md:px-6
-- Event listings: Two-column on desktop (filter sidebar + content), single column mobile
-- Filter sidebar: w-64 to w-80 on desktop, collapsible drawer on mobile
-- Calendar view: Full-width grid
+### Font Scale
+| Element | Size | Weight | Line Height |
+|---------|------|--------|-------------|
+| H1 | 40px (2.5rem) | 700 | 1.25 |
+| H2 | 32px (2rem) | 600 | 1.25 |
+| H3 | 24px (1.5rem) | 600 | 1.25 |
+| H4 | 20px (1.25rem) | 500 | 1.25 |
+| Body | 16px (1rem) | 400 | 1.6 |
+| Small | 14px (0.875rem) | 400 | 1.5 |
+| Caption | 12px (0.75rem) | 400 | 1.4 |
 
-## Component Library
+## Component Specifications
+
+### Event Cards
+- Background: White (#FFFFFF)
+- Border: 1px solid #E2E8F0
+- Border radius: 16px
+- Padding: 20px-24px
+- Shadow: Subtle card shadow
+- Hover: Mint border (#2ED3B7), slight lift, enhanced shadow
+
+### Buttons
+
+#### Primary (Pill CTA)
+- Background: #2ED3B7
+- Text: #0F172A
+- Border radius: 9999px (pill)
+- Padding: 10px 24px
+- Hover: #25B9A1
+- Focus: 2px mint ring with offset
+
+#### Secondary (Outline)
+- Background: Transparent
+- Text: #2ED3B7
+- Border: 1px solid #2ED3B7
+- Border radius: 9999px
+- Hover: 10% mint background
+
+#### Ghost
+- Background: Transparent
+- Text: #475569
+- Hover: #F1F5F9 background
+
+### Badges
+
+| Type | Background | Text | Border |
+|------|------------|------|--------|
+| Online | #CCFBF1 | #0F766E | #99F6E4 |
+| On-site | #F1F5F9 | #475569 | #E2E8F0 |
+| Free | #DCFCE7 | #166534 | #BBF7D0 |
+| Paid | #FEF3C7 | #92400E | #FDE68A |
+| Points | #FEF9C3 | #854D0E | #FEF08A |
+| Specialization | #E6FAF7 | #0F766E | #99F6E4 |
+
+### Inputs
+- Background: White
+- Border: 1px solid #E2E8F0
+- Border radius: 8px
+- Padding: 10px 14px
+- Focus: Mint ring (#2ED3B7)
+- Placeholder: #64748B
 
 ### Navigation
-- **Top Navigation Bar**: Sticky header with logo, main navigation links (Events, Calendar, About), search bar, admin login
-- Height: h-16
-- Include: Logo left, centered search with icon, right-aligned admin access
-- Search bar: Prominent placement, w-full max-w-md with icon prefix
+- Background: White with subtle border-bottom
+- Height: 64px
+- Logo: Mint accent
+- Links: #475569, hover #2ED3B7
+- Active: Mint background pill
 
-### Event Cards (Primary Component)
-**Structure**:
-- Border card with subtle elevation
-- Padding: p-4 to p-6
-- Rounded: rounded-lg
-- Hover state: slight elevation increase
+## Layout & Spacing
 
-**Content Layout** (top to bottom):
-1. Header row: Event title + bookmark icon (right)
-2. Metadata row: Date range, location/online badge, specialization tags
-3. Description: 2-3 lines truncated with "Read more"
-4. Footer row: Educational points badge, price badge, "Add to Calendar" button, "View Details" link
-5. Source indicator: Small text showing organizer + AI-detected badge if applicable
+### Spacing Scale
+- xs: 4px
+- sm: 8px
+- md: 16px
+- lg: 24px
+- xl: 32px
+- 2xl: 48px
+- 3xl: 64px
 
-**Badges/Tags**:
-- Rounded-full with px-3 py-1
-- Specialization tags: Multiple allowed, wrap to new line
-- Event type badges: "Online", "Warsaw", "Kraków", etc.
-- Points badge: "PKP: 15 pts" format
-- Price: "Free", "Paid", "Unknown"
+### Container
+- Max width: 1280px
+- Padding: 16px (mobile), 24px (tablet+)
 
-### Filters Panel
-**Structure**:
-- Sticky sidebar (desktop) or slide-out drawer (mobile)
-- Sections with clear dividers
+### Grid
+- Cards: 1 column mobile, 2 columns tablet, 3 columns desktop
+- Gap: 24px
 
-**Filter Groups**:
-1. **Date Range**: Date picker with presets (Today, This Week, This Month, Next 3 Months)
-2. **Specialization**: Checkbox list with all 14 specializations + "All" option
-3. **Event Type**: Radio buttons (All, On-site, Online)
-4. **Price**: Checkboxes (Free, Paid, Unknown)
-5. **Educational Points**: Toggle switch
-6. **Tags**: Multi-select checkboxes (Webinar, Workshop, Residents, Congress)
+## UX Guidelines
 
-**Filter Header**: "Filters" title with "Clear All" link, showing active filter count badge
+### Visual Hierarchy
+1. Date and time (most scannable)
+2. Event title
+3. Specialization badges
+4. Location/format
+5. Price and points
+6. CTA buttons
 
-### Calendar View
-- Month grid layout with day cells
-- Event indicators: colored dots or count badges per day
-- Click day to see event list in sidebar/modal
-- Navigation: Previous/Next month arrows, month/year dropdown
-- Today highlight with distinct styling
+### Interactions
+- Hover: Subtle elevation and mint border
+- Focus: Clear mint ring
+- Active: Slight scale down (0.98)
+- Transitions: 150-200ms ease-out
 
-### Event Detail Page
-**Layout**:
-- Two-column on desktop: Main content (2/3) + sidebar (1/3)
-- Single column stack on mobile
+### Empty States
+- Icon: Muted color
+- Message: Clear and helpful
+- Action: Primary CTA to resolve
 
-**Main Content**:
-1. Event title (large)
-2. Full description
-3. Agenda/Program section (if available)
-4. Organizer information
+### Loading States
+- Skeleton: Pulse animation
+- Match layout of loaded content
 
-**Sidebar**:
-1. Key Details card: Date, time, location, format
-2. Registration button (primary CTA)
-3. Add to Calendar dropdown (Google/Apple/Outlook options)
-4. Educational points info
-5. Price information
-6. Organizer card with logo/link
-7. Share options
-
-### Admin Panel
-**Structure**:
-- Dashboard layout with sidebar navigation
-- Sections: Pending Events, All Events, Sources, Settings
-
-**Pending Events Table**:
-- Columns: Title, Detected Date, Source, Specialization, Actions
-- Actions: Approve (green), Edit, Reject (red)
-- Batch actions toolbar when selecting multiple
-- AI confidence score indicator per event
-
-**Source Management**:
-- Table of monitored websites/RSS feeds
-- Columns: Source name, Type (RSS/Website), Last checked, Status, Actions
-- Add new source form with URL, type, check frequency
-
-### Forms
-- Input fields: Consistent h-10 to h-12, rounded-md, border styling
-- Labels: text-sm font-medium, mb-2
-- Error states: Red border, error text below in text-sm
-- Select dropdowns: Native styling enhanced with icons
-- Date pickers: Calendar popover from input field
-
-## Images
-
-**Hero Section** (Homepage):
-Professional medical conference stock photo showing doctors at an educational event - modern conference room setting, professional attire, laptops/presentations visible. The image should convey professionalism and continuing education.
-- Height: 60vh on desktop, 40vh mobile
-- Overlay: Subtle gradient overlay for text readability
-- Content over image: Centered headline "Wszystkie wydarzenia medyczne w Polsce" (All medical events in Poland), subtitle, prominent search bar with blurred background
-
-**No other images needed** - focus on data clarity and functional components.
-
-## Animations
-**Minimal approach**:
-- Card hover: Subtle elevation transition (150ms)
-- Filter panel: Smooth slide-in/out (200ms)
-- Loading states: Simple spinner, no elaborate animations
-- Page transitions: None - instant navigation
-
-## Key UX Patterns
-1. **Event Listing Default View**: Show 20-30 events per page with infinite scroll or pagination
-2. **Empty States**: Helpful messaging when no events match filters with "Clear filters" action
-3. **Loading States**: Skeleton cards matching event card layout
-4. **Mobile First**: Collapsible filters, bottom sheet for calendar export options, thumb-friendly tap targets (min 44px)
-5. **Breadcrumbs**: On detail pages showing Home > Events > [Event Title]
-6. **Toast Notifications**: For actions (event approved, added to calendar) - top-right position
-
-## Responsive Breakpoints
-- Mobile: < 768px (single column, stacked layout)
-- Tablet: 768px - 1024px (two-column with collapsible sidebar)
-- Desktop: > 1024px (full sidebar + content layout)
+## Accessibility
+- WCAG 2.1 AA compliant
+- Minimum contrast ratio: 4.5:1
+- Focus indicators visible
+- Touch targets: 44px minimum
+- Screen reader friendly labels

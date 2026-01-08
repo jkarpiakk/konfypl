@@ -14,25 +14,25 @@ interface EventListProps {
 
 function EventCardSkeleton() {
   return (
-    <Card>
-      <CardContent className="p-4 space-y-3">
-        <Skeleton className="h-6 w-3/4" />
+    <Card className="bg-white border border-[#E2E8F0] rounded-2xl">
+      <CardContent className="p-5 space-y-3">
+        <Skeleton className="h-6 w-3/4 bg-[#F1F5F9]" />
         <div className="flex gap-2">
-          <Skeleton className="h-5 w-24" />
-          <Skeleton className="h-5 w-16" />
+          <Skeleton className="h-5 w-24 bg-[#F1F5F9]" />
+          <Skeleton className="h-5 w-16 bg-[#F1F5F9]" />
         </div>
         <div className="flex gap-1.5">
-          <Skeleton className="h-5 w-20" />
-          <Skeleton className="h-5 w-24" />
-          <Skeleton className="h-5 w-16" />
+          <Skeleton className="h-5 w-20 bg-[#F1F5F9]" />
+          <Skeleton className="h-5 w-24 bg-[#F1F5F9]" />
+          <Skeleton className="h-5 w-16 bg-[#F1F5F9]" />
         </div>
-        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full bg-[#F1F5F9]" />
         <div className="flex justify-between">
           <div className="flex gap-2">
-            <Skeleton className="h-6 w-16" />
-            <Skeleton className="h-6 w-20" />
+            <Skeleton className="h-6 w-16 bg-[#F1F5F9]" />
+            <Skeleton className="h-6 w-20 bg-[#F1F5F9]" />
           </div>
-          <Skeleton className="h-8 w-24" />
+          <Skeleton className="h-8 w-24 bg-[#F1F5F9]" />
         </div>
       </CardContent>
     </Card>
@@ -52,22 +52,22 @@ export function EventList({ events, isLoading, onClearFilters, showClearFilters 
 
   if (events.length === 0) {
     return (
-      <Card className="border-dashed">
+      <Card className="border-dashed border-[#E2E8F0] bg-white rounded-2xl">
         <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-          <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-4">
+          <div className="w-14 h-14 rounded-full bg-[#E6FAF7] flex items-center justify-center mb-4">
             {showClearFilters ? (
-              <Search className="w-6 h-6 text-muted-foreground" />
+              <Search className="w-6 h-6 text-[#2ED3B7]" />
             ) : (
-              <CalendarX className="w-6 h-6 text-muted-foreground" />
+              <CalendarX className="w-6 h-6 text-[#2ED3B7]" />
             )}
           </div>
-          <h3 className="font-semibold text-lg mb-2" data-testid="text-empty-state">
+          <h3 className="font-heading font-semibold text-lg mb-2 text-[#0F172A]" data-testid="text-empty-state">
             {showClearFilters 
               ? "Brak wyników dla wybranych filtrów" 
               : "Brak nadchodzących wydarzeń"
             }
           </h3>
-          <p className="text-muted-foreground text-sm max-w-sm">
+          <p className="text-[#64748B] text-sm max-w-sm leading-relaxed">
             {showClearFilters
               ? "Spróbuj zmienić lub wyczyścić filtry, aby zobaczyć więcej wydarzeń."
               : "Nowe wydarzenia pojawią się tutaj wkrótce. Sprawdź ponownie później."
@@ -76,7 +76,7 @@ export function EventList({ events, isLoading, onClearFilters, showClearFilters 
           {showClearFilters && onClearFilters && (
             <Button 
               variant="outline" 
-              className="mt-4"
+              className="mt-4 rounded-full border-[#2ED3B7] text-[#2ED3B7] hover:bg-[#E6FAF7]"
               onClick={onClearFilters}
               data-testid="button-clear-filters-empty"
             >

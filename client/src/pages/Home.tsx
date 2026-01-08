@@ -97,7 +97,7 @@ export default function Home() {
     (filters.dateTo ? 1 : 0);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#F8FAFC]">
       <Navigation onSearch={handleNavSearch} searchQuery={filters.search} />
       
       <HeroSection
@@ -110,19 +110,27 @@ export default function Home() {
       <main className="max-w-7xl mx-auto px-4 md:px-6 py-8">
         <div className="flex items-center justify-between mb-6 gap-4">
           <div>
-            <h2 className="text-2xl font-semibold">Nadchodzące wydarzenia</h2>
-            <p className="text-muted-foreground text-sm">
+            <h2 className="font-heading text-2xl font-semibold text-[#0F172A]">Nadchodzące wydarzenia</h2>
+            <p className="text-[#64748B] text-sm">
               {filteredEvents.length} {filteredEvents.length === 1 ? "wydarzenie" : "wydarzeń"}
             </p>
           </div>
           
           <Tabs value={view} onValueChange={(v) => setView(v as "list" | "calendar")}>
-            <TabsList>
-              <TabsTrigger value="list" className="gap-2" data-testid="tab-list-view">
+            <TabsList className="bg-[#F1F5F9] border border-[#E2E8F0]">
+              <TabsTrigger 
+                value="list" 
+                className="gap-2 data-[state=active]:bg-white data-[state=active]:text-[#0F172A] text-[#64748B]" 
+                data-testid="tab-list-view"
+              >
                 <List className="w-4 h-4" />
                 <span className="hidden sm:inline">Lista</span>
               </TabsTrigger>
-              <TabsTrigger value="calendar" className="gap-2" data-testid="tab-calendar-view">
+              <TabsTrigger 
+                value="calendar" 
+                className="gap-2 data-[state=active]:bg-white data-[state=active]:text-[#0F172A] text-[#64748B]" 
+                data-testid="tab-calendar-view"
+              >
                 <CalendarDays className="w-4 h-4" />
                 <span className="hidden sm:inline">Kalendarz</span>
               </TabsTrigger>

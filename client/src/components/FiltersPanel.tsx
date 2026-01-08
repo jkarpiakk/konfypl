@@ -75,10 +75,10 @@ function FilterContent({ filters, onFiltersChange }: FiltersPanelProps) {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-muted-foreground" />
-          <h2 className="font-semibold">Filtry</h2>
+          <Filter className="w-4 h-4 text-[#64748B]" />
+          <h2 className="font-heading font-semibold text-[#0F172A]">Filtry</h2>
           {activeFiltersCount > 0 && (
-            <Badge variant="secondary" size="sm">
+            <Badge variant="secondary" className="bg-[#E6FAF7] text-[#0F766E] border border-[#99F6E4]">
               {activeFiltersCount}
             </Badge>
           )}
@@ -88,7 +88,7 @@ function FilterContent({ filters, onFiltersChange }: FiltersPanelProps) {
             variant="ghost"
             size="sm"
             onClick={clearAllFilters}
-            className="text-muted-foreground"
+            className="text-[#64748B] hover:text-[#2ED3B7]"
             data-testid="button-clear-filters"
           >
             Wyczyść
@@ -96,21 +96,26 @@ function FilterContent({ filters, onFiltersChange }: FiltersPanelProps) {
         )}
       </div>
 
-      <Separator />
+      <Separator className="bg-[#E2E8F0]" />
 
       <div className="space-y-2">
-        <Label className="text-sm font-medium">Zakres dat</Label>
+        <Label className="text-sm font-medium text-[#0F172A]">Zakres dat</Label>
         <div className="grid grid-cols-2 gap-2">
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="justify-start gap-2 text-left font-normal" data-testid="button-date-from">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="justify-start gap-2 text-left font-normal border-[#E2E8F0] text-[#475569] hover:border-[#2ED3B7]" 
+                data-testid="button-date-from"
+              >
                 <CalendarIcon className="w-4 h-4" />
                 {filters.dateFrom
                   ? format(filters.dateFrom, "d MMM", { locale: pl })
                   : "Od"}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
+            <PopoverContent className="w-auto p-0 bg-white border-[#E2E8F0]" align="start">
               <Calendar
                 mode="single"
                 selected={filters.dateFrom || undefined}
@@ -121,14 +126,19 @@ function FilterContent({ filters, onFiltersChange }: FiltersPanelProps) {
           </Popover>
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="justify-start gap-2 text-left font-normal" data-testid="button-date-to">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="justify-start gap-2 text-left font-normal border-[#E2E8F0] text-[#475569] hover:border-[#2ED3B7]" 
+                data-testid="button-date-to"
+              >
                 <CalendarIcon className="w-4 h-4" />
                 {filters.dateTo
                   ? format(filters.dateTo, "d MMM", { locale: pl })
                   : "Do"}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
+            <PopoverContent className="w-auto p-0 bg-white border-[#E2E8F0]" align="start">
               <Calendar
                 mode="single"
                 selected={filters.dateTo || undefined}
@@ -142,7 +152,7 @@ function FilterContent({ filters, onFiltersChange }: FiltersPanelProps) {
           <Button
             variant="ghost"
             size="sm"
-            className="text-xs"
+            className="text-xs text-[#475569] hover:text-[#2ED3B7] hover:bg-[#E6FAF7]"
             onClick={() => {
               const today = new Date();
               const nextWeek = new Date(today);
@@ -155,7 +165,7 @@ function FilterContent({ filters, onFiltersChange }: FiltersPanelProps) {
           <Button
             variant="ghost"
             size="sm"
-            className="text-xs"
+            className="text-xs text-[#475569] hover:text-[#2ED3B7] hover:bg-[#E6FAF7]"
             onClick={() => {
               const today = new Date();
               const nextMonth = new Date(today);
@@ -168,7 +178,7 @@ function FilterContent({ filters, onFiltersChange }: FiltersPanelProps) {
           <Button
             variant="ghost"
             size="sm"
-            className="text-xs"
+            className="text-xs text-[#475569] hover:text-[#2ED3B7] hover:bg-[#E6FAF7]"
             onClick={() => {
               const today = new Date();
               const next3Months = new Date(today);
@@ -181,11 +191,11 @@ function FilterContent({ filters, onFiltersChange }: FiltersPanelProps) {
         </div>
       </div>
 
-      <Separator />
+      <Separator className="bg-[#E2E8F0]" />
 
       <Collapsible open={specOpen} onOpenChange={setSpecOpen}>
         <CollapsibleTrigger asChild>
-          <Button variant="ghost" className="w-full justify-between p-0 h-auto font-medium">
+          <Button variant="ghost" className="w-full justify-between p-0 h-auto font-medium text-[#0F172A] hover:text-[#2ED3B7]">
             <span>Specjalizacja</span>
             {specOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </Button>
@@ -199,9 +209,10 @@ function FilterContent({ filters, onFiltersChange }: FiltersPanelProps) {
                     id={`spec-${spec}`}
                     checked={filters.specializations.includes(spec)}
                     onCheckedChange={(checked) => handleSpecChange(spec, !!checked)}
+                    className="border-[#E2E8F0] data-[state=checked]:bg-[#2ED3B7] data-[state=checked]:border-[#2ED3B7]"
                     data-testid={`checkbox-spec-${spec}`}
                   />
-                  <Label htmlFor={`spec-${spec}`} className="text-sm cursor-pointer flex-1">
+                  <Label htmlFor={`spec-${spec}`} className="text-sm cursor-pointer flex-1 text-[#475569]">
                     {SPECIALIZATION_LABELS[spec]}
                   </Label>
                 </div>
@@ -211,34 +222,34 @@ function FilterContent({ filters, onFiltersChange }: FiltersPanelProps) {
         </CollapsibleContent>
       </Collapsible>
 
-      <Separator />
+      <Separator className="bg-[#E2E8F0]" />
 
       <div className="space-y-3">
-        <Label className="text-sm font-medium">Typ wydarzenia</Label>
+        <Label className="text-sm font-medium text-[#0F172A]">Typ wydarzenia</Label>
         <RadioGroup
           value={filters.eventType}
           onValueChange={(value) => onFiltersChange({ ...filters, eventType: value as EventFilters["eventType"] })}
           className="space-y-2"
         >
           <div className="flex items-center gap-2">
-            <RadioGroupItem value="all" id="type-all" data-testid="radio-type-all" />
-            <Label htmlFor="type-all" className="text-sm cursor-pointer">Wszystkie</Label>
+            <RadioGroupItem value="all" id="type-all" className="border-[#E2E8F0] text-[#2ED3B7]" data-testid="radio-type-all" />
+            <Label htmlFor="type-all" className="text-sm cursor-pointer text-[#475569]">Wszystkie</Label>
           </div>
           <div className="flex items-center gap-2">
-            <RadioGroupItem value="onsite" id="type-onsite" data-testid="radio-type-onsite" />
-            <Label htmlFor="type-onsite" className="text-sm cursor-pointer">Stacjonarne</Label>
+            <RadioGroupItem value="onsite" id="type-onsite" className="border-[#E2E8F0] text-[#2ED3B7]" data-testid="radio-type-onsite" />
+            <Label htmlFor="type-onsite" className="text-sm cursor-pointer text-[#475569]">Stacjonarne</Label>
           </div>
           <div className="flex items-center gap-2">
-            <RadioGroupItem value="online" id="type-online" data-testid="radio-type-online" />
-            <Label htmlFor="type-online" className="text-sm cursor-pointer">Online</Label>
+            <RadioGroupItem value="online" id="type-online" className="border-[#E2E8F0] text-[#2ED3B7]" data-testid="radio-type-online" />
+            <Label htmlFor="type-online" className="text-sm cursor-pointer text-[#475569]">Online</Label>
           </div>
         </RadioGroup>
       </div>
 
-      <Separator />
+      <Separator className="bg-[#E2E8F0]" />
 
       <div className="space-y-3">
-        <Label className="text-sm font-medium">Cena</Label>
+        <Label className="text-sm font-medium text-[#0F172A]">Cena</Label>
         <div className="space-y-2">
           {[
             { value: "free" as const, label: "Bezpłatne" },
@@ -250,9 +261,10 @@ function FilterContent({ filters, onFiltersChange }: FiltersPanelProps) {
                 id={`price-${price.value}`}
                 checked={filters.priceType.includes(price.value)}
                 onCheckedChange={(checked) => handlePriceChange(price.value, !!checked)}
+                className="border-[#E2E8F0] data-[state=checked]:bg-[#2ED3B7] data-[state=checked]:border-[#2ED3B7]"
                 data-testid={`checkbox-price-${price.value}`}
               />
-              <Label htmlFor={`price-${price.value}`} className="text-sm cursor-pointer">
+              <Label htmlFor={`price-${price.value}`} className="text-sm cursor-pointer text-[#475569]">
                 {price.label}
               </Label>
             </div>
@@ -260,25 +272,26 @@ function FilterContent({ filters, onFiltersChange }: FiltersPanelProps) {
         </div>
       </div>
 
-      <Separator />
+      <Separator className="bg-[#E2E8F0]" />
 
       <div className="flex items-center justify-between">
-        <Label htmlFor="points-switch" className="text-sm font-medium cursor-pointer">
+        <Label htmlFor="points-switch" className="text-sm font-medium cursor-pointer text-[#0F172A]">
           Punkty edukacyjne
         </Label>
         <Switch
           id="points-switch"
           checked={filters.hasPoints === true}
           onCheckedChange={(checked) => onFiltersChange({ ...filters, hasPoints: checked ? true : null })}
+          className="data-[state=checked]:bg-[#2ED3B7]"
           data-testid="switch-has-points"
         />
       </div>
 
-      <Separator />
+      <Separator className="bg-[#E2E8F0]" />
 
       <Collapsible open={tagsOpen} onOpenChange={setTagsOpen}>
         <CollapsibleTrigger asChild>
-          <Button variant="ghost" className="w-full justify-between p-0 h-auto font-medium">
+          <Button variant="ghost" className="w-full justify-between p-0 h-auto font-medium text-[#0F172A] hover:text-[#2ED3B7]">
             <span>Tagi</span>
             {tagsOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </Button>
@@ -291,9 +304,10 @@ function FilterContent({ filters, onFiltersChange }: FiltersPanelProps) {
                   id={`tag-${tag}`}
                   checked={filters.tags.includes(tag)}
                   onCheckedChange={(checked) => handleTagChange(tag, !!checked)}
+                  className="border-[#E2E8F0] data-[state=checked]:bg-[#2ED3B7] data-[state=checked]:border-[#2ED3B7]"
                   data-testid={`checkbox-tag-${tag}`}
                 />
-                <Label htmlFor={`tag-${tag}`} className="text-sm cursor-pointer">
+                <Label htmlFor={`tag-${tag}`} className="text-sm cursor-pointer text-[#475569]">
                   {TAG_LABELS[tag]}
                 </Label>
               </div>
@@ -309,7 +323,7 @@ export function FiltersPanel({ filters, onFiltersChange, activeCount = 0 }: Filt
   return (
     <>
       <div className="hidden lg:block w-72 shrink-0">
-        <div className="sticky top-20 bg-card border border-card-border rounded-lg p-4">
+        <div className="sticky top-20 bg-white border border-[#E2E8F0] rounded-2xl p-5 shadow-card">
           <FilterContent filters={filters} onFiltersChange={onFiltersChange} />
         </div>
       </div>
@@ -317,19 +331,23 @@ export function FiltersPanel({ filters, onFiltersChange, activeCount = 0 }: Filt
       <div className="lg:hidden fixed bottom-4 right-4 z-40">
         <Sheet>
           <SheetTrigger asChild>
-            <Button size="lg" className="gap-2 shadow-lg" data-testid="button-filters-mobile">
+            <Button 
+              size="lg" 
+              className="gap-2 shadow-lg bg-[#2ED3B7] hover:bg-[#25B9A1] text-[#0F172A] rounded-full" 
+              data-testid="button-filters-mobile"
+            >
               <Filter className="w-5 h-5" />
               Filtry
               {activeCount > 0 && (
-                <Badge variant="secondary" className="ml-1">
+                <Badge variant="secondary" className="ml-1 bg-white/20 text-[#0F172A]">
                   {activeCount}
                 </Badge>
               )}
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-80 sm:w-96">
+          <SheetContent side="left" className="w-80 sm:w-96 bg-white border-[#E2E8F0]">
             <SheetHeader>
-              <SheetTitle>Filtry</SheetTitle>
+              <SheetTitle className="font-heading text-[#0F172A]">Filtry</SheetTitle>
             </SheetHeader>
             <ScrollArea className="h-[calc(100vh-6rem)] mt-4">
               <FilterContent filters={filters} onFiltersChange={onFiltersChange} />

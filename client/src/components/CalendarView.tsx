@@ -58,24 +58,26 @@ export function CalendarView({ events, isLoading }: CalendarViewProps) {
 
   return (
     <>
-      <Card>
+      <Card className="bg-white border border-[#E2E8F0] rounded-2xl shadow-card">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+              className="text-[#475569] hover:text-[#2ED3B7] hover:bg-[#E6FAF7]"
               data-testid="button-prev-month"
             >
               <ChevronLeft className="w-5 h-5" />
             </Button>
-            <h2 className="text-xl font-semibold" data-testid="text-current-month">
+            <h2 className="font-heading text-xl font-semibold text-[#0F172A] capitalize" data-testid="text-current-month">
               {format(currentMonth, "LLLL yyyy", { locale: pl })}
             </h2>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+              className="text-[#475569] hover:text-[#2ED3B7] hover:bg-[#E6FAF7]"
               data-testid="button-next-month"
             >
               <ChevronRight className="w-5 h-5" />
@@ -88,7 +90,7 @@ export function CalendarView({ events, isLoading }: CalendarViewProps) {
             {weekDays.map((day) => (
               <div
                 key={day}
-                className="text-center text-sm font-medium text-muted-foreground py-2"
+                className="text-center text-sm font-medium text-[#64748B] py-2"
               >
                 {day}
               </div>
@@ -100,7 +102,7 @@ export function CalendarView({ events, isLoading }: CalendarViewProps) {
               {Array.from({ length: 35 }).map((_, i) => (
                 <div
                   key={i}
-                  className="aspect-square p-1 border border-border rounded-md animate-pulse bg-muted/30"
+                  className="aspect-square p-1 border border-[#E2E8F0] rounded-lg animate-pulse bg-[#F1F5F9]"
                 />
               ))}
             </div>
@@ -118,12 +120,12 @@ export function CalendarView({ events, isLoading }: CalendarViewProps) {
                     onClick={() => handleDateClick(day)}
                     disabled={!hasEvents}
                     className={cn(
-                      "aspect-square p-1 border rounded-md transition-colors relative",
+                      "aspect-square p-1 border rounded-lg transition-all duration-150 relative",
                       isCurrentMonth 
-                        ? "bg-background border-border" 
-                        : "bg-muted/30 border-transparent text-muted-foreground",
-                      isToday && "ring-2 ring-primary ring-offset-1",
-                      hasEvents && "cursor-pointer hover-elevate",
+                        ? "bg-white border-[#E2E8F0]" 
+                        : "bg-[#F1F5F9] border-transparent text-[#64748B]",
+                      isToday && "ring-2 ring-[#2ED3B7] ring-offset-1",
+                      hasEvents && "cursor-pointer hover:border-[#2ED3B7] hover:shadow-sm",
                       !hasEvents && "cursor-default"
                     )}
                     data-testid={`calendar-day-${format(day, "yyyy-MM-dd")}`}
@@ -131,7 +133,8 @@ export function CalendarView({ events, isLoading }: CalendarViewProps) {
                     <span
                       className={cn(
                         "text-sm",
-                        isToday && "font-bold text-primary"
+                        isToday && "font-bold text-[#2ED3B7]",
+                        !isToday && isCurrentMonth && "text-[#0F172A]"
                       )}
                     >
                       {format(day, "d")}
@@ -142,13 +145,13 @@ export function CalendarView({ events, isLoading }: CalendarViewProps) {
                           dayEvents.map((_, i) => (
                             <div
                               key={i}
-                              className="w-1.5 h-1.5 rounded-full bg-primary"
+                              className="w-1.5 h-1.5 rounded-full bg-[#2ED3B7]"
                             />
                           ))
                         ) : (
                           <Badge
                             variant="secondary"
-                            className="text-[10px] px-1 py-0 h-4"
+                            className="text-[10px] px-1 py-0 h-4 bg-[#E6FAF7] text-[#0F766E]"
                           >
                             {dayEvents.length}
                           </Badge>
@@ -164,9 +167,9 @@ export function CalendarView({ events, isLoading }: CalendarViewProps) {
       </Card>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh]">
+        <DialogContent className="max-w-2xl max-h-[80vh] bg-white border-[#E2E8F0]">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="font-heading text-[#0F172A]">
               {selectedDate && format(selectedDate, "d MMMM yyyy", { locale: pl })}
             </DialogTitle>
           </DialogHeader>
