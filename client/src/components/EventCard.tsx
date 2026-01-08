@@ -7,7 +7,8 @@ import {
   GraduationCap, 
   ExternalLink,
   ChevronDown,
-  Sparkles
+  Sparkles,
+  Share2
 } from "lucide-react";
 import { SiGooglecalendar, SiApple } from "react-icons/si";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -22,8 +23,21 @@ import {
 import { cn } from "@/lib/utils";
 import { SPECIALIZATION_LABELS } from "@/lib/constants";
 import { downloadICSFile, getGoogleCalendarUrl, getOutlookCalendarUrl } from "@/lib/calendar";
+import { useToast } from "@/hooks/use-toast";
 import type { Event, Specialization, EventTag } from "@/lib/types";
 import { Link } from "wouter";
+
+const addUtmParams = (url: string, eventId: number): string => {
+  try {
+    const urlObj = new URL(url);
+    urlObj.searchParams.set("utm_source", "konfy.pl");
+    urlObj.searchParams.set("utm_medium", "referral");
+    urlObj.searchParams.set("utm_campaign", `event-${eventId}`);
+    return urlObj.toString();
+  } catch {
+    return url;
+  }
+};
 
 interface EventCardProps {
   event: Event;
@@ -40,8 +54,32 @@ const TAG_LABELS: Record<string, string> = {
 };
 
 export function EventCard({ event, compact = false }: EventCardProps) {
+  const { toast } = useToast();
   const startDate = new Date(event.startDate);
   const endDate = event.endDate ? new Date(event.endDate) : null;
+
+  const handleShare = async () => {
+    const eventUrl = `${window.location.origin}/event/${event.id}`;
+    try {
+      await navigator.clipboard.writeText(eventUrl);
+      toast({
+        title: "Link skopiowany",
+        description: "Link do wydarzenia zostal skopiowany do schowka",
+      });
+    } catch {
+      toast({
+        title: "Blad",
+        description: "Nie udalo sie skopiowac linku",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRegistrationClick = () => {
+    if (event.sourceUrl) {
+      window.open(addUtmParams(event.sourceUrl, event.id), "_blank");
+    }
+  };
 
   const formatEventDate = () => {
     const start = format(startDate, "d MMM yyyy", { locale: pl });
@@ -168,6 +206,16 @@ export function EventCard({ event, compact = false }: EventCardProps) {
 
         <div className="flex-1" />
 
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-[#64748B] hover:text-[#2ED3B7] hover:bg-[#E6FAF7]"
+          onClick={handleShare}
+          data-testid={`button-share-${event.id}`}
+        >
+          <Share2 className="w-4 h-4" />
+        </Button>
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button 
@@ -177,7 +225,7 @@ export function EventCard({ event, compact = false }: EventCardProps) {
               data-testid={`button-add-calendar-${event.id}`}
             >
               <Calendar className="w-4 h-4" />
-              Kalendarz
+              <span className="hidden sm:inline">Kalendarz</span>
               <ChevronDown className="w-3 h-3" />
             </Button>
           </DropdownMenuTrigger>
@@ -208,13 +256,13 @@ export function EventCard({ event, compact = false }: EventCardProps) {
 
         {event.sourceUrl && (
           <Button 
-            variant="ghost" 
-            size="icon"
-            className="text-[#64748B] hover:text-[#2ED3B7] hover:bg-[#E6FAF7]"
-            onClick={() => window.open(event.sourceUrl!, "_blank")}
-            data-testid={`link-event-source-${event.id}`}
+            size="sm"
+            className="gap-1 rounded-full bg-[#2ED3B7] text-[#0F172A] hover:bg-[#25B9A1]"
+            onClick={handleRegistrationClick}
+            data-testid={`button-registration-${event.id}`}
           >
             <ExternalLink className="w-4 h-4" />
+            <span className="hidden sm:inline">Strona wydarzenia</span>
           </Button>
         )}
       </CardFooter>

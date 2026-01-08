@@ -1,12 +1,13 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertEventSchema, insertSourceSchema, SPECIALIZATIONS } from "@shared/schema";
+import { insertEventSchema, insertSourceSchema, insertLeadSchema, SPECIALIZATIONS } from "@shared/schema";
 import { scanSingleSource, runScheduledScans } from "./scheduler";
 import { z } from "zod";
 import bcrypt from "bcrypt";
 import { isAuthenticated, authStorage } from "./replit_integrations/auth";
 import { users } from "@shared/models/auth";
+import { leads } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 
@@ -362,6 +363,21 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/leads", async (req, res) => {
+    try {
+      const parseResult = insertLeadSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ error: "Invalid lead data", details: parseResult.error.errors });
+      }
+      
+      const [lead] = await db.insert(leads).values(parseResult.data).returning();
+      res.status(201).json(lead);
+    } catch (error) {
+      console.error("Error creating lead:", error);
+      res.status(500).json({ error: "Failed to create lead" });
+    }
+  });
+
   app.get("/api/calendar/:eventId.ics", async (req, res) => {
     try {
       const id = parseInt(req.params.eventId);
@@ -387,7 +403,7 @@ export async function registerRoutes(
           .replace(/\n/g, "\\n");
       };
 
-      const uid = `event-${event.id}@medevents.pl`;
+      const uid = `event-${event.id}@konfy.pl`;
       const dtstamp = formatDate(new Date().toISOString());
       const dtstart = event.startDate.replace(/-/g, "");
       const dtend = (event.endDate || event.startDate).replace(/-/g, "");

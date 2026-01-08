@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Calendar, Home, Settings, Search, Menu, X, LogIn, LogOut } from "lucide-react";
+import { Calendar, Home, Settings, Search, Menu, X, LogIn, LogOut, Megaphone, Plus } from "lucide-react";
 import { KonfyLogo, KonfyIcon } from "@/components/KonfyLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -77,6 +77,30 @@ export function Navigation({ onSearch, searchQuery = "" }: NavigationProps) {
               </Link>
             ))}
           </nav>
+
+          <div className="hidden lg:flex items-center gap-2">
+            <Link href="/promuj">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 rounded-full border-[#2ED3B7] text-[#2ED3B7] hover:bg-[#2ED3B7]/10"
+                data-testid="button-promote-event"
+              >
+                <Megaphone className="w-4 h-4" />
+                Promuj wydarzenie
+              </Button>
+            </Link>
+            <Link href="/dodaj-wydarzenie">
+              <Button
+                size="sm"
+                className="gap-2 rounded-full bg-[#2ED3B7] text-[#0F172A] hover:bg-[#25B9A1]"
+                data-testid="button-add-event"
+              >
+                <Plus className="w-4 h-4" />
+                Dodaj wydarzenie
+              </Button>
+            </Link>
+          </div>
 
           <form
             onSubmit={handleSearchSubmit}
@@ -223,6 +247,30 @@ export function Navigation({ onSearch, searchQuery = "" }: NavigationProps) {
                   </Button>
                 </Link>
               )}
+
+              <div className="pt-3 mt-3 border-t border-[#E2E8F0] flex flex-col gap-2">
+                <Link href="/promuj">
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start gap-2 rounded-lg border-[#2ED3B7] text-[#2ED3B7]"
+                    onClick={() => setMobileMenuOpen(false)}
+                    data-testid="button-promote-event-mobile"
+                  >
+                    <Megaphone className="w-4 h-4" />
+                    Promuj wydarzenie
+                  </Button>
+                </Link>
+                <Link href="/dodaj-wydarzenie">
+                  <Button
+                    className="w-full justify-start gap-2 rounded-lg bg-[#2ED3B7] text-[#0F172A]"
+                    onClick={() => setMobileMenuOpen(false)}
+                    data-testid="button-add-event-mobile"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Dodaj wydarzenie
+                  </Button>
+                </Link>
+              </div>
               
               {!isAuthenticated && !isLoading && (
                 <a href="/api/login">

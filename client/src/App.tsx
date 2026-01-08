@@ -11,6 +11,8 @@ import CalendarPage from "@/pages/CalendarPage";
 import Admin from "@/pages/Admin";
 import SpecializationHub from "@/pages/SpecializationHub";
 import PillarPage from "@/pages/PillarPage";
+import PromotePage from "@/pages/PromotePage";
+import AddEventPage from "@/pages/AddEventPage";
 
 function Router() {
   return (
@@ -19,6 +21,8 @@ function Router() {
       <Route path="/event/:id" component={EventDetail} />
       <Route path="/calendar" component={CalendarPage} />
       <Route path="/admin" component={Admin} />
+      <Route path="/promuj" component={PromotePage} />
+      <Route path="/dodaj-wydarzenie" component={AddEventPage} />
       
       <Route path="/konferencje-medyczne">
         {() => <PillarPage pageType="conferences" />}

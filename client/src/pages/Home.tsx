@@ -6,6 +6,7 @@ import { EventList } from "@/components/EventList";
 import { FiltersPanel } from "@/components/FiltersPanel";
 import { OnboardingModal } from "@/components/OnboardingModal";
 import { SEOFooter } from "@/components/SEOFooter";
+import { OrganizerCTABlock } from "@/components/OrganizerCTABlock";
 import { getStoredPreferences } from "@/lib/preferences";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { List, CalendarDays } from "lucide-react";
@@ -163,6 +164,7 @@ export default function Home() {
           />
 
           <div className="flex-1 min-w-0">
+            <OrganizerCTABlock />
             {view === "list" ? (
               <EventList
                 events={filteredEvents}
