@@ -35,7 +35,7 @@ export default function Home() {
   const [heroSearch, setHeroSearch] = useState("");
 
   const { data: events = [], isLoading } = useQuery<Event[]>({
-    queryKey: ["/api/events", { status: "published" }],
+    queryKey: ["/api/events", { status: "published", upcoming: "true", limit: "50" }],
   });
 
   const handleOnboardingComplete = (selectedSpecs: Specialization[]) => {

@@ -117,7 +117,15 @@ export async function registerRoutes(
   app.get("/api/events", async (req, res) => {
     try {
       const status = req.query.status as string | undefined;
-      const events = await storage.getEvents(status ? { status } : undefined);
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+      const upcoming = req.query.upcoming === "true";
+      
+      const filters: { status?: string; limit?: number; upcoming?: boolean } = {};
+      if (status) filters.status = status;
+      if (limit && !isNaN(limit)) filters.limit = limit;
+      if (upcoming) filters.upcoming = true;
+      
+      const events = await storage.getEvents(Object.keys(filters).length > 0 ? filters : undefined);
       res.json(events);
     } catch (error) {
       console.error("Error fetching events:", error);

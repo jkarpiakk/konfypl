@@ -6,14 +6,14 @@ import {
   type ScanLog, type InsertScanLog 
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, sql } from "drizzle-orm";
+import { eq, desc, asc, and, sql, gte } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
 
-  getEvents(filters?: { status?: string }): Promise<Event[]>;
+  getEvents(filters?: { status?: string; limit?: number; upcoming?: boolean }): Promise<Event[]>;
   getEvent(id: number): Promise<Event | undefined>;
   createEvent(event: InsertEvent): Promise<Event>;
   updateEvent(id: number, event: Partial<InsertEvent>): Promise<Event | undefined>;
@@ -48,11 +48,35 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async getEvents(filters?: { status?: string }): Promise<Event[]> {
+  async getEvents(filters?: { status?: string; limit?: number; upcoming?: boolean }): Promise<Event[]> {
+    const conditions = [];
+    
     if (filters?.status) {
-      return db.select().from(events).where(eq(events.status, filters.status)).orderBy(desc(events.startDate));
+      conditions.push(eq(events.status, filters.status));
     }
-    return db.select().from(events).orderBy(desc(events.startDate));
+    
+    if (filters?.upcoming) {
+      const today = new Date().toISOString().split('T')[0];
+      conditions.push(gte(events.startDate, today));
+    }
+    
+    let query = db.select().from(events);
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as typeof query;
+    }
+    
+    if (filters?.upcoming) {
+      query = query.orderBy(asc(events.startDate)) as typeof query;
+    } else {
+      query = query.orderBy(desc(events.startDate)) as typeof query;
+    }
+    
+    if (filters?.limit) {
+      query = query.limit(filters.limit) as typeof query;
+    }
+    
+    return query;
   }
 
   async getEvent(id: number): Promise<Event | undefined> {
