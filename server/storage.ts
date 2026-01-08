@@ -12,6 +12,7 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: UpsertUser): Promise<User>;
+  getAllUsers(): Promise<User[]>;
 
   getEvents(filters?: { status?: string; limit?: number; upcoming?: boolean }): Promise<Event[]>;
   getEvent(id: number): Promise<Event | undefined>;
@@ -47,6 +48,10 @@ export class DatabaseStorage implements IStorage {
   async createUser(insertUser: UpsertUser): Promise<User> {
     const [user] = await db.insert(users).values(insertUser).returning();
     return user;
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users).orderBy(desc(users.createdAt));
   }
 
   async getEvents(filters?: { status?: string; limit?: number; upcoming?: boolean }): Promise<Event[]> {

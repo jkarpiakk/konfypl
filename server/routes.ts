@@ -205,6 +205,16 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/users", isAdmin, async (req, res) => {
+    try {
+      const usersList = await storage.getAllUsers();
+      res.json(usersList);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ error: "Failed to fetch users" });
+    }
+  });
+
   app.get("/api/sources", isAdmin, async (req, res) => {
     try {
       const sources = await storage.getSources();

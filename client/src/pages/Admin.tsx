@@ -26,6 +26,9 @@ import {
   Upload,
   Download,
   FileSpreadsheet,
+  Users,
+  Shield,
+  User,
 } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
 import { KonfyLogo } from "@/components/KonfyLogo";
@@ -337,6 +340,125 @@ function SourcesTable({
   );
 }
 
+interface UserData {
+  id: string;
+  email: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  profileImageUrl: string | null;
+  specializations: string[];
+  isAdmin: boolean;
+  createdAt: string | null;
+  updatedAt: string | null;
+}
+
+function UsersTable({
+  users,
+  isLoading,
+}: {
+  users: UserData[];
+  isLoading: boolean;
+}) {
+  if (isLoading) {
+    return (
+      <div className="space-y-2">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Skeleton key={i} className="h-16 w-full" />
+        ))}
+      </div>
+    );
+  }
+
+  if (users.length === 0) {
+    return (
+      <Card className="border-dashed">
+        <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+          <Users className="w-10 h-10 text-muted-foreground mb-4" />
+          <p className="text-muted-foreground">Brak użytkowników</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="border rounded-lg overflow-hidden">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Użytkownik</TableHead>
+            <TableHead>Email</TableHead>
+            <TableHead>Specjalizacje</TableHead>
+            <TableHead>Rola</TableHead>
+            <TableHead>Data rejestracji</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {users.map((user) => (
+            <TableRow key={user.id} data-testid={`row-user-${user.id}`}>
+              <TableCell className="font-medium">
+                <div className="flex items-center gap-3">
+                  {user.profileImageUrl ? (
+                    <img
+                      src={user.profileImageUrl}
+                      alt=""
+                      className="w-8 h-8 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-[#2ED3B7]/20 flex items-center justify-center">
+                      <User className="w-4 h-4 text-[#2ED3B7]" />
+                    </div>
+                  )}
+                  <span>
+                    {user.firstName || user.lastName
+                      ? `${user.firstName || ""} ${user.lastName || ""}`.trim()
+                      : "Brak nazwy"}
+                  </span>
+                </div>
+              </TableCell>
+              <TableCell className="text-muted-foreground">
+                {user.email || "Brak"}
+              </TableCell>
+              <TableCell>
+                <div className="flex flex-wrap gap-1">
+                  {(user.specializations || []).slice(0, 2).map((spec) => (
+                    <Badge key={spec} variant="outline" className="text-xs">
+                      {SPECIALIZATION_LABELS[spec as Specialization]?.slice(0, 10) || spec}
+                    </Badge>
+                  ))}
+                  {(user.specializations || []).length > 2 && (
+                    <Badge variant="outline" className="text-xs">
+                      +{user.specializations.length - 2}
+                    </Badge>
+                  )}
+                  {(!user.specializations || user.specializations.length === 0) && (
+                    <span className="text-xs text-muted-foreground">Brak</span>
+                  )}
+                </div>
+              </TableCell>
+              <TableCell>
+                {user.isAdmin ? (
+                  <Badge className="bg-[#2ED3B7] text-[#0F172A]">
+                    <Shield className="w-3 h-3 mr-1" />
+                    Admin
+                  </Badge>
+                ) : (
+                  <Badge variant="secondary">Użytkownik</Badge>
+                )}
+              </TableCell>
+              <TableCell className="text-muted-foreground">
+                {user.createdAt
+                  ? format(new Date(user.createdAt), "d MMM yyyy", { locale: pl })
+                  : "Nieznana"
+                }
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+
 function AdminLoginForm({ onLoginSuccess }: { onLoginSuccess: () => void }) {
   const { toast } = useToast();
   const [email, setEmail] = useState("");
@@ -508,6 +630,11 @@ export default function Admin() {
     enabled: isAuthenticated === true,
   });
 
+  const { data: usersList = [], isLoading: loadingUsers } = useQuery<UserData[]>({
+    queryKey: ["/api/users"],
+    enabled: isAuthenticated === true,
+  });
+
   const approveEvent = useMutation({
     mutationFn: (id: number) => apiRequest("PATCH", `/api/events/${id}`, { status: "published" }),
     onSuccess: () => {
@@ -665,16 +792,24 @@ export default function Admin() {
                 <Database className="w-4 h-4" />
                 Źródła
               </TabsTrigger>
+              <TabsTrigger value="users" className="gap-2" data-testid="tab-users">
+                <Users className="w-4 h-4" />
+                Użytkownicy
+                <Badge variant="secondary" className="ml-1">
+                  {usersList.length}
+                </Badge>
+              </TabsTrigger>
             </TabsList>
 
             <div className="flex gap-2">
-              {activeTab !== "sources" ? (
+              {(activeTab === "pending" || activeTab === "all") && (
                 <Button onClick={() => setIsAddingEvent(true)} data-testid="button-add-event">
                   <Plus className="w-4 h-4 mr-2" />
                   Dodaj wydarzenie
                 </Button>
-              ) : (
-                <div className="flex gap-2">
+              )}
+              {activeTab === "sources" && (
+                <>
                   <Button variant="outline" onClick={() => setIsImportingSource(true)} data-testid="button-import-sources">
                     <Upload className="w-4 h-4 mr-2" />
                     Importuj CSV
@@ -683,7 +818,7 @@ export default function Admin() {
                     <Plus className="w-4 h-4 mr-2" />
                     Dodaj źródło
                   </Button>
-                </div>
+                </>
               )}
             </div>
           </div>
@@ -716,6 +851,13 @@ export default function Admin() {
               onEdit={setEditingSource}
               onDelete={setDeleteSourceId}
               onScan={(id) => scanSource.mutate(id)}
+            />
+          </TabsContent>
+
+          <TabsContent value="users">
+            <UsersTable
+              users={usersList}
+              isLoading={loadingUsers}
             />
           </TabsContent>
         </Tabs>
