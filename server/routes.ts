@@ -7,9 +7,9 @@ import { z } from "zod";
 import bcrypt from "bcrypt";
 import { isAuthenticated, authStorage } from "./replit_integrations/auth";
 import { users } from "@shared/models/auth";
-import { leads, eventMetrics, sponsoredPlacements } from "@shared/schema";
+import { leads, eventMetrics, sponsoredPlacements, events } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, gte, lte, sql } from "drizzle-orm";
+import { eq, and, gte, lte, sql, desc, count, sum } from "drizzle-orm";
 import { stripeService } from "./stripeService";
 import { getStripePublishableKey } from "./stripeClient";
 
@@ -547,6 +547,156 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error creating checkout session:", error);
       res.status(500).json({ error: "Failed to create checkout session" });
+    }
+  });
+
+  // Analytics Dashboard API
+  app.get("/api/analytics/overview", async (req, res) => {
+    try {
+      const allEvents = await storage.getEvents();
+      const publishedEvents = allEvents.filter(e => e.status === "published");
+      const today = new Date();
+      const upcomingEvents = publishedEvents.filter(e => new Date(e.startDate) >= today);
+      
+      // Get total metrics
+      const metricsData = await db.select({
+        totalPageViews: sum(eventMetrics.pageViews),
+        totalClicks: sum(eventMetrics.registrationClicks),
+        totalCalendarAdds: sum(eventMetrics.calendarAdds),
+        totalShares: sum(eventMetrics.shares),
+      }).from(eventMetrics);
+      
+      // Get user count
+      const userCount = await db.select({ count: count() }).from(users);
+      
+      res.json({
+        totalEvents: publishedEvents.length,
+        upcomingEvents: upcomingEvents.length,
+        totalUsers: userCount[0]?.count || 0,
+        totalPageViews: Number(metricsData[0]?.totalPageViews) || 0,
+        totalClicks: Number(metricsData[0]?.totalClicks) || 0,
+        totalCalendarAdds: Number(metricsData[0]?.totalCalendarAdds) || 0,
+        totalShares: Number(metricsData[0]?.totalShares) || 0,
+      });
+    } catch (error) {
+      console.error("Error fetching analytics overview:", error);
+      res.status(500).json({ error: "Failed to fetch analytics" });
+    }
+  });
+
+  app.get("/api/analytics/specializations", async (req, res) => {
+    try {
+      const allEvents = await storage.getEvents();
+      const publishedEvents = allEvents.filter(e => e.status === "published");
+      
+      // Count events by specialization
+      const specCounts: Record<string, number> = {};
+      publishedEvents.forEach(event => {
+        event.specializations.forEach(spec => {
+          specCounts[spec] = (specCounts[spec] || 0) + 1;
+        });
+      });
+      
+      // Sort by count descending
+      const sortedSpecs = Object.entries(specCounts)
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count);
+      
+      res.json(sortedSpecs);
+    } catch (error) {
+      console.error("Error fetching specialization stats:", error);
+      res.status(500).json({ error: "Failed to fetch specialization stats" });
+    }
+  });
+
+  app.get("/api/analytics/event-types", async (req, res) => {
+    try {
+      const allEvents = await storage.getEvents();
+      const publishedEvents = allEvents.filter(e => e.status === "published");
+      
+      const online = publishedEvents.filter(e => e.isOnline).length;
+      const onsite = publishedEvents.filter(e => !e.isOnline).length;
+      const free = publishedEvents.filter(e => e.price === "free").length;
+      const paid = publishedEvents.filter(e => e.price === "paid").length;
+      const withPoints = publishedEvents.filter(e => e.hasEducationalPoints).length;
+      
+      res.json({
+        byFormat: [
+          { name: "Online", value: online },
+          { name: "Stacjonarne", value: onsite },
+        ],
+        byPrice: [
+          { name: "Bezplatne", value: free },
+          { name: "Platne", value: paid },
+        ],
+        withEducationalPoints: withPoints,
+      });
+    } catch (error) {
+      console.error("Error fetching event type stats:", error);
+      res.status(500).json({ error: "Failed to fetch event type stats" });
+    }
+  });
+
+  app.get("/api/analytics/engagement", async (req, res) => {
+    try {
+      // Get daily metrics for last 30 days
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const dateStr = thirtyDaysAgo.toISOString().split("T")[0];
+      
+      const dailyMetrics = await db
+        .select({
+          date: eventMetrics.date,
+          pageViews: sum(eventMetrics.pageViews),
+          clicks: sum(eventMetrics.registrationClicks),
+          calendarAdds: sum(eventMetrics.calendarAdds),
+        })
+        .from(eventMetrics)
+        .where(gte(eventMetrics.date, dateStr))
+        .groupBy(eventMetrics.date)
+        .orderBy(eventMetrics.date);
+      
+      res.json(dailyMetrics.map(m => ({
+        date: m.date,
+        pageViews: Number(m.pageViews) || 0,
+        clicks: Number(m.clicks) || 0,
+        calendarAdds: Number(m.calendarAdds) || 0,
+      })));
+    } catch (error) {
+      console.error("Error fetching engagement stats:", error);
+      res.status(500).json({ error: "Failed to fetch engagement stats" });
+    }
+  });
+
+  app.get("/api/analytics/top-events", async (req, res) => {
+    try {
+      const topEvents = await db
+        .select({
+          eventId: eventMetrics.eventId,
+          totalViews: sum(eventMetrics.pageViews),
+          totalClicks: sum(eventMetrics.registrationClicks),
+        })
+        .from(eventMetrics)
+        .groupBy(eventMetrics.eventId)
+        .orderBy(desc(sum(eventMetrics.pageViews)))
+        .limit(10);
+      
+      // Get event details
+      const allEvents = await storage.getEvents();
+      const enrichedEvents = topEvents.map(m => {
+        const event = allEvents.find(e => e.id === m.eventId);
+        return {
+          id: m.eventId,
+          title: event?.title || "Nieznane wydarzenie",
+          pageViews: Number(m.totalViews) || 0,
+          clicks: Number(m.totalClicks) || 0,
+        };
+      });
+      
+      res.json(enrichedEvents);
+    } catch (error) {
+      console.error("Error fetching top events:", error);
+      res.status(500).json({ error: "Failed to fetch top events" });
     }
   });
 

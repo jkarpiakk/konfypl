@@ -16,6 +16,7 @@ import PromotePage from "@/pages/PromotePage";
 import AddEventPage from "@/pages/AddEventPage";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import Terms from "@/pages/Terms";
+import AnalyticsDashboard from "@/pages/AnalyticsDashboard";
 
 function Router() {
   return (
@@ -24,6 +25,7 @@ function Router() {
       <Route path="/event/:id" component={EventDetail} />
       <Route path="/calendar" component={CalendarPage} />
       <Route path="/admin" component={Admin} />
+      <Route path="/analytics" component={AnalyticsDashboard} />
       <Route path="/promuj" component={PromotePage} />
       <Route path="/dodaj-wydarzenie" component={AddEventPage} />
       <Route path="/polityka-prywatnosci" component={PrivacyPolicy} />

@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Calendar, Home, Settings, Search, Menu, X, LogIn, LogOut, Megaphone, Plus } from "lucide-react";
+import { Calendar, Home, Settings, Search, Menu, X, LogIn, LogOut, Megaphone, Plus, BarChart3 } from "lucide-react";
 import { KonfyLogo, KonfyIcon } from "@/components/KonfyLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -121,17 +121,30 @@ export function Navigation({ onSearch, searchQuery = "" }: NavigationProps) {
 
           <div className="flex items-center gap-2">
             {user?.isAdmin && (
-              <Link href="/admin">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="hidden sm:flex gap-2 rounded-full border-[#E2E8F0] text-[#475569] hover:border-[#2ED3B7] hover:text-[#2ED3B7]" 
-                  data-testid="link-admin"
-                >
-                  <Settings className="w-4 h-4" />
-                  Admin
-                </Button>
-              </Link>
+              <>
+                <Link href="/analytics">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="hidden sm:flex gap-2 rounded-full border-[#E2E8F0] text-[#475569] hover:border-[#2ED3B7] hover:text-[#2ED3B7]" 
+                    data-testid="link-analytics"
+                  >
+                    <BarChart3 className="w-4 h-4" />
+                    Statystyki
+                  </Button>
+                </Link>
+                <Link href="/admin">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="hidden sm:flex gap-2 rounded-full border-[#E2E8F0] text-[#475569] hover:border-[#2ED3B7] hover:text-[#2ED3B7]" 
+                    data-testid="link-admin"
+                  >
+                    <Settings className="w-4 h-4" />
+                    Admin
+                  </Button>
+                </Link>
+              </>
             )}
             
             {isLoading ? (
@@ -235,17 +248,30 @@ export function Navigation({ onSearch, searchQuery = "" }: NavigationProps) {
                 </Link>
               ))}
               {user?.isAdmin && (
-                <Link href="/admin">
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start gap-2 text-[#475569]"
-                    onClick={() => setMobileMenuOpen(false)}
-                    data-testid="link-admin-mobile"
-                  >
-                    <Settings className="w-4 h-4" />
-                    Admin
-                  </Button>
-                </Link>
+                <>
+                  <Link href="/analytics">
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start gap-2 text-[#475569]"
+                      onClick={() => setMobileMenuOpen(false)}
+                      data-testid="link-analytics-mobile"
+                    >
+                      <BarChart3 className="w-4 h-4" />
+                      Statystyki
+                    </Button>
+                  </Link>
+                  <Link href="/admin">
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start gap-2 text-[#475569]"
+                      onClick={() => setMobileMenuOpen(false)}
+                      data-testid="link-admin-mobile"
+                    >
+                      <Settings className="w-4 h-4" />
+                      Admin
+                    </Button>
+                  </Link>
+                </>
               )}
 
               <div className="pt-3 mt-3 border-t border-[#E2E8F0] flex flex-col gap-2">
