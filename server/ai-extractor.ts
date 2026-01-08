@@ -20,7 +20,7 @@ interface ExtractedEvent {
   hasEducationalPoints: boolean;
   educationalPoints?: number;
   price: "free" | "paid" | "unknown";
-  sourceUrl?: string;
+  eventUrl?: string;
 }
 
 export async function extractEventsFromContent(
@@ -28,9 +28,17 @@ export async function extractEventsFromContent(
   sourceUrl: string
 ): Promise<{ events: Partial<InsertEvent>[]; confidence: number }> {
   try {
+    const sourceHost = new URL(sourceUrl).hostname;
+    
     const systemPrompt = `Jesteś ekspertem w ekstrakcji danych o wydarzeniach medycznych z tekstu.
 
 Twoim zadaniem jest znaleźć wszystkie konferencje, kongresy, webinary, szkolenia i warsztaty medyczne.
+
+BARDZO WAŻNE: Dla każdego wydarzenia musisz znaleźć ORYGINALNY link do strony wydarzenia (eventUrl).
+- NIE używaj linków do agregatora (${sourceHost})
+- Szukaj linków do oficjalnych stron konferencji, organizatorów, rejestracji
+- Link powinien prowadzić do strony gdzie użytkownik może się zarejestrować lub dowiedzieć więcej
+- Jeśli nie znajdziesz zewnętrznego linku, zostaw eventUrl jako null
 
 Dostępne specjalizacje (użyj tylko tych wartości):
 ${SPECIALIZATIONS.join(", ")}
@@ -50,6 +58,7 @@ Dla każdego wydarzenia wyodrębnij:
 - hasEducationalPoints: true/false
 - educationalPoints: liczba punktów (jeśli podano)
 - price: "free", "paid", lub "unknown"
+- eventUrl: ORYGINALNY link do strony wydarzenia (NIE do agregatora ${sourceHost})
 
 Odpowiedz w JSON:
 {
@@ -61,7 +70,7 @@ Odpowiedz w JSON:
       model: "gpt-4.1",
       messages: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: `Przeanalizuj poniższy tekst i wyodrębnij wydarzenia medyczne:\n\n${content.slice(0, 8000)}` }
+        { role: "user", content: `Przeanalizuj poniższy tekst i wyodrębnij wydarzenia medyczne. Zwróć szczególną uwagę na linki - szukaj oryginalnych stron wydarzeń:\n\n${content.slice(0, 10000)}` }
       ],
       response_format: { type: "json_object" },
       max_completion_tokens: 4096,
@@ -69,24 +78,39 @@ Odpowiedz w JSON:
 
     const result = JSON.parse(response.choices[0]?.message?.content || "{}");
     
-    const extractedEvents: Partial<InsertEvent>[] = (result.events || []).map((e: ExtractedEvent) => ({
-      title: e.title,
-      description: e.description,
-      specializations: e.specializations.filter((s: string) => SPECIALIZATIONS.includes(s as any)),
-      tags: e.tags || [],
-      startDate: e.startDate,
-      endDate: e.endDate || null,
-      location: e.location || null,
-      isOnline: e.isOnline || false,
-      organizer: e.organizer || null,
-      hasEducationalPoints: e.hasEducationalPoints || false,
-      educationalPoints: e.educationalPoints || null,
-      price: e.price || "unknown",
-      sourceUrl: sourceUrl,
-      status: "pending",
-      isAiAdded: true,
-      aiConfidence: result.confidence || 70,
-    }));
+    const extractedEvents: Partial<InsertEvent>[] = (result.events || []).map((e: ExtractedEvent) => {
+      let finalUrl = e.eventUrl || null;
+      
+      if (finalUrl) {
+        try {
+          const eventHost = new URL(finalUrl).hostname;
+          if (eventHost === sourceHost) {
+            finalUrl = null;
+          }
+        } catch {
+          finalUrl = null;
+        }
+      }
+      
+      return {
+        title: e.title,
+        description: e.description,
+        specializations: e.specializations.filter((s: string) => SPECIALIZATIONS.includes(s as any)),
+        tags: e.tags || [],
+        startDate: e.startDate,
+        endDate: e.endDate || null,
+        location: e.location || null,
+        isOnline: e.isOnline || false,
+        organizer: e.organizer || null,
+        hasEducationalPoints: e.hasEducationalPoints || false,
+        educationalPoints: e.educationalPoints || null,
+        price: e.price || "unknown",
+        sourceUrl: finalUrl,
+        status: "pending",
+        isAiAdded: true,
+        aiConfidence: result.confidence || 70,
+      };
+    });
 
     return {
       events: extractedEvents,
