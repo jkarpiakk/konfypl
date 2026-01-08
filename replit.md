@@ -110,6 +110,13 @@ The backend implements a RESTful API pattern with routes for events, sources, an
 - Color palette: Neo-Mint #2ED3B7, Dark Slate #0F172A, White #FFFFFF
 - Typography: Manrope font, semi-bold 600, letter-spacing -0.03em
 
+**January 2026 - Monetization Features**
+- Sponsored placements: Events with active placement display "Promowane" badge with mint gradient, sorted first in listings
+- Analytics tracking: /api/track endpoint records pageViews, registrationClicks, calendarAdds, shares per event
+- Lead capture: Enhanced leads table with eventTitle, eventDate, eventWebsite, organizerName fields
+- Stripe integration: Payment processing for promotion packages (Basic 199 PLN, Pro 499 PLN, Max 999 PLN)
+- PromotePage: Package selection with Stripe checkout and lead capture fallback
+
 ## Project Structure
 
 ```
