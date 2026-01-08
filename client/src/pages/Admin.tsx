@@ -23,6 +23,9 @@ import {
   Eye,
   EyeOff,
   LogOut,
+  Upload,
+  Download,
+  FileSpreadsheet,
 } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
 import { KonfyLogo } from "@/components/KonfyLogo";
@@ -458,6 +461,7 @@ export default function Admin() {
   const [editingSource, setEditingSource] = useState<Source | null>(null);
   const [isAddingEvent, setIsAddingEvent] = useState(false);
   const [isAddingSource, setIsAddingSource] = useState(false);
+  const [isImportingSource, setIsImportingSource] = useState(false);
   const [deleteEventId, setDeleteEventId] = useState<number | null>(null);
   const [deleteSourceId, setDeleteSourceId] = useState<number | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -670,10 +674,16 @@ export default function Admin() {
                   Dodaj wydarzenie
                 </Button>
               ) : (
-                <Button onClick={() => setIsAddingSource(true)} data-testid="button-add-source">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Dodaj źródło
-                </Button>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => setIsImportingSource(true)} data-testid="button-import-sources">
+                    <Upload className="w-4 h-4 mr-2" />
+                    Importuj CSV
+                  </Button>
+                  <Button onClick={() => setIsAddingSource(true)} data-testid="button-add-source">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Dodaj źródło
+                  </Button>
+                </div>
               )}
             </div>
           </div>
@@ -731,6 +741,11 @@ export default function Admin() {
           }
         }}
         source={editingSource}
+      />
+
+      <ImportSourcesDialog
+        open={isImportingSource}
+        onOpenChange={setIsImportingSource}
       />
 
       <AlertDialog open={!!deleteEventId} onOpenChange={() => setDeleteEventId(null)}>
@@ -1201,6 +1216,195 @@ function SourceFormDialog({
             <Button type="submit" disabled={mutation.isPending} data-testid="button-save-source">
               {mutation.isPending ? "Zapisywanie..." : "Zapisz"}
             </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ImportSourcesDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const { toast } = useToast();
+  const [file, setFile] = useState<File | null>(null);
+  const [importResult, setImportResult] = useState<{
+    inserted: number;
+    duplicates: number;
+    errors: { row: number; error: string }[];
+  } | null>(null);
+
+  const mutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      
+      const response = await fetch("/api/sources/import", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Import failed");
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setImportResult(data);
+      queryClient.invalidateQueries({ queryKey: ["/api/sources"] });
+      toast({ 
+        title: "Import zakończony", 
+        description: `Dodano ${data.inserted} źródeł, ${data.duplicates} duplikatów` 
+      });
+    },
+    onError: (error: Error) => {
+      toast({ 
+        title: "Błąd importu", 
+        description: error.message, 
+        variant: "destructive" 
+      });
+    },
+  });
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+      setImportResult(null);
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (file) {
+      mutation.mutate(file);
+    }
+  };
+
+  const handleClose = () => {
+    setFile(null);
+    setImportResult(null);
+    onOpenChange(false);
+  };
+
+  const downloadTemplate = () => {
+    const template = "name,url,type,checkFrequencyHours\nPolskie Towarzystwo Kardiologiczne,https://ptkardio.pl/wydarzenia,website,48\nMedExpress RSS,https://medexpress.pl/rss/wydarzenia,rss,24";
+    const blob = new Blob([template], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "szablon_zrodla.csv";
+    link.click();
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <FileSpreadsheet className="w-5 h-5" />
+            Importuj źródła z CSV
+          </DialogTitle>
+          <DialogDescription>
+            Prześlij plik CSV z listą źródeł do monitorowania
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label>Format pliku CSV</Label>
+              <Button 
+                type="button" 
+                variant="outline" 
+                size="sm" 
+                onClick={downloadTemplate}
+                className="gap-2"
+                data-testid="button-download-template"
+              >
+                <Download className="w-4 h-4" />
+                Pobierz szablon
+              </Button>
+            </div>
+            <div className="text-sm text-muted-foreground bg-muted p-3 rounded-md font-mono">
+              name,url,type,checkFrequencyHours
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Kolumny: <strong>name</strong> (nazwa), <strong>url</strong> (adres), <strong>type</strong> (website/rss), <strong>checkFrequencyHours</strong> (24/48/72)
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="csvFile">Wybierz plik CSV</Label>
+            <Input
+              id="csvFile"
+              type="file"
+              accept=".csv,text/csv"
+              onChange={handleFileChange}
+              data-testid="input-import-file"
+            />
+            {file && (
+              <p className="text-sm text-muted-foreground">
+                Wybrano: {file.name} ({Math.round(file.size / 1024)} KB)
+              </p>
+            )}
+          </div>
+
+          {importResult && (
+            <Card className={importResult.errors.length > 0 ? "border-amber-200" : "border-green-200"}>
+              <CardContent className="pt-4">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-4 text-sm">
+                    <span className="text-green-600 font-medium">
+                      Dodane: {importResult.inserted}
+                    </span>
+                    <span className="text-amber-600 font-medium">
+                      Duplikaty: {importResult.duplicates}
+                    </span>
+                    {importResult.errors.length > 0 && (
+                      <span className="text-red-600 font-medium">
+                        Błędy: {importResult.errors.length}
+                      </span>
+                    )}
+                  </div>
+                  {importResult.errors.length > 0 && (
+                    <div className="text-sm space-y-1 mt-2 max-h-32 overflow-y-auto">
+                      {importResult.errors.slice(0, 10).map((err, i) => (
+                        <p key={i} className="text-red-600 text-xs">
+                          Wiersz {err.row}: {err.error}
+                        </p>
+                      ))}
+                      {importResult.errors.length > 10 && (
+                        <p className="text-muted-foreground text-xs">
+                          ...i {importResult.errors.length - 10} więcej błędów
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={handleClose}>
+              {importResult ? "Zamknij" : "Anuluj"}
+            </Button>
+            {!importResult && (
+              <Button 
+                type="submit" 
+                disabled={!file || mutation.isPending}
+                data-testid="button-import-submit"
+              >
+                {mutation.isPending ? "Importowanie..." : "Importuj"}
+              </Button>
+            )}
           </DialogFooter>
         </form>
       </DialogContent>

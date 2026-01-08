@@ -4,6 +4,13 @@ import { storage } from "./storage";
 import { insertEventSchema, insertSourceSchema, insertLeadSchema, SPECIALIZATIONS } from "@shared/schema";
 import { scanSingleSource, runScheduledScans } from "./scheduler";
 import { z } from "zod";
+import multer from "multer";
+import { parse } from "csv-parse/sync";
+
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 2 * 1024 * 1024 } // 2MB limit
+});
 import bcrypt from "bcrypt";
 import { isAuthenticated, authStorage } from "./replit_integrations/auth";
 import { users } from "@shared/models/auth";
@@ -285,6 +292,124 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error starting scan:", error);
       res.status(500).json({ error: "Failed to start scan" });
+    }
+  });
+
+  // Bulk import sources from CSV
+  app.post("/api/sources/import", isAdmin, upload.single("file"), async (req: any, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+
+      const csvContent = req.file.buffer.toString("utf-8");
+      
+      let records: any[];
+      try {
+        records = parse(csvContent, {
+          columns: true,
+          skip_empty_lines: true,
+          trim: true,
+          bom: true,
+        });
+      } catch (parseError) {
+        return res.status(400).json({ error: "Invalid CSV format" });
+      }
+
+      if (records.length === 0) {
+        return res.status(400).json({ error: "CSV file is empty" });
+      }
+
+      // Get existing sources for deduplication
+      const existingSources = await storage.getSources();
+      const existingUrls = new Set(existingSources.map(s => s.url.toLowerCase()));
+
+      const results = {
+        inserted: 0,
+        duplicates: 0,
+        errors: [] as { row: number; error: string }[],
+      };
+
+      for (let i = 0; i < records.length; i++) {
+        const row = records[i];
+        const rowNum = i + 2; // +2 for header row and 0-indexing
+
+        // Validate required fields
+        const name = row.name || row.nazwa;
+        const url = row.url || row.URL;
+        const type = (row.type || row.typ || "website").toLowerCase();
+        const frequency = parseInt(row.checkFrequencyHours || row.frequency || row.częstotliwość || "48");
+
+        if (!name || !name.trim()) {
+          results.errors.push({ row: rowNum, error: "Brak nazwy" });
+          continue;
+        }
+
+        if (!url || !url.trim()) {
+          results.errors.push({ row: rowNum, error: "Brak URL" });
+          continue;
+        }
+
+        // Validate URL format
+        try {
+          const parsedUrl = new URL(url);
+          if (!["http:", "https:"].includes(parsedUrl.protocol)) {
+            results.errors.push({ row: rowNum, error: "URL musi używać http/https" });
+            continue;
+          }
+        } catch {
+          results.errors.push({ row: rowNum, error: "Nieprawidłowy format URL" });
+          continue;
+        }
+
+        // Validate type
+        if (!["website", "rss"].includes(type)) {
+          results.errors.push({ row: rowNum, error: "Typ musi być 'website' lub 'rss'" });
+          continue;
+        }
+
+        // Validate frequency
+        if (isNaN(frequency) || frequency < 1 || frequency > 168) {
+          results.errors.push({ row: rowNum, error: "Częstotliwość musi być między 1 a 168 godzin" });
+          continue;
+        }
+
+        // Check for duplicates
+        if (existingUrls.has(url.toLowerCase())) {
+          results.duplicates++;
+          continue;
+        }
+
+        // Create source
+        try {
+          await storage.createSource({
+            name: name.trim(),
+            url: url.trim(),
+            type,
+            checkFrequencyHours: frequency,
+            status: "active",
+          });
+          existingUrls.add(url.toLowerCase());
+          results.inserted++;
+        } catch (createError: any) {
+          if (createError.message?.includes("duplicate") || createError.code === "23505") {
+            results.duplicates++;
+          } else {
+            results.errors.push({ row: rowNum, error: "Błąd zapisu do bazy" });
+          }
+        }
+      }
+
+      res.json({
+        message: `Import zakończony: ${results.inserted} dodanych, ${results.duplicates} duplikatów`,
+        inserted: results.inserted,
+        duplicates: results.duplicates,
+        errors: results.errors,
+        totalProcessed: records.length,
+      });
+    } catch (error) {
+      console.error("Error importing sources:", error);
+      res.status(500).json({ error: "Failed to import sources" });
     }
   });
 
