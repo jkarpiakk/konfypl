@@ -61,23 +61,14 @@ export function EventCard({ event, compact = false, isSponsored = false }: Event
   const endDate = event.endDate ? new Date(event.endDate) : null;
   const cardRef = useRef<HTMLDivElement>(null);
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleMouseEnter = () => {
     if (!cardRef.current) return;
-    const rect = cardRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
-    const rotateX = (y - centerY) / 80;
-    const rotateY = (centerX - x) / 80;
-    cardRef.current.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-2px)`;
-    cardRef.current.style.transition = "transform 0.15s ease-out";
+    cardRef.current.style.transform = "translateY(-3px)";
   };
 
   const handleMouseLeave = () => {
     if (!cardRef.current) return;
     cardRef.current.style.transform = "";
-    cardRef.current.style.transition = "transform 0.25s ease-out";
   };
 
   const trackEvent = (action: string) => {
@@ -143,10 +134,10 @@ export function EventCard({ event, compact = false, isSponsored = false }: Event
   return (
     <Card 
       ref={cardRef}
-      onMouseMove={handleMouseMove}
+      onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       className={cn(
-        "bg-white border rounded-2xl shadow-card transition-shadow duration-200 hover:shadow-card-hover",
+        "bg-white border rounded-2xl shadow-card transition-all duration-200 hover:shadow-card-hover",
         isSponsored 
           ? "border-[#2ED3B7] ring-2 ring-[#2ED3B7]/20 hover:border-[#25B9A1]" 
           : "border-[#E2E8F0] hover:border-[#2ED3B7]"
