@@ -68,16 +68,16 @@ export function EventCard({ event, compact = false, isSponsored = false }: Event
     const y = e.clientY - rect.top;
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
-    const rotateX = (y - centerY) / 20;
-    const rotateY = (centerX - x) / 20;
-    cardRef.current.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
-    cardRef.current.style.transition = "transform 0.1s ease-out";
+    const rotateX = (y - centerY) / 80;
+    const rotateY = (centerX - x) / 80;
+    cardRef.current.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-2px)`;
+    cardRef.current.style.transition = "transform 0.15s ease-out";
   };
 
   const handleMouseLeave = () => {
     if (!cardRef.current) return;
     cardRef.current.style.transform = "";
-    cardRef.current.style.transition = "transform 0.3s ease-out";
+    cardRef.current.style.transition = "transform 0.25s ease-out";
   };
 
   const trackEvent = (action: string) => {
