@@ -202,6 +202,23 @@ export default function Home() {
 
           <div className="flex-1 min-w-0">
             <OrganizerCTABlock />
+            
+            <div className="mb-6 p-4 bg-gradient-to-r from-[#E6FAF7] to-[#F8FAFC] border border-[#99F6E4] rounded-xl flex flex-col sm:flex-row items-center gap-4">
+              <div className="flex-1 text-center sm:text-left">
+                <p className="font-semibold text-[#0F172A]">
+                  Daj znać o nowych wydarzeniach w Twojej specjalizacji
+                </p>
+                <p className="text-sm text-[#64748B]">
+                  Zapisz się i otrzymuj powiadomienia o wydarzeniach dopasowanych do Ciebie.
+                </p>
+              </div>
+              <a href="mailto:hello@konfy.pl?subject=Chcę%20otrzymywać%20powiadomienia&body=Moja%20specjalizacja:%20">
+                <button className="px-6 py-2 bg-[#2ED3B7] text-[#0F172A] font-semibold rounded-full hover:bg-[#25B9A1] transition-colors whitespace-nowrap" data-testid="button-newsletter-cta">
+                  Zapisz się
+                </button>
+              </a>
+            </div>
+
             {view === "list" ? (
               <EventList
                 events={filteredEvents}

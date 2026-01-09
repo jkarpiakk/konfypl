@@ -1,7 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Navigation } from "@/components/Navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { 
   BarChart, 
   Bar, 
@@ -26,9 +28,15 @@ import {
   Share2,
   TrendingUp,
   Activity,
+  ShieldAlert,
 } from "lucide-react";
 import { SPECIALIZATION_LABELS } from "@/lib/constants";
 import type { Specialization } from "@/lib/types";
+
+interface AdminSession {
+  authenticated: boolean;
+  isAdmin: boolean;
+}
 
 interface OverviewData {
   totalEvents: number;
@@ -94,30 +102,78 @@ function StatCard({ title, value, icon: Icon, subtitle }: {
 }
 
 export default function AnalyticsDashboard() {
-  const { data: overview, isLoading: loadingOverview } = useQuery<OverviewData>({
+  const [, setLocation] = useLocation();
+  
+  const { data: adminSession, isLoading: loadingAuth } = useQuery<AdminSession>({
+    queryKey: ["/api/admin/session"],
+  });
+
+  const { data: overview, isLoading: loadingOverview, error: overviewError } = useQuery<OverviewData>({
     queryKey: ["/api/analytics/overview"],
+    enabled: adminSession?.isAdmin === true,
   });
 
   const { data: specializations, isLoading: loadingSpecs } = useQuery<SpecializationData[]>({
     queryKey: ["/api/analytics/specializations"],
+    enabled: adminSession?.isAdmin === true,
   });
 
   const { data: eventTypes, isLoading: loadingTypes } = useQuery<EventTypeData>({
     queryKey: ["/api/analytics/event-types"],
+    enabled: adminSession?.isAdmin === true,
   });
 
   const { data: engagement, isLoading: loadingEngagement } = useQuery<EngagementData[]>({
     queryKey: ["/api/analytics/engagement"],
+    enabled: adminSession?.isAdmin === true,
   });
 
   const { data: topEvents, isLoading: loadingTopEvents } = useQuery<TopEvent[]>({
     queryKey: ["/api/analytics/top-events"],
+    enabled: adminSession?.isAdmin === true,
   });
 
   const specChartData = specializations?.slice(0, 8).map(s => ({
     name: SPECIALIZATION_LABELS[s.name as Specialization] || s.name,
     count: s.count,
   })) || [];
+
+  if (loadingAuth) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <main className="max-w-7xl mx-auto px-4 md:px-6 py-8">
+          <div className="flex items-center justify-center h-64">
+            <Skeleton className="h-8 w-48" />
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (!adminSession?.isAdmin) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <main className="max-w-7xl mx-auto px-4 md:px-6 py-8">
+          <Card className="max-w-md mx-auto">
+            <CardContent className="pt-8 pb-8 text-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
+                <ShieldAlert className="w-8 h-8 text-red-600" />
+              </div>
+              <h2 className="text-xl font-bold mb-2">Brak dostępu</h2>
+              <p className="text-muted-foreground mb-6">
+                Panel analityczny jest dostępny tylko dla administratorów.
+              </p>
+              <Button onClick={() => setLocation("/")} data-testid="button-go-home">
+                Wróć do strony głównej
+              </Button>
+            </CardContent>
+          </Card>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

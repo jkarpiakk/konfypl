@@ -312,6 +312,16 @@ export default function EventDetail() {
                 </a>
               </div>
             )}
+
+            <div className="text-center pt-4 border-t border-[#E2E8F0]">
+              <a
+                href={`mailto:hello@konfy.pl?subject=Zgłoszenie%20błędu%20-%20${encodeURIComponent(event.title)}&body=Dotyczy%20wydarzenia:%20${encodeURIComponent(event.title)}%0A%0AOpis%20błędu:%20`}
+                className="text-xs text-[#64748B] hover:text-[#2ED3B7] transition-colors inline-flex items-center gap-1"
+                data-testid="link-report-error"
+              >
+                Zgłoś błąd w wydarzeniu
+              </a>
+            </div>
           </div>
         </div>
       </main>

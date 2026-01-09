@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { 
@@ -12,7 +12,9 @@ import {
   Share2,
   Crown,
   Star,
-  Zap
+  Zap,
+  Bell,
+  Mail
 } from "lucide-react";
 import { SiGooglecalendar, SiApple } from "react-icons/si";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -23,11 +25,23 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { SPECIALIZATION_LABELS } from "@/lib/constants";
 import { downloadICSFile, getGoogleCalendarUrl, getOutlookCalendarUrl } from "@/lib/calendar";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import type { Event, Specialization, EventTag, PromotionTier } from "@/lib/types";
 import { Link } from "wouter";
 
@@ -101,6 +115,9 @@ export function EventCard({ event, compact = false }: EventCardProps) {
   const startDate = new Date(event.startDate);
   const endDate = event.endDate ? new Date(event.endDate) : null;
   const cardRef = useRef<HTMLDivElement>(null);
+  const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
+  const [reminderEmail, setReminderEmail] = useState("");
+  const [reminderLoading, setReminderLoading] = useState(false);
 
   const handleMouseEnter = () => {
     if (!cardRef.current) return;
@@ -110,6 +127,38 @@ export function EventCard({ event, compact = false }: EventCardProps) {
   const handleMouseLeave = () => {
     if (!cardRef.current) return;
     cardRef.current.style.transform = "";
+  };
+
+  const handleReminderSubmit = async () => {
+    if (!reminderEmail || !reminderEmail.includes("@")) {
+      toast({ title: "Błąd", description: "Podaj poprawny adres email", variant: "destructive" });
+      return;
+    }
+    
+    setReminderLoading(true);
+    try {
+      await apiRequest("POST", "/api/leads", {
+        email: reminderEmail,
+        eventId: event.id,
+        type: "reminder",
+        eventTitle: event.title,
+        eventDate: event.startDate,
+        eventWebsite: event.sourceUrl,
+        organizerName: event.organizer,
+      });
+      
+      toast({ 
+        title: "Zapisano przypomnienie", 
+        description: `Wyślemy Ci email przed wydarzeniem na ${reminderEmail}` 
+      });
+      setReminderDialogOpen(false);
+      setReminderEmail("");
+      trackEvent("reminder_signup");
+    } catch {
+      toast({ title: "Błąd", description: "Nie udało się zapisać przypomnienia", variant: "destructive" });
+    } finally {
+      setReminderLoading(false);
+    }
   };
 
   const trackEvent = (action: string) => {
@@ -305,15 +354,58 @@ export function EventCard({ event, compact = false }: EventCardProps) {
 
         <div className="flex-1" />
 
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-[#64748B] hover:text-[#2ED3B7] hover:bg-[#E6FAF7]"
-          onClick={handleShare}
-          data-testid={`button-share-${event.id}`}
-        >
-          <Share2 className="w-4 h-4" />
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-[#64748B] hover:text-[#2ED3B7] hover:bg-[#E6FAF7]"
+              data-testid={`button-share-${event.id}`}
+            >
+              <Share2 className="w-4 h-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="bg-white border-[#E2E8F0] shadow-lg rounded-lg">
+            <DropdownMenuItem 
+              onClick={() => {
+                const url = encodeURIComponent(`${window.location.origin}/event/${event.id}?utm_source=facebook`);
+                const text = encodeURIComponent(event.title);
+                window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${text}`, "_blank", "width=600,height=400");
+                trackEvent("share");
+              }}
+              className="cursor-pointer hover:bg-[#F1F5F9]"
+            >
+              Facebook
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={() => {
+                const url = encodeURIComponent(`${window.location.origin}/event/${event.id}?utm_source=twitter`);
+                const text = encodeURIComponent(`${event.title} - ${window.location.origin}/event/${event.id}`);
+                window.open(`https://twitter.com/intent/tweet?text=${text}`, "_blank", "width=600,height=400");
+                trackEvent("share");
+              }}
+              className="cursor-pointer hover:bg-[#F1F5F9]"
+            >
+              X (Twitter)
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={() => {
+                const url = encodeURIComponent(`${window.location.origin}/event/${event.id}?utm_source=linkedin`);
+                window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, "_blank", "width=600,height=400");
+                trackEvent("share");
+              }}
+              className="cursor-pointer hover:bg-[#F1F5F9]"
+            >
+              LinkedIn
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={handleShare}
+              className="cursor-pointer hover:bg-[#F1F5F9]"
+            >
+              Kopiuj link
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -350,8 +442,66 @@ export function EventCard({ event, compact = false }: EventCardProps) {
               <SiApple className="w-4 h-4 mr-2" />
               Apple Calendar (.ics)
             </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem 
+              onClick={() => setReminderDialogOpen(true)}
+              className="cursor-pointer hover:bg-[#F1F5F9] text-[#2ED3B7]"
+              data-testid={`button-email-reminder-${event.id}`}
+            >
+              <Bell className="w-4 h-4 mr-2" />
+              Przypomnienie email
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        <Dialog open={reminderDialogOpen} onOpenChange={setReminderDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Bell className="w-5 h-5 text-[#2ED3B7]" />
+                Przypomnienie o wydarzeniu
+              </DialogTitle>
+              <DialogDescription>
+                Wyślemy Ci email przed rozpoczęciem wydarzenia "{event.title}".
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="reminder-email">Adres email</Label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8]" />
+                    <Input
+                      id="reminder-email"
+                      type="email"
+                      placeholder="twoj@email.pl"
+                      value={reminderEmail}
+                      onChange={(e) => setReminderEmail(e.target.value)}
+                      className="pl-10"
+                      data-testid="input-reminder-email"
+                    />
+                  </div>
+                </div>
+              </div>
+              <p className="text-xs text-[#64748B]">
+                Przypomnienie zostanie wysłane 24h przed wydarzeniem. Twój email nie zostanie udostępniony osobom trzecim.
+              </p>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setReminderDialogOpen(false)}>
+                Anuluj
+              </Button>
+              <Button 
+                onClick={handleReminderSubmit}
+                disabled={reminderLoading}
+                className="bg-[#2ED3B7] text-[#0F172A] hover:bg-[#25B9A1]"
+                data-testid="button-submit-reminder"
+              >
+                {reminderLoading ? "Zapisywanie..." : "Zapisz przypomnienie"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {event.sourceUrl && (
           <Button 

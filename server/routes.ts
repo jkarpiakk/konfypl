@@ -215,6 +215,28 @@ export async function registerRoutes(
     }
   });
 
+  const updateUserSchema = z.object({
+    isAdmin: z.boolean(),
+  });
+
+  app.patch("/api/users/:id", isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const parsed = updateUserSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid request body", details: parsed.error.errors });
+      }
+      
+      await db.update(users).set({ isAdmin: parsed.data.isAdmin }).where(eq(users.id, id));
+      
+      const updatedUser = await storage.getUser(id);
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      res.status(500).json({ error: "Failed to update user" });
+    }
+  });
+
   app.get("/api/sources", isAdmin, async (req, res) => {
     try {
       const sources = await storage.getSources();
@@ -685,8 +707,8 @@ export async function registerRoutes(
     }
   });
 
-  // Analytics Dashboard API
-  app.get("/api/analytics/overview", async (req, res) => {
+  // Analytics Dashboard API (Admin only)
+  app.get("/api/analytics/overview", isAdmin, async (req, res) => {
     try {
       const allEvents = await storage.getEvents();
       const publishedEvents = allEvents.filter(e => e.status === "published");
@@ -719,7 +741,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/analytics/specializations", async (req, res) => {
+  app.get("/api/analytics/specializations", isAdmin, async (req, res) => {
     try {
       const allEvents = await storage.getEvents();
       const publishedEvents = allEvents.filter(e => e.status === "published");
@@ -744,7 +766,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/analytics/event-types", async (req, res) => {
+  app.get("/api/analytics/event-types", isAdmin, async (req, res) => {
     try {
       const allEvents = await storage.getEvents();
       const publishedEvents = allEvents.filter(e => e.status === "published");
@@ -772,7 +794,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/analytics/engagement", async (req, res) => {
+  app.get("/api/analytics/engagement", isAdmin, async (req, res) => {
     try {
       // Get daily metrics for last 30 days
       const thirtyDaysAgo = new Date();
@@ -803,7 +825,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/analytics/top-events", async (req, res) => {
+  app.get("/api/analytics/top-events", isAdmin, async (req, res) => {
     try {
       const topEvents = await db
         .select({

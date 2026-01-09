@@ -434,9 +434,11 @@ interface UserData {
 function UsersTable({
   users,
   isLoading,
+  onToggleAdmin,
 }: {
   users: UserData[];
   isLoading: boolean;
+  onToggleAdmin?: (userId: string, isAdmin: boolean) => void;
 }) {
   if (isLoading) {
     return (
@@ -469,6 +471,7 @@ function UsersTable({
             <TableHead>Specjalizacje</TableHead>
             <TableHead>Rola</TableHead>
             <TableHead>Data rejestracji</TableHead>
+            <TableHead>Akcje</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -529,6 +532,18 @@ function UsersTable({
                   ? format(new Date(user.createdAt), "d MMM yyyy", { locale: pl })
                   : "Nieznana"
                 }
+              </TableCell>
+              <TableCell>
+                {onToggleAdmin && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onToggleAdmin(user.id, !user.isAdmin)}
+                    data-testid={`button-toggle-admin-${user.id}`}
+                  >
+                    {user.isAdmin ? "Usuń admina" : "Nadaj admina"}
+                  </Button>
+                )}
               </TableCell>
             </TableRow>
           ))}
@@ -780,6 +795,21 @@ export default function Admin() {
     },
   });
 
+  const toggleUserAdmin = useMutation({
+    mutationFn: ({ userId, isAdmin }: { userId: string; isAdmin: boolean }) => 
+      apiRequest("PATCH", `/api/users/${userId}`, { isAdmin }),
+    onSuccess: (_, { isAdmin }) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      toast({ 
+        title: isAdmin ? "Nadano uprawnienia admina" : "Usunięto uprawnienia admina",
+        description: isAdmin ? "Użytkownik ma teraz dostęp do panelu admina" : "Użytkownik nie ma już dostępu do panelu admina"
+      });
+    },
+    onError: () => {
+      toast({ title: "Błąd", description: "Nie udało się zmienić uprawnień", variant: "destructive" });
+    },
+  });
+
   if (isAuthenticated === null) {
     return (
       <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
@@ -898,6 +928,13 @@ export default function Admin() {
                   {usersList.length}
                 </Badge>
               </TabsTrigger>
+              <TabsTrigger value="promotions" className="gap-2" data-testid="tab-promotions">
+                <Megaphone className="w-4 h-4" />
+                Promocje
+                <Badge variant="secondary" className="ml-1 bg-[#2ED3B7]/20 text-[#0F172A]">
+                  {allEvents.filter(e => e.promotionTier && e.promotionTier !== "none").length}
+                </Badge>
+              </TabsTrigger>
             </TabsList>
 
             <div className="flex gap-2">
@@ -959,7 +996,102 @@ export default function Admin() {
             <UsersTable
               users={usersList}
               isLoading={loadingUsers}
+              onToggleAdmin={(userId, isAdmin) => toggleUserAdmin.mutate({ userId, isAdmin })}
             />
+          </TabsContent>
+
+          <TabsContent value="promotions">
+            <div className="space-y-4">
+              <Card className="bg-gradient-to-r from-[#2ED3B7]/10 to-[#FFD700]/10 border-[#2ED3B7]/30">
+                <CardContent className="py-4">
+                  <div className="flex items-center gap-3">
+                    <Megaphone className="w-5 h-5 text-[#2ED3B7]" />
+                    <div>
+                      <p className="font-medium text-[#0F172A]">Zarządzanie promocjami wydarzeń</p>
+                      <p className="text-sm text-[#64748B]">Poniżej znajdują się wszystkie aktywnie promowane wydarzenia. Możesz zmienić poziom promocji lub ją wyłączyć.</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              {loadingAll ? (
+                <div className="space-y-2">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <Skeleton key={i} className="h-16 w-full" />
+                  ))}
+                </div>
+              ) : (
+                <div className="border rounded-lg overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Wydarzenie</TableHead>
+                        <TableHead>Data</TableHead>
+                        <TableHead>Poziom promocji</TableHead>
+                        <TableHead>Data rozpoczęcia</TableHead>
+                        <TableHead>Akcje</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {allEvents
+                        .filter(e => e.promotionTier && e.promotionTier !== "none")
+                        .map((event) => (
+                          <TableRow key={event.id} data-testid={`row-promotion-${event.id}`}>
+                            <TableCell className="font-medium">
+                              <div className="flex items-center gap-2">
+                                {event.promotionTier === "max" && <Crown className="w-4 h-4 text-[#FFD700]" />}
+                                {event.promotionTier === "pro" && <Zap className="w-4 h-4 text-[#2ED3B7]" />}
+                                {event.promotionTier === "basic" && <Star className="w-4 h-4 text-[#2ED3B7]" />}
+                                <span className="line-clamp-1">{event.title}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-[#64748B]">
+                              {event.startDate ? format(new Date(event.startDate), "d MMM yyyy", { locale: pl }) : "Brak daty"}
+                            </TableCell>
+                            <TableCell>
+                              <Badge className={
+                                event.promotionTier === "max" 
+                                  ? "bg-gradient-to-r from-[#FFD700] to-[#FFA500] text-[#0F172A]"
+                                  : event.promotionTier === "pro"
+                                    ? "bg-gradient-to-r from-[#2ED3B7] to-[#10B981] text-white"
+                                    : "bg-[#2ED3B7]/20 text-[#0F172A] border border-[#2ED3B7]"
+                              }>
+                                {PROMOTION_TIER_LABELS[event.promotionTier as PromotionTier]}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-[#64748B]">
+                              {event.promotionStart 
+                                ? format(new Date(event.promotionStart), "d MMM yyyy", { locale: pl })
+                                : "Nieznana"}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setPromotionTier.mutate({ id: event.id, tier: "none" })}
+                                  data-testid={`button-remove-promotion-${event.id}`}
+                                >
+                                  Wyłącz promocję
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      {allEvents.filter(e => e.promotionTier && e.promotionTier !== "none").length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center py-8 text-[#64748B]">
+                            <Megaphone className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                            <p>Brak promowanych wydarzeń</p>
+                            <p className="text-sm">Przejdź do zakładki "Wszystkie" aby ustawić promocję dla wydarzeń</p>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </div>
           </TabsContent>
         </Tabs>
       </main>

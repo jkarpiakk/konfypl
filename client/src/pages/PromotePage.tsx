@@ -21,7 +21,11 @@ import {
   Star,
   ArrowRight,
   Zap,
-  Loader2
+  Loader2,
+  Crown,
+  Sparkles,
+  Calendar,
+  MapPin,
 } from "lucide-react";
 import { Link, useSearch } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -261,6 +265,105 @@ export default function PromotePage() {
                 </CardFooter>
               </Card>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="py-16 bg-white border-t border-[#E2E8F0]">
+        <div className="max-w-7xl mx-auto px-4 md:px-6">
+          <div className="text-center mb-12">
+            <h2 className="font-heading text-3xl font-bold text-[#0F172A] mb-4">
+              Jak wygląda promocja?
+            </h2>
+            <p className="text-[#64748B] max-w-2xl mx-auto">
+              Zobacz jak Twoje wydarzenie będzie wyróżnione w zależności od wybranego pakietu.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            <div>
+              <h3 className="font-semibold text-center mb-4 flex items-center justify-center gap-2">
+                <Star className="w-5 h-5 text-[#2ED3B7]" />
+                Basic - Promowane
+              </h3>
+              <Card className="border-[#2ED3B7] border-2 shadow-md">
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="font-heading font-semibold text-lg text-[#0F172A]">
+                      Przykładowe wydarzenie
+                    </h3>
+                    <Badge className="gap-1 text-xs bg-[#E6FAF7] text-[#0F766E] border-[#99F6E4]">
+                      <Star className="w-3 h-3" />
+                      Promowane
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-2 mt-2 text-sm text-[#475569]">
+                    <Calendar className="w-4 h-4 text-[#2ED3B7]" />
+                    <span>15 sty 2026</span>
+                    <MapPin className="w-4 h-4 ml-2 text-[#2ED3B7]" />
+                    <span>Warszawa</span>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <p className="text-sm text-[#64748B]">Miętowe obramowanie wyróżnia wydarzenie na tle innych.</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-center mb-4 flex items-center justify-center gap-2">
+                <Crown className="w-5 h-5 text-[#0EA5E9]" />
+                Pro - Wyróżniony Partner
+              </h3>
+              <Card className="border-transparent ring-2 ring-[#2ED3B7] shadow-lg relative overflow-hidden">
+                <div className="bg-gradient-to-r from-[#2ED3B7] to-[#0EA5E9] text-white text-xs font-medium px-3 py-1.5 flex items-center gap-1.5">
+                  <Sparkles className="w-3 h-3" />
+                  Wyróżniony Partner
+                </div>
+                <CardHeader className="pb-3">
+                  <h3 className="font-heading font-semibold text-lg text-[#0F172A]">
+                    Przykładowe wydarzenie
+                  </h3>
+                  <div className="flex items-center gap-2 mt-2 text-sm text-[#475569]">
+                    <Calendar className="w-4 h-4 text-[#2ED3B7]" />
+                    <span>15 sty 2026</span>
+                    <MapPin className="w-4 h-4 ml-2 text-[#2ED3B7]" />
+                    <span>Kraków</span>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <p className="text-sm text-[#64748B]">Gradient obramowania + banner z tytułem partnera.</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-center mb-4 flex items-center justify-center gap-2">
+                <Zap className="w-5 h-5 text-[#FFD700]" />
+                Max - Premium Partner
+              </h3>
+              <Card className="border-transparent ring-2 ring-[#FFD700]/50 shadow-xl relative overflow-hidden animate-pulse">
+                <div className="absolute inset-[-4px] rounded-2xl bg-gradient-to-r from-[#FFD700] via-[#FF8C00] to-[#FFD700] -z-10 blur-sm opacity-60" />
+                <div className="bg-gradient-to-r from-[#FFD700] via-[#FF8C00] to-[#FFD700] text-[#0F172A] text-xs font-semibold px-3 py-1.5 flex items-center gap-1.5">
+                  <Zap className="w-3 h-3" />
+                  Premium Partner
+                </div>
+                <CardHeader className="pb-3 bg-white rounded-t-none">
+                  <h3 className="font-heading font-semibold text-lg text-[#0F172A]">
+                    Przykładowe wydarzenie
+                  </h3>
+                  <div className="flex items-center gap-2 mt-2 text-sm text-[#475569]">
+                    <Calendar className="w-4 h-4 text-[#2ED3B7]" />
+                    <span>15 sty 2026</span>
+                    <MapPin className="w-4 h-4 ml-2 text-[#2ED3B7]" />
+                    <span>Online</span>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0 bg-white">
+                  <p className="text-sm text-[#64748B]">Złota poświata + animacja pulsowania + wyróżnienie max.</p>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </section>
