@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek } from "date-fns";
 import { pl } from "date-fns/locale";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Crown, Zap, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +9,40 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { EventCard } from "./EventCard";
-import type { Event } from "@/lib/types";
+import type { Event, PromotionTier } from "@/lib/types";
+
+const isPromotionActive = (event: Event): boolean => {
+  if (event.promotionTier === "none") return false;
+  const now = new Date();
+  const start = event.promotionStart ? new Date(event.promotionStart) : null;
+  const end = event.promotionEnd ? new Date(event.promotionEnd) : null;
+  if (start && now < start) return false;
+  if (end && now > end) return false;
+  return true;
+};
+
+const getHighestPromoTier = (events: Event[]): PromotionTier => {
+  const tiers: PromotionTier[] = ["none", "basic", "pro", "max"];
+  let highest: PromotionTier = "none";
+  for (const event of events) {
+    if (isPromotionActive(event)) {
+      const tier = event.promotionTier as PromotionTier;
+      if (tiers.indexOf(tier) > tiers.indexOf(highest)) {
+        highest = tier;
+      }
+    }
+  }
+  return highest;
+};
+
+const getDotColor = (tier: PromotionTier): string => {
+  switch (tier) {
+    case "max": return "bg-gradient-to-r from-[#FFD700] to-[#FF8C00]";
+    case "pro": return "bg-gradient-to-r from-[#2ED3B7] to-[#0EA5E9]";
+    case "basic": return "bg-[#2ED3B7]";
+    default: return "bg-[#94A3B8]";
+  }
+};
 
 interface CalendarViewProps {
   events: Event[];
@@ -113,6 +146,8 @@ export function CalendarView({ events, isLoading }: CalendarViewProps) {
                 const isCurrentMonth = isSameMonth(day, currentMonth);
                 const isToday = isSameDay(day, today);
                 const hasEvents = dayEvents.length > 0;
+                const highestTier = getHighestPromoTier(dayEvents);
+                const hasPromo = highestTier !== "none";
 
                 return (
                   <button
@@ -126,10 +161,22 @@ export function CalendarView({ events, isLoading }: CalendarViewProps) {
                         : "bg-[#F1F5F9] border-transparent text-[#64748B]",
                       isToday && "ring-2 ring-[#2ED3B7] ring-offset-1",
                       hasEvents && "cursor-pointer hover:border-[#2ED3B7] hover:shadow-sm",
-                      !hasEvents && "cursor-default"
+                      !hasEvents && "cursor-default",
+                      hasPromo && highestTier === "max" && "bg-gradient-to-br from-[#FFF8E1] to-[#FFE082] border-[#FFD700]",
+                      hasPromo && highestTier === "pro" && "bg-gradient-to-br from-[#E6FAF7] to-[#E0F7FA] border-[#2ED3B7]",
+                      hasPromo && highestTier === "basic" && "bg-[#F0FDF9] border-[#99F6E4]"
                     )}
                     data-testid={`calendar-day-${format(day, "yyyy-MM-dd")}`}
                   >
+                    {hasPromo && highestTier === "max" && (
+                      <Zap className="absolute top-0.5 right-0.5 w-3 h-3 text-[#FF8C00]" />
+                    )}
+                    {hasPromo && highestTier === "pro" && (
+                      <Crown className="absolute top-0.5 right-0.5 w-3 h-3 text-[#0EA5E9]" />
+                    )}
+                    {hasPromo && highestTier === "basic" && (
+                      <Star className="absolute top-0.5 right-0.5 w-2.5 h-2.5 text-[#2ED3B7]" />
+                    )}
                     <span
                       className={cn(
                         "text-sm",
@@ -142,16 +189,22 @@ export function CalendarView({ events, isLoading }: CalendarViewProps) {
                     {hasEvents && (
                       <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-0.5">
                         {dayEvents.length <= 3 ? (
-                          dayEvents.map((_, i) => (
-                            <div
-                              key={i}
-                              className="w-1.5 h-1.5 rounded-full bg-[#2ED3B7]"
-                            />
-                          ))
+                          dayEvents.map((event, i) => {
+                            const tier = isPromotionActive(event) ? event.promotionTier as PromotionTier : "none";
+                            return (
+                              <div
+                                key={i}
+                                className={cn("w-1.5 h-1.5 rounded-full", getDotColor(tier))}
+                              />
+                            );
+                          })
                         ) : (
                           <Badge
                             variant="secondary"
-                            className="text-[10px] px-1 py-0 h-4 bg-[#E6FAF7] text-[#0F766E]"
+                            className={cn(
+                              "text-[10px] px-1 py-0 h-4",
+                              hasPromo ? "bg-[#2ED3B7] text-white" : "bg-[#E6FAF7] text-[#0F766E]"
+                            )}
                           >
                             {dayEvents.length}
                           </Badge>
