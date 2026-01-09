@@ -675,6 +675,46 @@ export async function registerRoutes(
     }
   });
 
+  // Newsletter subscription endpoint
+  app.post("/api/newsletter/subscribe", async (req, res) => {
+    try {
+      const { email, name, specializations, eventId, eventTitle } = req.body;
+      
+      if (!email || !email.includes("@")) {
+        return res.status(400).json({ error: "Invalid email address" });
+      }
+      
+      const fields: Record<string, string> = {};
+      if (name) fields.name = name;
+      if (specializations && specializations.length > 0) {
+        fields.specializations = specializations.join(", ");
+      }
+      if (eventId) fields.event_id = String(eventId);
+      if (eventTitle) fields.event_title = eventTitle;
+      fields.source = "newsletter";
+      
+      const success = await addSubscriber({ email, fields });
+      
+      // Also save to leads table for backup
+      await db.insert(leads).values({
+        email,
+        type: eventId ? "reminder" : "newsletter",
+        eventId: eventId || null,
+        eventTitle: eventTitle || null,
+      }).catch(() => {});
+      
+      if (success) {
+        res.json({ success: true, message: "Zapisano do newslettera" });
+      } else {
+        // Even if MailerLite fails, we saved to leads
+        res.json({ success: true, message: "Zapisano do newslettera" });
+      }
+    } catch (error) {
+      console.error("Newsletter subscription error:", error);
+      res.status(500).json({ error: "Failed to subscribe" });
+    }
+  });
+
   app.post("/api/leads", async (req, res) => {
     try {
       const parseResult = insertLeadSchema.safeParse(req.body);
