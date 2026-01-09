@@ -29,6 +29,10 @@ import {
   Users,
   Shield,
   User,
+  Star,
+  Crown,
+  Zap,
+  Megaphone,
 } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
 import { KonfyLogo } from "@/components/KonfyLogo";
@@ -71,7 +75,29 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { SPECIALIZATIONS, SPECIALIZATION_LABELS } from "@/lib/constants";
-import type { Event, Source, Specialization } from "@/lib/types";
+import type { Event, Source, Specialization, PromotionTier } from "@/lib/types";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+const PROMOTION_TIER_LABELS: Record<PromotionTier, string> = {
+  none: "Brak",
+  basic: "Basic",
+  pro: "Pro",
+  max: "Max",
+};
+
+const PROMOTION_TIER_ICONS: Record<PromotionTier, React.ReactNode> = {
+  none: null,
+  basic: <Star className="w-3 h-3 text-[#2ED3B7]" />,
+  pro: <Crown className="w-3 h-3 text-[#0EA5E9]" />,
+  max: <Zap className="w-3 h-3 text-[#FF8C00]" />,
+};
 
 function EventsTable({
   events,
@@ -81,6 +107,7 @@ function EventsTable({
   onReject,
   onEdit,
   onDelete,
+  onSetPromotion,
 }: {
   events: Event[];
   isLoading: boolean;
@@ -89,6 +116,7 @@ function EventsTable({
   onReject?: (id: number) => void;
   onEdit?: (event: Event) => void;
   onDelete?: (id: number) => void;
+  onSetPromotion?: (id: number, tier: PromotionTier) => void;
 }) {
   if (isLoading) {
     return (
@@ -116,9 +144,10 @@ function EventsTable({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[300px]">Tytuł</TableHead>
+            <TableHead className="w-[280px]">Tytuł</TableHead>
             <TableHead>Data</TableHead>
             <TableHead>Specjalizacja</TableHead>
+            <TableHead>Promocja</TableHead>
             <TableHead>Status</TableHead>
             {showApproval && <TableHead>AI</TableHead>}
             <TableHead className="text-right">Akcje</TableHead>
@@ -151,6 +180,56 @@ function EventsTable({
                     </Badge>
                   )}
                 </div>
+              </TableCell>
+              <TableCell>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 gap-1.5"
+                      data-testid={`button-promo-${event.id}`}
+                    >
+                      {PROMOTION_TIER_ICONS[(event.promotionTier || "none") as PromotionTier]}
+                      <span className="text-xs">
+                        {PROMOTION_TIER_LABELS[(event.promotionTier || "none") as PromotionTier]}
+                      </span>
+                      <Megaphone className="w-3 h-3 ml-1 opacity-50" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    <DropdownMenuLabel className="text-xs">Ustaw poziom promocji</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => onSetPromotion?.(event.id, "none")}
+                      className="gap-2"
+                    >
+                      <span className="w-4" />
+                      Brak promocji
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => onSetPromotion?.(event.id, "basic")}
+                      className="gap-2"
+                    >
+                      <Star className="w-4 h-4 text-[#2ED3B7]" />
+                      Basic - miętowa ramka
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => onSetPromotion?.(event.id, "pro")}
+                      className="gap-2"
+                    >
+                      <Crown className="w-4 h-4 text-[#0EA5E9]" />
+                      Pro - gradient + banner
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => onSetPromotion?.(event.id, "max")}
+                      className="gap-2"
+                    >
+                      <Zap className="w-4 h-4 text-[#FF8C00]" />
+                      Max - złoty glow + animacja
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </TableCell>
               <TableCell>
                 <Badge
@@ -660,6 +739,26 @@ export default function Admin() {
     },
   });
 
+  const setPromotionTier = useMutation({
+    mutationFn: ({ id, tier }: { id: number; tier: PromotionTier }) => 
+      apiRequest("PATCH", `/api/events/${id}`, { 
+        promotionTier: tier,
+        promotionStart: tier !== "none" ? new Date().toISOString().split("T")[0] : null,
+        promotionEnd: null,
+      }),
+    onSuccess: (_, { tier }) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/events"] });
+      const label = PROMOTION_TIER_LABELS[tier];
+      toast({ 
+        title: tier === "none" ? "Promocja wyłączona" : `Ustawiono promocję: ${label}`,
+        description: tier === "none" ? "Wydarzenie nie jest już promowane" : `Wydarzenie będzie wyróżnione w listingach`
+      });
+    },
+    onError: () => {
+      toast({ title: "Błąd", description: "Nie udało się ustawić promocji", variant: "destructive" });
+    },
+  });
+
   const deleteSource = useMutation({
     mutationFn: (id: number) => apiRequest("DELETE", `/api/sources/${id}`),
     onSuccess: () => {
@@ -832,6 +931,7 @@ export default function Admin() {
               onReject={(id) => rejectEvent.mutate(id)}
               onEdit={setEditingEvent}
               onDelete={setDeleteEventId}
+              onSetPromotion={(id, tier) => setPromotionTier.mutate({ id, tier })}
             />
           </TabsContent>
 
@@ -841,6 +941,7 @@ export default function Admin() {
               isLoading={loadingAll}
               onEdit={setEditingEvent}
               onDelete={setDeleteEventId}
+              onSetPromotion={(id, tier) => setPromotionTier.mutate({ id, tier })}
             />
           </TabsContent>
 

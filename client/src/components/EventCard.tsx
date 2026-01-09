@@ -62,20 +62,20 @@ const getPromotionStyles = (tier: PromotionTier) => {
     case "basic":
       return {
         cardClass: "border-[#2ED3B7] border-2 shadow-md",
-        badge: { label: "Wyróżnione", icon: Star, bgClass: "bg-[#E6FAF7] text-[#0F766E] border-[#99F6E4]" },
+        badge: { label: "Promowane", icon: Star, bgClass: "bg-[#E6FAF7] text-[#0F766E] border-[#99F6E4]" },
         banner: null,
       };
     case "pro":
       return {
         cardClass: "border-transparent ring-2 ring-[#2ED3B7] shadow-lg relative before:absolute before:inset-0 before:rounded-2xl before:p-[2px] before:bg-gradient-to-r before:from-[#2ED3B7] before:via-[#0EA5E9] before:to-[#2ED3B7] before:-z-10",
-        badge: { label: "Premium", icon: Crown, bgClass: "bg-gradient-to-r from-[#2ED3B7] to-[#0EA5E9] text-white border-0" },
-        banner: { bgClass: "bg-gradient-to-r from-[#2ED3B7] to-[#0EA5E9]", label: "Premium Spotlight" },
+        badge: { label: "Wyróżniony Partner", icon: Crown, bgClass: "bg-gradient-to-r from-[#2ED3B7] to-[#0EA5E9] text-white border-0" },
+        banner: { bgClass: "bg-gradient-to-r from-[#2ED3B7] to-[#0EA5E9]", label: "Wyróżniony Partner" },
       };
     case "max":
       return {
         cardClass: "border-transparent ring-2 ring-[#FFD700]/50 shadow-xl relative overflow-visible before:absolute before:inset-[-4px] before:rounded-2xl before:bg-gradient-to-r before:from-[#FFD700] before:via-[#FF8C00] before:to-[#FFD700] before:-z-10 before:blur-sm before:opacity-60 animate-pulse-subtle",
-        badge: { label: "Infinity Showcase", icon: Zap, bgClass: "bg-gradient-to-r from-[#FFD700] to-[#FF8C00] text-[#0F172A] border-0 font-semibold" },
-        banner: { bgClass: "bg-gradient-to-r from-[#FFD700] via-[#FF8C00] to-[#FFD700]", label: "Infinity Showcase" },
+        badge: { label: "Premium Partner", icon: Zap, bgClass: "bg-gradient-to-r from-[#FFD700] to-[#FF8C00] text-[#0F172A] border-0 font-semibold" },
+        banner: { bgClass: "bg-gradient-to-r from-[#FFD700] via-[#FF8C00] to-[#FFD700]", label: "Premium Partner" },
       };
     default:
       return {
@@ -87,7 +87,7 @@ const getPromotionStyles = (tier: PromotionTier) => {
 };
 
 const isPromotionActive = (event: Event): boolean => {
-  if (event.promotionTier === "none") return false;
+  if (!event.promotionTier || event.promotionTier === "none") return false;
   const now = new Date();
   const start = event.promotionStart ? new Date(event.promotionStart) : null;
   const end = event.promotionEnd ? new Date(event.promotionEnd) : null;

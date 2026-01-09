@@ -12,7 +12,7 @@ import { EventCard } from "./EventCard";
 import type { Event, PromotionTier } from "@/lib/types";
 
 const isPromotionActive = (event: Event): boolean => {
-  if (event.promotionTier === "none") return false;
+  if (!event.promotionTier || event.promotionTier === "none") return false;
   const now = new Date();
   const start = event.promotionStart ? new Date(event.promotionStart) : null;
   const end = event.promotionEnd ? new Date(event.promotionEnd) : null;

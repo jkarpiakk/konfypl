@@ -10,7 +10,26 @@ import { getStoredPreferences } from "@/lib/preferences";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { List, CalendarDays } from "lucide-react";
 import { CalendarView } from "@/components/CalendarView";
-import type { Event, EventFilters, Specialization } from "@/lib/types";
+import type { Event, EventFilters, Specialization, PromotionTier } from "@/lib/types";
+
+const isPromotionActive = (event: Event): boolean => {
+  if (!event.promotionTier || event.promotionTier === "none") return false;
+  const now = new Date();
+  const start = event.promotionStart ? new Date(event.promotionStart) : null;
+  const end = event.promotionEnd ? new Date(event.promotionEnd) : null;
+  if (start && now < start) return false;
+  if (end && now > end) return false;
+  return true;
+};
+
+const getTierPriority = (tier: PromotionTier): number => {
+  switch (tier) {
+    case "max": return 3;
+    case "pro": return 2;
+    case "basic": return 1;
+    default: return 0;
+  }
+};
 
 const defaultFilters: EventFilters = {
   search: "",
@@ -91,7 +110,21 @@ export default function Home() {
       }
 
       return true;
-    }).sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
+    }).sort((a, b) => {
+      const aActive = isPromotionActive(a);
+      const bActive = isPromotionActive(b);
+      
+      if (aActive && !bActive) return -1;
+      if (!aActive && bActive) return 1;
+      
+      if (aActive && bActive) {
+        const aPriority = getTierPriority(a.promotionTier as PromotionTier);
+        const bPriority = getTierPriority(b.promotionTier as PromotionTier);
+        if (aPriority !== bPriority) return bPriority - aPriority;
+      }
+      
+      return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
+    });
   }, [events, filters]);
 
   const handleHeroSearch = () => {
