@@ -171,9 +171,9 @@ export default function EventDetail() {
 
             <div>
               <h2 className="text-lg font-semibold mb-3">Opis</h2>
-              <div className="prose prose-sm dark:prose-invert max-w-none" data-testid="text-event-description">
+              <div className="max-w-none" data-testid="text-event-description">
                 {event.description ? (
-                  <p className="whitespace-pre-wrap">{event.description}</p>
+                  <p className="whitespace-pre-wrap text-[#334155] leading-relaxed">{event.description}</p>
                 ) : (
                   <p className="text-muted-foreground italic">
                     Brak opisu dla tego wydarzenia.
