@@ -65,6 +65,15 @@ export const TAG_LABELS: Record<typeof EVENT_TAGS[number], string> = {
 
 // Note: users table is defined in ./models/auth.ts
 
+export const PROMOTION_TIERS = ["none", "basic", "pro", "max"] as const;
+
+export const PROMOTION_TIER_LABELS: Record<typeof PROMOTION_TIERS[number], string> = {
+  none: "Brak",
+  basic: "Basic",
+  pro: "Pro",
+  max: "Max"
+};
+
 export const events = pgTable("events", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
@@ -85,6 +94,9 @@ export const events = pgTable("events", {
   status: text("status").default("pending").notNull(),
   isAiAdded: boolean("is_ai_added").default(false).notNull(),
   aiConfidence: integer("ai_confidence"),
+  promotionTier: text("promotion_tier").default("none").notNull(),
+  promotionStart: date("promotion_start"),
+  promotionEnd: date("promotion_end"),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
   updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
@@ -292,6 +304,7 @@ export const insertLeadSchema = createInsertSchema(leads).omit({
 export type Specialization = typeof SPECIALIZATIONS[number];
 export type EventTag = typeof EVENT_TAGS[number];
 export type PlacementType = typeof PLACEMENT_TYPES[number];
+export type PromotionTier = typeof PROMOTION_TIERS[number];
 // Note: User and InsertUser types are exported from ./models/auth.ts
 export type InsertEvent = z.infer<typeof insertEventSchema>;
 export type Event = typeof events.$inferSelect;
