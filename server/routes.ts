@@ -206,6 +206,93 @@ export async function registerRoutes(
     }
   });
 
+  const setPromotionSchema = z.object({
+    tier: z.enum(["none", "basic", "pro", "max"]),
+    hours: z.number().min(1).max(8760).optional(),
+  });
+
+  app.post("/api/events/:id/promotion", isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid event ID" });
+      }
+      
+      const parsed = setPromotionSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid promotion data", details: parsed.error.errors });
+      }
+      
+      const { tier, hours } = parsed.data;
+      
+      let updateData: any = { promotionTier: tier };
+      
+      if (tier === "none") {
+        updateData.promotionStart = null;
+        updateData.promotionEnd = null;
+        updateData.promotionHours = null;
+        updateData.promotionOrder = 0;
+      } else if (hours) {
+        const now = new Date();
+        const end = new Date(now.getTime() + hours * 60 * 60 * 1000);
+        updateData.promotionStart = now;
+        updateData.promotionEnd = end;
+        updateData.promotionHours = hours;
+      }
+      
+      const event = await storage.updateEvent(id, updateData);
+      if (!event) {
+        return res.status(404).json({ error: "Event not found" });
+      }
+      res.json(event);
+    } catch (error) {
+      console.error("Error setting promotion:", error);
+      res.status(500).json({ error: "Failed to set promotion" });
+    }
+  });
+
+  const reorderPromotionsSchema = z.object({
+    orderedIds: z.array(z.number()),
+  });
+
+  app.post("/api/events/promotions/reorder", isAdmin, async (req, res) => {
+    try {
+      const parsed = reorderPromotionsSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid reorder data", details: parsed.error.errors });
+      }
+      
+      const { orderedIds } = parsed.data;
+      
+      for (let i = 0; i < orderedIds.length; i++) {
+        await storage.updateEvent(orderedIds[i], { promotionOrder: i });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error reordering promotions:", error);
+      res.status(500).json({ error: "Failed to reorder promotions" });
+    }
+  });
+
+  app.get("/api/events/promoted", async (req, res) => {
+    try {
+      const allEvents = await storage.getEvents({ status: "published" });
+      const now = new Date();
+      const promotedEvents = allEvents.filter(e => 
+        e.promotionTier !== "none" && 
+        e.promotionStart && 
+        e.promotionEnd && 
+        new Date(e.promotionStart) <= now && 
+        new Date(e.promotionEnd) >= now
+      );
+      res.json(promotedEvents);
+    } catch (error) {
+      console.error("Error fetching promoted events:", error);
+      res.status(500).json({ error: "Failed to fetch promoted events" });
+    }
+  });
+
   app.get("/api/users", isAdmin, async (req, res) => {
     try {
       const usersList = await storage.getAllUsers();
