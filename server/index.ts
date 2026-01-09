@@ -12,6 +12,23 @@ import { WebhookHandlers } from './webhookHandlers';
 const app = express();
 const httpServer = createServer(app);
 
+// Health check endpoints - respond immediately for deployment health checks
+app.get('/health', (_req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Root health check - will be overwritten by static handler in production
+// but provides immediate response during startup
+let serverReady = false;
+app.get('/', (req, res, next) => {
+  if (!serverReady) {
+    // During startup, return a simple 200 response
+    return res.status(200).send('<!DOCTYPE html><html><head><title>Konfy.pl</title></head><body><h1>Starting...</h1></body></html>');
+  }
+  // Once ready, pass to next handler (static files or vite)
+  next();
+});
+
 declare module "http" {
   interface IncomingMessage {
     rawBody: unknown;
@@ -175,6 +192,7 @@ app.use((req, res, next) => {
       reusePort: true,
     },
     () => {
+      serverReady = true;
       log(`serving on port ${port}`);
     },
   );
