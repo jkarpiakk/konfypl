@@ -256,7 +256,7 @@ export default function PromotePage() {
                     onClick={() => handleSelectPackage(pkg)}
                     data-testid={`button-select-${pkg.name.toLowerCase()}`}
                   >
-                    Wybierz {pkg.name}
+                    Zapytaj o {pkg.name}
                   </Button>
                 </CardFooter>
               </Card>
@@ -332,10 +332,10 @@ export default function PromotePage() {
         <DialogContent className="bg-white">
           <DialogHeader>
             <DialogTitle className="font-heading">
-              {selectedPackage ? `Pakiet ${selectedPackage.name}` : 'Zamow pakiet'}
+              {selectedPackage ? `Zapytaj o pakiet ${selectedPackage.name}` : 'Zapytaj o promocje'}
             </DialogTitle>
             <DialogDescription>
-              {selectedPackage && `${selectedPackage.price} PLN / ${selectedPackage.period}`}
+              {selectedPackage && `Cena: ${selectedPackage.price} PLN / ${selectedPackage.period}`}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -351,8 +351,8 @@ export default function PromotePage() {
               />
             </div>
             <p className="text-sm text-[#64748B]">
-              Po zgloszeniu skontaktujemy sie z Toba, aby omowic szczegoly promocji 
-              i przeslac link do platnosci.
+              Zostaw swoj email, a skontaktujemy sie z Toba w ciagu 24 godzin, 
+              aby omowic szczegoly promocji i ustalić warunki wspolpracy.
             </p>
             <Button
               className="w-full rounded-full bg-[#2ED3B7] text-[#0F172A] hover:bg-[#25B9A1]"
@@ -363,10 +363,10 @@ export default function PromotePage() {
               {isLoading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Przetwarzanie...
+                  Wysylanie...
                 </>
               ) : (
-                'Zamow pakiet'
+                'Wyslij zgloszenie'
               )}
             </Button>
           </div>
