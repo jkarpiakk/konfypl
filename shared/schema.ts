@@ -117,8 +117,10 @@ export const events = pgTable("events", {
   isAiAdded: boolean("is_ai_added").default(false).notNull(),
   aiConfidence: integer("ai_confidence"),
   promotionTier: text("promotion_tier").default("none").notNull(),
-  promotionStart: date("promotion_start"),
-  promotionEnd: date("promotion_end"),
+  promotionStart: timestamp("promotion_start"),
+  promotionEnd: timestamp("promotion_end"),
+  promotionHours: integer("promotion_hours"),
+  promotionOrder: integer("promotion_order").default(0).notNull(),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
   updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
