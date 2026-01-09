@@ -6,9 +6,10 @@ import { EventList } from "@/components/EventList";
 import { FiltersPanel } from "@/components/FiltersPanel";
 import { SEOFooter } from "@/components/SEOFooter";
 import { OrganizerCTABlock } from "@/components/OrganizerCTABlock";
+import { NewsletterModal } from "@/components/NewsletterModal";
 import { getStoredPreferences } from "@/lib/preferences";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { List, CalendarDays } from "lucide-react";
+import { List, CalendarDays, Bell } from "lucide-react";
 import { CalendarView } from "@/components/CalendarView";
 import type { Event, EventFilters, Specialization, PromotionTier } from "@/lib/types";
 
@@ -52,6 +53,7 @@ export default function Home() {
   });
   const [view, setView] = useState<"list" | "calendar">("list");
   const [heroSearch, setHeroSearch] = useState("");
+  const [newsletterOpen, setNewsletterOpen] = useState(false);
 
   const { data: events = [], isLoading } = useQuery<Event[]>({
     queryKey: ["/api/events", { status: "published", upcoming: "true", limit: "50" }],
@@ -204,20 +206,33 @@ export default function Home() {
             <OrganizerCTABlock />
             
             <div className="mb-6 p-4 bg-gradient-to-r from-[#E6FAF7] to-[#F8FAFC] border border-[#99F6E4] rounded-xl flex flex-col sm:flex-row items-center gap-4">
-              <div className="flex-1 text-center sm:text-left">
-                <p className="font-semibold text-[#0F172A]">
-                  Daj znać o nowych wydarzeniach w Twojej specjalizacji
-                </p>
-                <p className="text-sm text-[#64748B]">
-                  Zapisz się i otrzymuj powiadomienia o wydarzeniach dopasowanych do Ciebie.
-                </p>
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-full bg-[#2ED3B7]/20">
+                  <Bell className="w-5 h-5 text-[#2ED3B7]" />
+                </div>
+                <div className="text-center sm:text-left">
+                  <p className="font-semibold text-[#0F172A]">
+                    Daj znać o nowych wydarzeniach w Twojej specjalizacji
+                  </p>
+                  <p className="text-sm text-[#64748B]">
+                    Zapisz się i otrzymuj powiadomienia o wydarzeniach dopasowanych do Ciebie.
+                  </p>
+                </div>
               </div>
-              <a href="mailto:hello@konfy.pl?subject=Chcę%20otrzymywać%20powiadomienia&body=Moja%20specjalizacja:%20">
-                <button className="px-6 py-2 bg-[#2ED3B7] text-[#0F172A] font-semibold rounded-full hover:bg-[#25B9A1] transition-colors whitespace-nowrap" data-testid="button-newsletter-cta">
-                  Zapisz się
-                </button>
-              </a>
+              <button 
+                onClick={() => setNewsletterOpen(true)}
+                className="px-6 py-2 bg-[#2ED3B7] text-[#0F172A] font-semibold rounded-full hover:bg-[#25B9A1] transition-colors whitespace-nowrap" 
+                data-testid="button-newsletter-cta"
+              >
+                Zapisz się
+              </button>
             </div>
+
+            <NewsletterModal 
+              open={newsletterOpen} 
+              onOpenChange={setNewsletterOpen} 
+              mode="newsletter"
+            />
 
             {view === "list" ? (
               <EventList

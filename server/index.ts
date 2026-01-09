@@ -21,12 +21,9 @@ app.get('/health', (_req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Root endpoint for health checks - responds immediately
-// Once server is ready, this passes to the next handler (static/vite)
+// Root endpoint - pass to next handler immediately
+// Vite or static handler will serve the actual app
 app.get('/', (req, res, next) => {
-  if (!serverReady) {
-    return res.status(200).send('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Konfy.pl</title></head><body><h1>Konfy.pl</h1><p>Uruchamianie...</p></body></html>');
-  }
   next();
 });
 
