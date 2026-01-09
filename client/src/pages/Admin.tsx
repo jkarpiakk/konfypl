@@ -1060,7 +1060,7 @@ function EventFormDialog({
     status: "published",
   });
 
-  useState(() => {
+  useEffect(() => {
     if (event) {
       setFormData({
         title: event.title,
@@ -1077,8 +1077,24 @@ function EventFormDialog({
         sourceUrl: event.sourceUrl || "",
         status: event.status,
       });
+    } else {
+      setFormData({
+        title: "",
+        description: "",
+        specializations: [],
+        startDate: "",
+        endDate: "",
+        location: "",
+        isOnline: false,
+        organizer: "",
+        hasEducationalPoints: false,
+        educationalPoints: "",
+        price: "unknown",
+        sourceUrl: "",
+        status: "published",
+      });
     }
-  });
+  }, [event]);
 
   const mutation = useMutation({
     mutationFn: (data: typeof formData) => {
