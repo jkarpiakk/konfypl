@@ -1,14 +1,28 @@
-import MailerLite from "@mailerlite/mailerlite-nodejs";
+let mailerlite: any = null;
+let initialized = false;
 
-const apiKey = process.env.MAILERLITE_API_KEY;
+async function getClient(): Promise<any> {
+  if (initialized) return mailerlite;
+  
+  const apiKey = process.env.MAILERLITE_API_KEY;
+  if (!apiKey) {
+    console.log("MailerLite API key not configured - email sync disabled");
+    initialized = true;
+    return null;
+  }
 
-let mailerlite: MailerLite | null = null;
-
-if (apiKey) {
-  mailerlite = new MailerLite({ api_key: apiKey });
-  console.log("MailerLite integration initialized");
-} else {
-  console.log("MailerLite API key not configured - email sync disabled");
+  try {
+    const MailerLiteModule = await import("@mailerlite/mailerlite-nodejs");
+    const MailerLite = MailerLiteModule.default || MailerLiteModule;
+    mailerlite = new MailerLite({ api_key: apiKey });
+    console.log("MailerLite integration initialized");
+  } catch (error) {
+    console.error("Failed to initialize MailerLite:", error);
+    mailerlite = null;
+  }
+  
+  initialized = true;
+  return mailerlite;
 }
 
 export interface SubscriberData {
@@ -19,7 +33,8 @@ export interface SubscriberData {
 }
 
 export async function addSubscriber(data: SubscriberData): Promise<boolean> {
-  if (!mailerlite) {
+  const client = await getClient();
+  if (!client) {
     console.log("MailerLite not configured, skipping subscriber sync");
     return false;
   }
@@ -34,7 +49,7 @@ export async function addSubscriber(data: SubscriberData): Promise<boolean> {
       params.groups = data.groups;
     }
 
-    await mailerlite.subscribers.createOrUpdate(params);
+    await client.subscribers.createOrUpdate(params);
     console.log(`MailerLite: Added/updated subscriber ${data.email}`);
     return true;
   } catch (error: any) {
@@ -44,12 +59,13 @@ export async function addSubscriber(data: SubscriberData): Promise<boolean> {
 }
 
 export async function addToGroup(email: string, groupId: string): Promise<boolean> {
-  if (!mailerlite) {
+  const client = await getClient();
+  if (!client) {
     return false;
   }
 
   try {
-    await mailerlite.groups.assignSubscriber(email, groupId);
+    await client.groups.assignSubscriber(email, groupId);
     console.log(`MailerLite: Added ${email} to group ${groupId}`);
     return true;
   } catch (error: any) {
@@ -59,12 +75,13 @@ export async function addToGroup(email: string, groupId: string): Promise<boolea
 }
 
 export async function getGroups(): Promise<any[]> {
-  if (!mailerlite) {
+  const client = await getClient();
+  if (!client) {
     return [];
   }
 
   try {
-    const response = await mailerlite.groups.get({ limit: 100, sort: "name" });
+    const response = await client.groups.get({ limit: 100, sort: "name" });
     return response.data?.data || [];
   } catch (error: any) {
     console.error("MailerLite groups error:", error.response?.data || error.message);
@@ -72,6 +89,7 @@ export async function getGroups(): Promise<any[]> {
   }
 }
 
-export function isConfigured(): boolean {
-  return mailerlite !== null;
+export async function isConfigured(): Promise<boolean> {
+  const client = await getClient();
+  return client !== null;
 }

@@ -32,6 +32,13 @@ const allowlist = [
   "zod-validation-error",
 ];
 
+// Packages that should NOT be bundled due to ESM/CJS interop issues
+const forceExternal = [
+  "@mailerlite/mailerlite-nodejs",
+  "stripe-replit-sync",
+  "openid-client",
+];
+
 async function buildAll() {
   await rm("dist", { recursive: true, force: true });
 
@@ -44,7 +51,10 @@ async function buildAll() {
     ...Object.keys(pkg.dependencies || {}),
     ...Object.keys(pkg.devDependencies || {}),
   ];
-  const externals = allDeps.filter((dep) => !allowlist.includes(dep));
+  const externals = [
+    ...allDeps.filter((dep) => !allowlist.includes(dep)),
+    ...forceExternal,
+  ];
 
   await esbuild({
     entryPoints: ["server/index.ts"],
@@ -58,6 +68,7 @@ async function buildAll() {
     minify: true,
     external: externals,
     logLevel: "info",
+    mainFields: ["main", "module"],
   });
 }
 
