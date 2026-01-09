@@ -6,7 +6,7 @@ import {
   type ScanLog, type InsertScanLog 
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, asc, and, sql, gte } from "drizzle-orm";
+import { eq, desc, asc, and, sql, gte, ne, lte, or, isNull } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -72,10 +72,19 @@ export class DatabaseStorage implements IStorage {
       query = query.where(and(...conditions)) as typeof query;
     }
     
+    const now = new Date();
+    const isPromotedActive = sql`CASE 
+      WHEN ${events.promotionTier} != 'none' 
+        AND ${events.promotionStart} IS NOT NULL 
+        AND ${events.promotionEnd} IS NOT NULL 
+        AND ${events.promotionStart} <= ${now} 
+        AND ${events.promotionEnd} >= ${now} 
+      THEN 0 ELSE 1 END`;
+    
     if (filters?.upcoming) {
-      query = query.orderBy(asc(events.startDate)) as typeof query;
+      query = query.orderBy(isPromotedActive, asc(events.promotionOrder), asc(events.startDate)) as typeof query;
     } else {
-      query = query.orderBy(desc(events.startDate)) as typeof query;
+      query = query.orderBy(isPromotedActive, asc(events.promotionOrder), desc(events.startDate)) as typeof query;
     }
     
     if (filters?.limit) {
