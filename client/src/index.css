@@ -314,17 +314,40 @@
     }
   }
 
-  /* Subtle pulse for Max tier promotion */
+  /* Subtle pulse for Max tier promotion - optimized for 60fps */
   .animate-pulse-subtle {
-    animation: pulse-subtle 3s ease-in-out infinite;
+    position: relative;
   }
 
-  @keyframes pulse-subtle {
+  .animate-pulse-subtle::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: inherit;
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.5), rgba(255, 140, 0, 0.5));
+    z-index: -1;
+    opacity: 0.5;
+    animation: glow-pulse 2.5s ease-in-out infinite;
+    will-change: opacity;
+    pointer-events: none;
+  }
+
+  @keyframes glow-pulse {
     0%, 100% {
-      box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+      opacity: 0.4;
     }
     50% {
-      box-shadow: 0 0 25px rgba(255, 215, 0, 0.5);
+      opacity: 0.7;
     }
+  }
+
+  /* Optimized card hover */
+  .card-hover-optimized {
+    will-change: transform, box-shadow;
+    transition: transform 150ms ease-out, box-shadow 150ms ease-out;
+  }
+
+  .card-hover-optimized:hover {
+    transform: translateY(-3px);
   }
 }

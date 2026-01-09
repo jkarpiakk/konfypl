@@ -40,7 +40,18 @@ export const EVENT_TAGS = [
   "residents",
   "workshop",
   "congress",
-  "conference"
+  "conference",
+  "symposium",
+  "online",
+  "hybrid",
+  "advanced",
+  "basic_level",
+  "practical",
+  "certification",
+  "hands_on",
+  "case_studies",
+  "live_surgery",
+  "networking"
 ] as const;
 
 export const TAG_LABELS: Record<typeof EVENT_TAGS[number], string> = {
@@ -51,7 +62,18 @@ export const TAG_LABELS: Record<typeof EVENT_TAGS[number], string> = {
   residents: "Dla rezydentów",
   workshop: "Warsztaty",
   congress: "Kongres",
-  conference: "Konferencja"
+  conference: "Konferencja",
+  symposium: "Sympozjum",
+  online: "Online",
+  hybrid: "Hybrydowe",
+  advanced: "Zaawansowane",
+  basic_level: "Podstawowe",
+  practical: "Praktyczne",
+  certification: "Z certyfikatem",
+  hands_on: "Hands-on",
+  case_studies: "Case studies",
+  live_surgery: "Live surgery",
+  networking: "Networking"
 };
 
 export const SPECIALIZATION_COLORS: Record<typeof SPECIALIZATIONS[number], string> = {

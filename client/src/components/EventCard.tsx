@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { 
@@ -114,20 +114,9 @@ export function EventCard({ event, compact = false }: EventCardProps) {
   const { toast } = useToast();
   const startDate = new Date(event.startDate);
   const endDate = event.endDate ? new Date(event.endDate) : null;
-  const cardRef = useRef<HTMLDivElement>(null);
   const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
   const [reminderEmail, setReminderEmail] = useState("");
   const [reminderLoading, setReminderLoading] = useState(false);
-
-  const handleMouseEnter = () => {
-    if (!cardRef.current) return;
-    cardRef.current.style.transform = "translateY(-3px)";
-  };
-
-  const handleMouseLeave = () => {
-    if (!cardRef.current) return;
-    cardRef.current.style.transform = "";
-  };
 
   const handleReminderSubmit = async () => {
     if (!reminderEmail || !reminderEmail.includes("@")) {
@@ -226,11 +215,8 @@ export function EventCard({ event, compact = false }: EventCardProps) {
 
   return (
     <Card 
-      ref={cardRef}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
       className={cn(
-        "bg-white border rounded-2xl transition-all duration-200 hover:shadow-card-hover",
+        "bg-white border rounded-2xl card-hover-optimized hover:shadow-card-hover",
         promotionStyles.cardClass
       )}
       data-testid={`card-event-${event.id}`}
