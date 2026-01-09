@@ -12,22 +12,50 @@ import { WebhookHandlers } from './webhookHandlers';
 const app = express();
 const httpServer = createServer(app);
 
-// Health check endpoints - respond immediately for deployment health checks
+// Track initialization state
+let serverReady = false;
+
+// Health check endpoint - MUST respond immediately for Cloud Run health checks
+// This is defined BEFORE any other middleware to ensure fastest response
 app.get('/health', (_req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Root health check - will be overwritten by static handler in production
-// but provides immediate response during startup
-let serverReady = false;
+// Root endpoint for health checks - responds immediately
+// Once server is ready, this passes to the next handler (static/vite)
 app.get('/', (req, res, next) => {
   if (!serverReady) {
-    // During startup, return a simple 200 response
-    return res.status(200).send('<!DOCTYPE html><html><head><title>Konfy.pl</title></head><body><h1>Starting...</h1></body></html>');
+    return res.status(200).send('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Konfy.pl</title></head><body><h1>Konfy.pl</h1><p>Uruchamianie...</p></body></html>');
   }
-  // Once ready, pass to next handler (static files or vite)
   next();
 });
+
+export function log(message: string, source = "express") {
+  const formattedTime = new Date().toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  });
+  console.log(`${formattedTime} [${source}] ${message}`);
+}
+
+// Start server IMMEDIATELY to pass health checks
+const port = parseInt(process.env.PORT || "5000", 10);
+httpServer.listen(
+  {
+    port,
+    host: "0.0.0.0",
+    reusePort: true,
+  },
+  () => {
+    log(`server listening on port ${port}`);
+    // Start async initialization after server is listening
+    initializeApp().catch(err => {
+      console.error('Failed to initialize app:', err);
+    });
+  },
+);
 
 declare module "http" {
   interface IncomingMessage {
@@ -76,97 +104,89 @@ async function initStripe() {
   }
 }
 
-initStripe().catch(console.error);
+async function initializeApp() {
+  log('Starting app initialization...');
 
-app.post(
-  '/api/stripe/webhook',
-  express.raw({ type: 'application/json' }),
-  async (req, res) => {
-    const signature = req.headers['stripe-signature'];
-    if (!signature) {
-      return res.status(400).json({ error: 'Missing stripe-signature' });
-    }
-
-    try {
-      const sig = Array.isArray(signature) ? signature[0] : signature;
-      if (!Buffer.isBuffer(req.body)) {
-        return res.status(500).json({ error: 'Webhook processing error' });
+  // Stripe webhook endpoint (raw body needed)
+  app.post(
+    '/api/stripe/webhook',
+    express.raw({ type: 'application/json' }),
+    async (req, res) => {
+      const signature = req.headers['stripe-signature'];
+      if (!signature) {
+        return res.status(400).json({ error: 'Missing stripe-signature' });
       }
 
-      await WebhookHandlers.processWebhook(req.body as Buffer, sig);
-      res.status(200).json({ received: true });
-    } catch (error: any) {
-      console.error('Webhook error:', error.message);
-      res.status(400).json({ error: 'Webhook processing error' });
-    }
-  }
-);
+      try {
+        const sig = Array.isArray(signature) ? signature[0] : signature;
+        if (!Buffer.isBuffer(req.body)) {
+          return res.status(500).json({ error: 'Webhook processing error' });
+        }
 
-app.use(
-  express.json({
-    verify: (req, _res, buf) => {
-      req.rawBody = buf;
-    },
-  }),
-);
-
-app.use(express.urlencoded({ extended: false }));
-
-export function log(message: string, source = "express") {
-  const formattedTime = new Date().toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: true,
-  });
-
-  console.log(`${formattedTime} [${source}] ${message}`);
-}
-
-app.use((req, res, next) => {
-  const start = Date.now();
-  const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
-
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
-  };
-
-  res.on("finish", () => {
-    const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
+        await WebhookHandlers.processWebhook(req.body as Buffer, sig);
+        res.status(200).json({ received: true });
+      } catch (error: any) {
+        console.error('Webhook error:', error.message);
+        res.status(400).json({ error: 'Webhook processing error' });
       }
-
-      log(logLine);
     }
+  );
+
+  // JSON and URL-encoded body parsing
+  app.use(
+    express.json({
+      verify: (req, _res, buf) => {
+        req.rawBody = buf;
+      },
+    }),
+  );
+  app.use(express.urlencoded({ extended: false }));
+
+  // Request logging middleware
+  app.use((req, res, next) => {
+    const start = Date.now();
+    const path = req.path;
+    let capturedJsonResponse: Record<string, any> | undefined = undefined;
+
+    const originalResJson = res.json;
+    res.json = function (bodyJson, ...args) {
+      capturedJsonResponse = bodyJson;
+      return originalResJson.apply(res, [bodyJson, ...args]);
+    };
+
+    res.on("finish", () => {
+      const duration = Date.now() - start;
+      if (path.startsWith("/api")) {
+        let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
+        if (capturedJsonResponse) {
+          logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
+        }
+        log(logLine);
+      }
+    });
+
+    next();
   });
 
-  next();
-});
+  // Initialize Stripe in parallel (non-blocking)
+  initStripe().catch(console.error);
 
-(async () => {
-  // Setup Replit Auth BEFORE registering other routes
+  // Setup Replit Auth
   await setupAuth(app);
   registerAuthRoutes(app);
   
+  // Register API routes
   await registerRoutes(httpServer, app);
 
+  // Error handler
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
-
     res.status(status).json({ message });
     throw err;
   });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
+  // Setup static files or Vite dev server
   if (process.env.NODE_ENV === "production") {
     serveStatic(app);
   } else {
@@ -174,26 +194,13 @@ app.use((req, res, next) => {
     await setupVite(httpServer, app);
   }
 
-  // Seed database with sample data if empty
+  // Seed database
   await seedDatabase();
 
-  // Start the background scheduler for periodic source scans
+  // Start scheduler
   startScheduler();
 
-  // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Other ports are firewalled. Default to 5000 if not specified.
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = parseInt(process.env.PORT || "5000", 10);
-  httpServer.listen(
-    {
-      port,
-      host: "0.0.0.0",
-      reusePort: true,
-    },
-    () => {
-      serverReady = true;
-      log(`serving on port ${port}`);
-    },
-  );
-})();
+  // Mark server as fully ready
+  serverReady = true;
+  log('App initialization complete - server fully ready');
+}
