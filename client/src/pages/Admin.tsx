@@ -33,6 +33,8 @@ import {
   Crown,
   Zap,
   Megaphone,
+  GripVertical,
+  Timer,
 } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
 import { KonfyLogo } from "@/components/KonfyLogo";
@@ -682,6 +684,11 @@ export default function Admin() {
   const [deleteSourceId, setDeleteSourceId] = useState<number | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [adminEmail, setAdminEmail] = useState<string>("");
+  const [promotionDialogOpen, setPromotionDialogOpen] = useState(false);
+  const [promotionEventId, setPromotionEventId] = useState<number | null>(null);
+  const [promotionHoursInput, setPromotionHoursInput] = useState("24");
+  const [promotionTierInput, setPromotionTierInput] = useState<PromotionTier>("basic");
+  const [draggedEventId, setDraggedEventId] = useState<number | null>(null);
 
   useEffect(() => {
     checkSession();
@@ -755,24 +762,126 @@ export default function Admin() {
   });
 
   const setPromotionTier = useMutation({
-    mutationFn: ({ id, tier }: { id: number; tier: PromotionTier }) => 
-      apiRequest("PATCH", `/api/events/${id}`, { 
-        promotionTier: tier,
-        promotionStart: tier !== "none" ? new Date().toISOString().split("T")[0] : null,
-        promotionEnd: null,
-      }),
-    onSuccess: (_, { tier }) => {
+    mutationFn: ({ id, tier, hours }: { id: number; tier: PromotionTier; hours?: number }) => 
+      apiRequest("POST", `/api/events/${id}/promotion`, { tier, hours }),
+    onSuccess: (_, { tier, hours }) => {
       queryClient.invalidateQueries({ queryKey: ["/api/events"] });
       const label = PROMOTION_TIER_LABELS[tier];
-      toast({ 
-        title: tier === "none" ? "Promocja wyłączona" : `Ustawiono promocję: ${label}`,
-        description: tier === "none" ? "Wydarzenie nie jest już promowane" : `Wydarzenie będzie wyróżnione w listingach`
-      });
+      if (tier === "none") {
+        toast({ 
+          title: "Promocja wyłączona",
+          description: "Wydarzenie nie jest już promowane"
+        });
+      } else {
+        toast({ 
+          title: `Ustawiono promocję: ${label}`,
+          description: `Wydarzenie będzie promowane przez ${hours} godzin`
+        });
+      }
+      setPromotionDialogOpen(false);
+      setPromotionEventId(null);
     },
     onError: () => {
       toast({ title: "Błąd", description: "Nie udało się ustawić promocji", variant: "destructive" });
     },
   });
+
+  const removePromotion = (id: number) => {
+    setPromotionTier.mutate({ id, tier: "none" });
+  };
+
+  const reorderPromotions = useMutation({
+    mutationFn: (orderedIds: number[]) => 
+      apiRequest("POST", `/api/events/promotions/reorder`, { orderedIds }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/events"] });
+      toast({ title: "Kolejność zaktualizowana" });
+    },
+    onError: () => {
+      toast({ title: "Błąd", description: "Nie udało się zmienić kolejności", variant: "destructive" });
+    },
+  });
+
+  const openPromotionDialog = (eventId: number, currentTier: PromotionTier) => {
+    if (currentTier === "none") {
+      removePromotion(eventId);
+      return;
+    }
+    setPromotionEventId(eventId);
+    setPromotionTierInput(currentTier);
+    setPromotionHoursInput("24");
+    setPromotionDialogOpen(true);
+  };
+
+  const handleSetPromotion = () => {
+    if (promotionEventId) {
+      const hours = parseInt(promotionHoursInput);
+      if (isNaN(hours) || hours < 1) {
+        toast({ title: "Błąd", description: "Podaj prawidłową liczbę godzin", variant: "destructive" });
+        return;
+      }
+      setPromotionTier.mutate({ id: promotionEventId, tier: promotionTierInput, hours });
+    }
+  };
+
+  const getPromotedEvents = () => {
+    const now = new Date();
+    return allEvents
+      .filter(e => 
+        e.promotionTier !== "none" && 
+        e.promotionStart && 
+        e.promotionEnd && 
+        new Date(e.promotionStart) <= now && 
+        new Date(e.promotionEnd) >= now
+      )
+      .sort((a, b) => (a.promotionOrder || 0) - (b.promotionOrder || 0));
+  };
+
+  const handleDragStart = (eventId: number) => {
+    setDraggedEventId(eventId);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (targetEventId: number) => {
+    if (!draggedEventId || draggedEventId === targetEventId) {
+      setDraggedEventId(null);
+      return;
+    }
+    
+    const promoted = getPromotedEvents();
+    const draggedIndex = promoted.findIndex(e => e.id === draggedEventId);
+    const targetIndex = promoted.findIndex(e => e.id === targetEventId);
+    
+    if (draggedIndex === -1 || targetIndex === -1) {
+      setDraggedEventId(null);
+      return;
+    }
+    
+    const newOrder = [...promoted];
+    const [removed] = newOrder.splice(draggedIndex, 1);
+    newOrder.splice(targetIndex, 0, removed);
+    
+    reorderPromotions.mutate(newOrder.map(e => e.id));
+    setDraggedEventId(null);
+  };
+
+  const getRemainingTime = (endDate: string | Date | null) => {
+    if (!endDate) return null;
+    const end = new Date(endDate);
+    const now = new Date();
+    const diff = end.getTime() - now.getTime();
+    if (diff <= 0) return "Wygasła";
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    if (hours > 24) {
+      const days = Math.floor(hours / 24);
+      return `${days}d ${hours % 24}h`;
+    }
+    return `${hours}h ${minutes}m`;
+  };
 
   const deleteSource = useMutation({
     mutationFn: (id: number) => apiRequest("DELETE", `/api/sources/${id}`),
@@ -968,7 +1077,7 @@ export default function Admin() {
               onReject={(id) => rejectEvent.mutate(id)}
               onEdit={setEditingEvent}
               onDelete={setDeleteEventId}
-              onSetPromotion={(id, tier) => setPromotionTier.mutate({ id, tier })}
+              onSetPromotion={(id, tier) => openPromotionDialog(id, tier)}
             />
           </TabsContent>
 
@@ -978,7 +1087,7 @@ export default function Admin() {
               isLoading={loadingAll}
               onEdit={setEditingEvent}
               onDelete={setDeleteEventId}
-              onSetPromotion={(id, tier) => setPromotionTier.mutate({ id, tier })}
+              onSetPromotion={(id, tier) => openPromotionDialog(id, tier)}
             />
           </TabsContent>
 
@@ -1008,7 +1117,7 @@ export default function Admin() {
                     <Megaphone className="w-5 h-5 text-[#2ED3B7]" />
                     <div>
                       <p className="font-medium text-[#0F172A]">Zarządzanie promocjami wydarzeń</p>
-                      <p className="text-sm text-[#64748B]">Poniżej znajdują się wszystkie aktywnie promowane wydarzenia. Możesz zmienić poziom promocji lub ją wyłączyć.</p>
+                      <p className="text-sm text-[#64748B]">Przeciągnij wydarzenia aby zmienić kolejność wyświetlania. Promowane wydarzenia pojawiają się na górze listy.</p>
                     </div>
                   </div>
                 </CardContent>
@@ -1025,24 +1134,37 @@ export default function Admin() {
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead className="w-8"></TableHead>
                         <TableHead>Wydarzenie</TableHead>
-                        <TableHead>Data</TableHead>
-                        <TableHead>Poziom promocji</TableHead>
-                        <TableHead>Data rozpoczęcia</TableHead>
+                        <TableHead>Data wydarzenia</TableHead>
+                        <TableHead>Poziom</TableHead>
+                        <TableHead>Pozostały czas</TableHead>
                         <TableHead>Akcje</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {allEvents
-                        .filter(e => e.promotionTier && e.promotionTier !== "none")
-                        .map((event) => (
-                          <TableRow key={event.id} data-testid={`row-promotion-${event.id}`}>
+                      {getPromotedEvents().map((event, index) => (
+                          <TableRow 
+                            key={event.id} 
+                            data-testid={`row-promotion-${event.id}`}
+                            draggable
+                            onDragStart={() => handleDragStart(event.id)}
+                            onDragOver={handleDragOver}
+                            onDrop={() => handleDrop(event.id)}
+                            className={`cursor-move transition-colors ${draggedEventId === event.id ? "opacity-50 bg-[#2ED3B7]/10" : ""}`}
+                          >
+                            <TableCell className="w-8">
+                              <div className="flex items-center gap-2">
+                                <GripVertical className="w-4 h-4 text-[#94A3B8]" />
+                                <span className="text-xs text-[#94A3B8] font-mono">{index + 1}</span>
+                              </div>
+                            </TableCell>
                             <TableCell className="font-medium">
                               <div className="flex items-center gap-2">
                                 {event.promotionTier === "max" && <Crown className="w-4 h-4 text-[#FFD700]" />}
                                 {event.promotionTier === "pro" && <Zap className="w-4 h-4 text-[#2ED3B7]" />}
                                 {event.promotionTier === "basic" && <Star className="w-4 h-4 text-[#2ED3B7]" />}
-                                <span className="line-clamp-1">{event.title}</span>
+                                <span className="line-clamp-1 max-w-[300px]">{event.title}</span>
                               </div>
                             </TableCell>
                             <TableCell className="text-[#64748B]">
@@ -1059,30 +1181,43 @@ export default function Admin() {
                                 {PROMOTION_TIER_LABELS[event.promotionTier as PromotionTier]}
                               </Badge>
                             </TableCell>
-                            <TableCell className="text-[#64748B]">
-                              {event.promotionStart 
-                                ? format(new Date(event.promotionStart), "d MMM yyyy", { locale: pl })
-                                : "Nieznana"}
+                            <TableCell>
+                              <div className="flex items-center gap-1.5 text-sm">
+                                <Timer className="w-3.5 h-3.5 text-[#64748B]" />
+                                <span className={getRemainingTime(event.promotionEnd) === "Wygasła" ? "text-red-500" : "text-[#0F172A] font-medium"}>
+                                  {getRemainingTime(event.promotionEnd) || "Nieznany"}
+                                </span>
+                              </div>
                             </TableCell>
                             <TableCell>
                               <div className="flex gap-2">
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => setPromotionTier.mutate({ id: event.id, tier: "none" })}
+                                  onClick={() => openPromotionDialog(event.id, event.promotionTier as PromotionTier)}
+                                  data-testid={`button-edit-promotion-${event.id}`}
+                                >
+                                  <Clock className="w-3.5 h-3.5 mr-1" />
+                                  Przedłuż
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => removePromotion(event.id)}
+                                  className="text-red-500 hover:text-red-600 hover:bg-red-50"
                                   data-testid={`button-remove-promotion-${event.id}`}
                                 >
-                                  Wyłącz promocję
+                                  <X className="w-3.5 h-3.5" />
                                 </Button>
                               </div>
                             </TableCell>
                           </TableRow>
                         ))}
-                      {allEvents.filter(e => e.promotionTier && e.promotionTier !== "none").length === 0 && (
+                      {getPromotedEvents().length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={5} className="text-center py-8 text-[#64748B]">
+                          <TableCell colSpan={6} className="text-center py-8 text-[#64748B]">
                             <Megaphone className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                            <p>Brak promowanych wydarzeń</p>
+                            <p>Brak aktywnych promocji</p>
                             <p className="text-sm">Przejdź do zakładki "Wszystkie" aby ustawić promocję dla wydarzeń</p>
                           </TableCell>
                         </TableRow>
@@ -1162,6 +1297,85 @@ export default function Admin() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={promotionDialogOpen} onOpenChange={setPromotionDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Megaphone className="w-5 h-5 text-[#2ED3B7]" />
+              Ustaw promocję
+            </DialogTitle>
+            <DialogDescription>
+              Wybierz poziom promocji i czas trwania w godzinach.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Poziom promocji</Label>
+              <Select 
+                value={promotionTierInput} 
+                onValueChange={(val) => setPromotionTierInput(val as PromotionTier)}
+              >
+                <SelectTrigger data-testid="select-promotion-tier">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="basic">
+                    <div className="flex items-center gap-2">
+                      <Star className="w-4 h-4 text-[#2ED3B7]" />
+                      Basic
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="pro">
+                    <div className="flex items-center gap-2">
+                      <Crown className="w-4 h-4 text-[#0EA5E9]" />
+                      Pro
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="max">
+                    <div className="flex items-center gap-2">
+                      <Zap className="w-4 h-4 text-[#FF8C00]" />
+                      Max
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="promotion-hours">Czas trwania (godziny)</Label>
+              <Input
+                id="promotion-hours"
+                type="number"
+                min="1"
+                max="8760"
+                value={promotionHoursInput}
+                onChange={(e) => setPromotionHoursInput(e.target.value)}
+                placeholder="np. 24, 48, 72, 168"
+                data-testid="input-promotion-hours"
+              />
+              <p className="text-xs text-[#64748B]">
+                Popularny wybór: 24h (1 dzień), 168h (1 tydzień), 720h (1 miesiąc)
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setPromotionDialogOpen(false)}
+            >
+              Anuluj
+            </Button>
+            <Button 
+              onClick={handleSetPromotion}
+              disabled={setPromotionTier.isPending}
+              className="bg-[#2ED3B7] hover:bg-[#25B9A1] text-[#0F172A]"
+              data-testid="button-confirm-promotion"
+            >
+              {setPromotionTier.isPending ? "Zapisywanie..." : "Ustaw promocję"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

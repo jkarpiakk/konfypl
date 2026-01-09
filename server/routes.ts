@@ -6,7 +6,7 @@ import { scanSingleSource, runScheduledScans } from "./scheduler";
 import { z } from "zod";
 import multer from "multer";
 import { parse } from "csv-parse/sync";
-import { addSubscriber, isConfigured as isMailerLiteConfigured } from "./mailerlite";
+import { addSubscriber } from "./mailerlite";
 
 const upload = multer({ 
   storage: multer.memoryStorage(),
@@ -684,7 +684,7 @@ export async function registerRoutes(
       
       const [lead] = await db.insert(leads).values(parseResult.data).returning();
       
-      if (isMailerLiteConfigured() && lead.email) {
+      if (lead.email) {
         const fields: Record<string, string> = {};
         if (lead.eventTitle) fields.event_title = lead.eventTitle;
         if (lead.eventDate) fields.event_date = lead.eventDate;
