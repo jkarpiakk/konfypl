@@ -1,6 +1,6 @@
-import type { Event, Source, ScanLog, Specialization, EventTag } from "@shared/schema";
+import type { Event, Source, ScanLog, Specialization, EventTag, PromotionTier } from "@shared/schema";
 
-export type { Event, Source, ScanLog, Specialization, EventTag };
+export type { Event, Source, ScanLog, Specialization, EventTag, PromotionTier };
 
 export interface EventFilters {
   search: string;

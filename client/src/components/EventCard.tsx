@@ -9,7 +9,10 @@ import {
   ExternalLink,
   ChevronDown,
   Sparkles,
-  Share2
+  Share2,
+  Crown,
+  Star,
+  Zap
 } from "lucide-react";
 import { SiGooglecalendar, SiApple } from "react-icons/si";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -25,7 +28,7 @@ import { cn } from "@/lib/utils";
 import { SPECIALIZATION_LABELS } from "@/lib/constants";
 import { downloadICSFile, getGoogleCalendarUrl, getOutlookCalendarUrl } from "@/lib/calendar";
 import { useToast } from "@/hooks/use-toast";
-import type { Event, Specialization, EventTag } from "@/lib/types";
+import type { Event, Specialization, EventTag, PromotionTier } from "@/lib/types";
 import { Link } from "wouter";
 
 const addUtmParams = (url: string, eventId: number): string => {
@@ -43,7 +46,6 @@ const addUtmParams = (url: string, eventId: number): string => {
 interface EventCardProps {
   event: Event;
   compact?: boolean;
-  isSponsored?: boolean;
 }
 
 const TAG_LABELS: Record<string, string> = {
@@ -55,7 +57,46 @@ const TAG_LABELS: Record<string, string> = {
   symposium: "Sympozjum",
 };
 
-export function EventCard({ event, compact = false, isSponsored = false }: EventCardProps) {
+const getPromotionStyles = (tier: PromotionTier) => {
+  switch (tier) {
+    case "basic":
+      return {
+        cardClass: "border-[#2ED3B7] border-2 shadow-md",
+        badge: { label: "Wyróżnione", icon: Star, bgClass: "bg-[#E6FAF7] text-[#0F766E] border-[#99F6E4]" },
+        banner: null,
+      };
+    case "pro":
+      return {
+        cardClass: "border-transparent ring-2 ring-[#2ED3B7] shadow-lg relative before:absolute before:inset-0 before:rounded-2xl before:p-[2px] before:bg-gradient-to-r before:from-[#2ED3B7] before:via-[#0EA5E9] before:to-[#2ED3B7] before:-z-10",
+        badge: { label: "Premium", icon: Crown, bgClass: "bg-gradient-to-r from-[#2ED3B7] to-[#0EA5E9] text-white border-0" },
+        banner: { bgClass: "bg-gradient-to-r from-[#2ED3B7] to-[#0EA5E9]", label: "Premium Spotlight" },
+      };
+    case "max":
+      return {
+        cardClass: "border-transparent ring-2 ring-[#FFD700]/50 shadow-xl relative overflow-visible before:absolute before:inset-[-4px] before:rounded-2xl before:bg-gradient-to-r before:from-[#FFD700] before:via-[#FF8C00] before:to-[#FFD700] before:-z-10 before:blur-sm before:opacity-60 animate-pulse-subtle",
+        badge: { label: "Infinity Showcase", icon: Zap, bgClass: "bg-gradient-to-r from-[#FFD700] to-[#FF8C00] text-[#0F172A] border-0 font-semibold" },
+        banner: { bgClass: "bg-gradient-to-r from-[#FFD700] via-[#FF8C00] to-[#FFD700]", label: "Infinity Showcase" },
+      };
+    default:
+      return {
+        cardClass: "border-[#E2E8F0] hover:border-[#2ED3B7]",
+        badge: null,
+        banner: null,
+      };
+  }
+};
+
+const isPromotionActive = (event: Event): boolean => {
+  if (event.promotionTier === "none") return false;
+  const now = new Date();
+  const start = event.promotionStart ? new Date(event.promotionStart) : null;
+  const end = event.promotionEnd ? new Date(event.promotionEnd) : null;
+  if (start && now < start) return false;
+  if (end && now > end) return false;
+  return true;
+};
+
+export function EventCard({ event, compact = false }: EventCardProps) {
   const { toast } = useToast();
   const startDate = new Date(event.startDate);
   const endDate = event.endDate ? new Date(event.endDate) : null;
@@ -130,6 +171,9 @@ export function EventCard({ event, compact = false, isSponsored = false }: Event
   };
 
   const priceInfo = getPriceLabel();
+  const isPromoted = isPromotionActive(event);
+  const promotionStyles = isPromoted ? getPromotionStyles(event.promotionTier as PromotionTier) : getPromotionStyles("none");
+  const PromoBadgeIcon = promotionStyles.badge?.icon;
 
   return (
     <Card 
@@ -137,17 +181,22 @@ export function EventCard({ event, compact = false, isSponsored = false }: Event
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       className={cn(
-        "bg-white border rounded-2xl shadow-card transition-all duration-200 hover:shadow-card-hover",
-        isSponsored 
-          ? "border-[#2ED3B7] ring-2 ring-[#2ED3B7]/20 hover:border-[#25B9A1]" 
-          : "border-[#E2E8F0] hover:border-[#2ED3B7]"
+        "bg-white border rounded-2xl transition-all duration-200 hover:shadow-card-hover",
+        promotionStyles.cardClass
       )}
       data-testid={`card-event-${event.id}`}
     >
-      {isSponsored && (
-        <div className="bg-gradient-to-r from-[#2ED3B7] to-[#25B9A1] text-white text-xs font-medium px-3 py-1 rounded-t-2xl flex items-center gap-1.5">
-          <Sparkles className="w-3 h-3" />
-          Promowane
+      {promotionStyles.banner && (
+        <div className={cn(
+          "text-white text-xs font-medium px-3 py-1.5 rounded-t-2xl flex items-center gap-1.5",
+          promotionStyles.banner.bgClass
+        )}>
+          {event.promotionTier === "max" ? (
+            <Zap className="w-3 h-3" />
+          ) : (
+            <Sparkles className="w-3 h-3" />
+          )}
+          {promotionStyles.banner.label}
         </div>
       )}
       <CardHeader className="pb-3">
@@ -160,12 +209,20 @@ export function EventCard({ event, compact = false, isSponsored = false }: Event
               {event.title}
             </h3>
           </Link>
-          {event.isAiAdded && (
-            <Badge variant="outline" className="shrink-0 gap-1 text-xs border-[#2ED3B7] text-[#2ED3B7] bg-[#E6FAF7]">
-              <Sparkles className="w-3 h-3" />
-              AI
-            </Badge>
-          )}
+          <div className="flex items-center gap-1.5 shrink-0">
+            {isPromoted && promotionStyles.badge && !promotionStyles.banner && PromoBadgeIcon && (
+              <Badge className={cn("gap-1 text-xs border", promotionStyles.badge.bgClass)}>
+                <PromoBadgeIcon className="w-3 h-3" />
+                {promotionStyles.badge.label}
+              </Badge>
+            )}
+            {event.isAiAdded && (
+              <Badge variant="outline" className="gap-1 text-xs border-[#2ED3B7] text-[#2ED3B7] bg-[#E6FAF7]">
+                <Sparkles className="w-3 h-3" />
+                AI
+              </Badge>
+            )}
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 mt-2">
