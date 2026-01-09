@@ -75,19 +75,19 @@ const getPromotionStyles = (tier: PromotionTier) => {
   switch (tier) {
     case "basic":
       return {
-        cardClass: "border-[#2ED3B7] border-2 shadow-md",
+        cardClass: "border-[#E2E8F0] hover:border-[#2ED3B7] hover:border-2 hover:shadow-md promoted-basic",
         badge: { label: "Promowane", icon: Star, bgClass: "bg-[#E6FAF7] text-[#0F766E] border-[#99F6E4]" },
         banner: null,
       };
     case "pro":
       return {
-        cardClass: "border-transparent ring-2 ring-[#2ED3B7] shadow-lg relative before:absolute before:inset-0 before:rounded-2xl before:p-[2px] before:bg-gradient-to-r before:from-[#2ED3B7] before:via-[#0EA5E9] before:to-[#2ED3B7] before:-z-10",
+        cardClass: "border-[#E2E8F0] hover:border-[#2ED3B7] hover:ring-2 hover:ring-[#2ED3B7] hover:shadow-lg promoted-pro",
         badge: { label: "Wyróżniony Partner", icon: Crown, bgClass: "bg-gradient-to-r from-[#2ED3B7] to-[#0EA5E9] text-white border-0" },
         banner: { bgClass: "bg-gradient-to-r from-[#2ED3B7] to-[#0EA5E9]", label: "Wyróżniony Partner" },
       };
     case "max":
       return {
-        cardClass: "border-transparent ring-2 ring-[#FFD700]/50 shadow-xl relative overflow-visible before:absolute before:inset-[-4px] before:rounded-2xl before:bg-gradient-to-r before:from-[#FFD700] before:via-[#FF8C00] before:to-[#FFD700] before:-z-10 before:blur-sm before:opacity-60 animate-pulse-subtle",
+        cardClass: "border-[#E2E8F0] hover:border-[#FFD700] hover:ring-2 hover:ring-[#FFD700]/50 hover:shadow-xl promoted-max",
         badge: { label: "Premium Partner", icon: Zap, bgClass: "bg-gradient-to-r from-[#FFD700] to-[#FF8C00] text-[#0F172A] border-0 font-semibold" },
         banner: { bgClass: "bg-gradient-to-r from-[#FFD700] via-[#FF8C00] to-[#FFD700]", label: "Premium Partner" },
       };
