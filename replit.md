@@ -154,8 +154,15 @@ The backend implements a RESTful API pattern with routes for events, sources, an
 - `PATCH /api/events/:id` - Update event
 - `DELETE /api/events/:id` - Delete event
 - `GET /api/sources` - List sources
-- `POST /api/sources/:id/scan` - Trigger source scan
+- `POST /api/sources/:id/scan` - Trigger single source scan
+- `POST /api/sources/scan-all` - Trigger scan of ALL active sources (admin only)
 - `GET /api/calendar/:eventId.ics` - Download ICS file
+
+## Admin Panel Features
+
+- **Manual Source Refresh**: Admin panel has "Odśwież wszystkie źródła" button in Źródła tab to manually trigger scanning all sources
+- Events from scans are added with status "pending" for admin review before publishing
+- Background scheduler also runs every 6 hours automatically
 
 ## Security Notes
 

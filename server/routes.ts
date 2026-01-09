@@ -397,6 +397,43 @@ export async function registerRoutes(
     }
   });
 
+  // Scan ALL sources at once
+  app.post("/api/sources/scan-all", isAdmin, async (req, res) => {
+    try {
+      const allSources = await storage.getSources();
+      const activeSources = allSources.filter(s => s.status === "active");
+      
+      res.json({ 
+        message: "Scanning all sources started", 
+        totalSources: activeSources.length 
+      });
+      
+      // Run scans in background
+      (async () => {
+        console.log(`Starting scan of ${activeSources.length} sources...`);
+        let totalFound = 0;
+        let totalAdded = 0;
+        
+        for (const source of activeSources) {
+          try {
+            const result = await scanSingleSource(source.id);
+            totalFound += result.found;
+            totalAdded += result.added;
+            // Small delay between sources to avoid rate limiting
+            await new Promise(resolve => setTimeout(resolve, 2000));
+          } catch (error) {
+            console.error(`Error scanning source ${source.name}:`, error);
+          }
+        }
+        
+        console.log(`Scan complete. Total found: ${totalFound}, Total added: ${totalAdded}`);
+      })();
+    } catch (error) {
+      console.error("Error starting scan all:", error);
+      res.status(500).json({ error: "Failed to start scan" });
+    }
+  });
+
   app.post("/api/sources/:id/scan", isAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);

@@ -904,6 +904,21 @@ export default function Admin() {
     },
   });
 
+  const scanAllSources = useMutation({
+    mutationFn: () => apiRequest("POST", "/api/sources/scan-all"),
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/sources"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/events"] });
+      toast({ 
+        title: "Skanowanie wszystkich źródeł", 
+        description: `Rozpoczęto skanowanie ${data?.totalSources || "wszystkich"} źródeł w tle` 
+      });
+    },
+    onError: () => {
+      toast({ title: "Błąd", description: "Nie udało się rozpocząć skanowania", variant: "destructive" });
+    },
+  });
+
   const toggleUserAdmin = useMutation({
     mutationFn: ({ userId, isAdmin }: { userId: string; isAdmin: boolean }) => 
       apiRequest("PATCH", `/api/users/${userId}`, { isAdmin }),
@@ -1092,13 +1107,40 @@ export default function Admin() {
           </TabsContent>
 
           <TabsContent value="sources">
-            <SourcesTable
-              sources={sources}
-              isLoading={loadingSources}
-              onEdit={setEditingSource}
-              onDelete={setDeleteSourceId}
-              onScan={(id) => scanSource.mutate(id)}
-            />
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={() => scanAllSources.mutate()}
+                    disabled={scanAllSources.isPending}
+                    className="bg-[#2ED3B7] hover:bg-[#26b89e] text-white"
+                    data-testid="button-scan-all-sources"
+                  >
+                    {scanAllSources.isPending ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                        Skanowanie...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="w-4 h-4 mr-2" />
+                        Odśwież wszystkie źródła
+                      </>
+                    )}
+                  </Button>
+                </div>
+                <p className="text-sm text-[#64748B]">
+                  {sources.filter(s => s.status === "active").length} aktywnych źródeł
+                </p>
+              </div>
+              <SourcesTable
+                sources={sources}
+                isLoading={loadingSources}
+                onEdit={setEditingSource}
+                onDelete={setDeleteSourceId}
+                onScan={(id) => scanSource.mutate(id)}
+              />
+            </div>
           </TabsContent>
 
           <TabsContent value="users">
