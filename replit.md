@@ -124,6 +124,16 @@ The backend implements a RESTful API pattern with routes for events, sources, an
 - AI extraction enhanced with exclusive keywords to prevent cross-specialization drift
 - SEO data updated with all 18 specializations for SEOFooter
 
+**January 2026 - Social Media Graphics Generator**
+- Admin panel feature for creating shareable event cards
+- Formats: Facebook (1200x630px), Instagram Post (1080x1080px), Instagram Stories (1080x1920px)
+- Fabric.js canvas editor with 8 gradient/solid backgrounds
+- AI-powered Polish post text and hashtag generation via OpenAI GPT-4.1-mini
+- Visual editor with title, date, location fields, font selection, promotion badge toggle
+- High-DPI JPG export (2x scale) and Web Share API integration
+- Endpoint: POST /api/events/:id/social-copy for AI content generation
+- Component: SocialGraphicEditorModal.tsx (integrated in Admin panel)
+
 ## Project Structure
 
 ```
