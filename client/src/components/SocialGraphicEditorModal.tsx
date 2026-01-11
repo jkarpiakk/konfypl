@@ -206,7 +206,7 @@ export function SocialGraphicEditorModal({
     const textColor = isDark ? "#FFFFFF" : "#0F172A";
     const secondaryColor = isDark ? "rgba(255,255,255,0.8)" : "#64748B";
 
-    const padding = 40 * scale;
+    const padding = 60 * scale;
     const titleFontSize = titleSize[0] * scale;
     const dateFontSize = dateSize[0] * scale;
 
@@ -324,7 +324,7 @@ export function SocialGraphicEditorModal({
       }
 
       const titleY = format === "instagram" ? 0.28 : 0.25;
-      const maxTitleWidth = (width - padding * 2) * scale;
+      const maxTitleWidth = width * scale - padding * 2;
       const title = new fabric.Textbox(customTitle || event.title, {
         left: padding,
         top: height * scale * titleY,
