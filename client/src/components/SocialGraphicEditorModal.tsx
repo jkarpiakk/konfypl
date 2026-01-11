@@ -235,9 +235,9 @@ export function SocialGraphicEditorModal({
       });
       canvas.add(title);
 
-      const dateText = new fabric.Text(`Data: ${customDate}`, {
+      const dateText = new fabric.Text(customDate, {
         left: padding,
-        top: height * scale * 0.55,
+        top: height * scale * 0.52,
         fontSize: dateFontSize,
         fontFamily: selectedFont,
         fill: secondaryColor,
@@ -247,7 +247,7 @@ export function SocialGraphicEditorModal({
 
       const locationText = new fabric.Text(`Miejsce: ${customLocation}`, {
         left: padding,
-        top: height * scale * 0.55 + dateFontSize + 10 * scale,
+        top: height * scale * 0.52 + dateFontSize + 12 * scale,
         fontSize: dateFontSize,
         fontFamily: selectedFont,
         fill: secondaryColor,
@@ -313,7 +313,7 @@ export function SocialGraphicEditorModal({
       if (specs) {
         const specsText = new fabric.Text(specs.toUpperCase(), {
           left: padding,
-          top: padding + 50 * scale,
+          top: padding + 45 * scale,
           fontSize: 14 * scale,
           fontFamily: selectedFont,
           fontWeight: "500",
@@ -323,11 +323,12 @@ export function SocialGraphicEditorModal({
         canvas.add(specsText);
       }
 
-      const titleY = format === "instagram" ? 0.35 : 0.3;
+      const titleY = format === "instagram" ? 0.28 : 0.25;
+      const maxTitleWidth = (width - padding * 2) * scale;
       const title = new fabric.Textbox(customTitle || event.title, {
         left: padding,
         top: height * scale * titleY,
-        width: (width - 80) * scale,
+        width: maxTitleWidth,
         fontSize: titleFontSize,
         fontFamily: selectedFont,
         fontWeight: "700",
@@ -337,8 +338,10 @@ export function SocialGraphicEditorModal({
       });
       canvas.add(title);
 
-      const infoY = format === "instagram" ? 0.65 : 0.7;
-      const dateText = new fabric.Text(`Data: ${customDate}`, {
+      const infoY = format === "instagram" ? 0.68 : 0.72;
+      const lineSpacing = 8 * scale;
+      
+      const dateText = new fabric.Text(customDate, {
         left: padding,
         top: height * scale * infoY,
         fontSize: dateFontSize,
@@ -349,8 +352,8 @@ export function SocialGraphicEditorModal({
       canvas.add(dateText);
 
       const locationText = new fabric.Text(`Miejsce: ${customLocation}`, {
-        left: padding + 200 * scale,
-        top: height * scale * infoY,
+        left: padding,
+        top: height * scale * infoY + dateFontSize + lineSpacing,
         fontSize: dateFontSize,
         fontFamily: selectedFont,
         fill: secondaryColor,
