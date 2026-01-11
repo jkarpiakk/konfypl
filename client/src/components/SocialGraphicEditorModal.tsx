@@ -218,6 +218,8 @@ export function SocialGraphicEditorModal({
         fontFamily: selectedFont,
         fontWeight: "600",
         fill: textColor,
+        originX: "left",
+        originY: "top",
         selectable: false,
       });
       canvas.add(logo);
@@ -225,12 +227,14 @@ export function SocialGraphicEditorModal({
       const title = new fabric.Textbox(customTitle || event.title, {
         left: padding,
         top: height * scale * 0.3,
-        width: (width - 80) * scale,
+        width: (width - 120) * scale,
         fontSize: titleFontSize,
         fontFamily: selectedFont,
         fontWeight: "700",
         fill: textColor,
         lineHeight: 1.2,
+        originX: "left",
+        originY: "top",
         selectable: false,
       });
       canvas.add(title);
@@ -241,6 +245,8 @@ export function SocialGraphicEditorModal({
         fontSize: dateFontSize,
         fontFamily: selectedFont,
         fill: secondaryColor,
+        originX: "left",
+        originY: "top",
         selectable: false,
       });
       canvas.add(dateText);
@@ -251,6 +257,8 @@ export function SocialGraphicEditorModal({
         fontSize: dateFontSize,
         fontFamily: selectedFont,
         fill: secondaryColor,
+        originX: "left",
+        originY: "top",
         selectable: false,
       });
       canvas.add(locationText);
@@ -258,12 +266,14 @@ export function SocialGraphicEditorModal({
       if (showPromotion && event.promotionTier && event.promotionTier !== "none") {
         const badgeText = event.promotionTier === "max" ? "MAX" : event.promotionTier === "pro" ? "PRO" : "PROMOWANE";
         const badge = new fabric.Text(badgeText, {
-          left: width * scale - padding - 80 * scale,
+          left: width * scale - padding,
           top: padding,
           fontSize: 18 * scale,
           fontFamily: selectedFont,
           fontWeight: "600",
           fill: event.promotionTier === "max" ? "#FF8C00" : event.promotionTier === "pro" ? "#0EA5E9" : "#2ED3B7",
+          originX: "right",
+          originY: "top",
           selectable: false,
         });
         canvas.add(badge);
@@ -272,7 +282,7 @@ export function SocialGraphicEditorModal({
       const cta = new fabric.Rect({
         left: padding,
         top: height * scale - padding - 60 * scale,
-        width: (width - 80) * scale,
+        width: (width - 120) * scale,
         height: 50 * scale,
         fill: "#2ED3B7",
         rx: 25 * scale,
@@ -289,6 +299,7 @@ export function SocialGraphicEditorModal({
         fontWeight: "600",
         fill: "#0F172A",
         originX: "center",
+        originY: "top",
         selectable: false,
       });
       canvas.add(ctaText);
@@ -301,6 +312,8 @@ export function SocialGraphicEditorModal({
         fontFamily: selectedFont,
         fontWeight: "600",
         fill: textColor,
+        originX: "left",
+        originY: "top",
         selectable: false,
       });
       canvas.add(logo);
@@ -318,6 +331,8 @@ export function SocialGraphicEditorModal({
           fontFamily: selectedFont,
           fontWeight: "500",
           fill: "#2ED3B7",
+          originX: "left",
+          originY: "top",
           selectable: false,
         });
         canvas.add(specsText);
@@ -334,6 +349,8 @@ export function SocialGraphicEditorModal({
         fontWeight: "700",
         fill: textColor,
         lineHeight: 1.2,
+        originX: "left",
+        originY: "top",
         selectable: false,
       });
       canvas.add(title);
@@ -347,6 +364,8 @@ export function SocialGraphicEditorModal({
         fontSize: dateFontSize,
         fontFamily: selectedFont,
         fill: secondaryColor,
+        originX: "left",
+        originY: "top",
         selectable: false,
       });
       canvas.add(dateText);
@@ -357,6 +376,8 @@ export function SocialGraphicEditorModal({
         fontSize: dateFontSize,
         fontFamily: selectedFont,
         fill: secondaryColor,
+        originX: "left",
+        originY: "top",
         selectable: false,
       });
       canvas.add(locationText);
@@ -373,12 +394,14 @@ export function SocialGraphicEditorModal({
           max: "MAX",
         };
         const badge = new fabric.Text(tierLabels[event.promotionTier] || "", {
-          left: width * scale - padding - 100 * scale,
+          left: width * scale - padding,
           top: padding,
           fontSize: 16 * scale,
           fontFamily: selectedFont,
           fontWeight: "700",
           fill: tierColors[event.promotionTier] || "#2ED3B7",
+          originX: "right",
+          originY: "top",
           selectable: false,
         });
         canvas.add(badge);
@@ -405,6 +428,7 @@ export function SocialGraphicEditorModal({
         fontWeight: "600",
         fill: "#0F172A",
         originX: "center",
+        originY: "top",
         selectable: false,
       });
       canvas.add(ctaText);
