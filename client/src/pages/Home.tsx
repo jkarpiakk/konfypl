@@ -61,6 +61,10 @@ export default function Home() {
     queryKey: ["/api/events", { status: "published", upcoming: "true", limit: "50" }],
   });
 
+  const { data: eventCountData } = useQuery<{ count: number }>({
+    queryKey: ["/api/events/count"],
+  });
+
   const { data: sponsoredEventIds = [] } = useQuery<number[]>({
     queryKey: ["/api/sponsored-placements"],
   });
@@ -167,7 +171,7 @@ export default function Home() {
         searchQuery={heroSearch}
         onSearchChange={setHeroSearch}
         onSearch={handleHeroSearch}
-        eventCount={events.length}
+        eventCount={eventCountData?.count}
         selectedSpecs={filters.specializations}
         onSpecsChange={handleSpecsChange}
       />

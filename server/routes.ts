@@ -158,6 +158,16 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/events/count", async (_req, res) => {
+    try {
+      const total = await storage.getEventCount({ status: "published", upcoming: true });
+      res.json({ count: total });
+    } catch (error) {
+      console.error("Error fetching event count:", error);
+      res.status(500).json({ error: "Failed to fetch event count" });
+    }
+  });
+
   app.get("/api/events/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);

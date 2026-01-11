@@ -15,6 +15,7 @@ export interface IStorage {
   getAllUsers(): Promise<User[]>;
 
   getEvents(filters?: { status?: string; limit?: number; upcoming?: boolean; city?: string; voivodeship?: string; specialization?: string }): Promise<Event[]>;
+  getEventCount(filters?: { status?: string; upcoming?: boolean }): Promise<number>;
   getEvent(id: number): Promise<Event | undefined>;
   createEvent(event: InsertEvent): Promise<Event>;
   updateEvent(id: number, event: Partial<InsertEvent>): Promise<Event | undefined>;
@@ -104,6 +105,26 @@ export class DatabaseStorage implements IStorage {
     }
     
     return query;
+  }
+
+  async getEventCount(filters?: { status?: string; upcoming?: boolean }): Promise<number> {
+    const conditions = [];
+    
+    if (filters?.status) {
+      conditions.push(eq(events.status, filters.status));
+    }
+    
+    if (filters?.upcoming) {
+      const today = new Date().toISOString().split('T')[0];
+      conditions.push(gte(events.startDate, today));
+    }
+    
+    const result = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(events)
+      .where(conditions.length > 0 ? and(...conditions) : undefined);
+    
+    return Number(result[0]?.count || 0);
   }
 
   async getEvent(id: number): Promise<Event | undefined> {
