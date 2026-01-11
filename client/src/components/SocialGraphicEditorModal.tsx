@@ -97,6 +97,14 @@ export function SocialGraphicEditorModal({
   const [copiedHashtags, setCopiedHashtags] = useState(false);
   const [copiedText, setCopiedText] = useState(false);
   const [showPromotion, setShowPromotion] = useState(true);
+  const [showLogo, setShowLogo] = useState(true);
+  
+  const [logoX, setLogoX] = useState([5]);
+  const [logoY, setLogoY] = useState([5]);
+  const [titleX, setTitleX] = useState([5]);
+  const [titleY, setTitleY] = useState([25]);
+  const [infoX, setInfoX] = useState([5]);
+  const [infoY, setInfoY] = useState([72]);
 
   const generateCopyMutation = useMutation({
     mutationFn: async (eventId: number) => {
@@ -305,18 +313,40 @@ export function SocialGraphicEditorModal({
       canvas.add(ctaText);
 
     } else {
-      const logo = new fabric.Text("konfy.pl", {
-        left: padding,
-        top: padding,
-        fontSize: 28 * scale,
-        fontFamily: selectedFont,
-        fontWeight: "600",
-        fill: textColor,
-        originX: "left",
-        originY: "top",
-        selectable: false,
-      });
-      canvas.add(logo);
+      if (showLogo) {
+        const logoGroup = new fabric.Group([], {
+          left: (logoX[0] / 100) * width * scale,
+          top: (logoY[0] / 100) * height * scale,
+          originX: "left",
+          originY: "top",
+          selectable: false,
+        });
+
+        const konfyText = new fabric.Text("konfy", {
+          left: 0,
+          top: 0,
+          fontSize: 28 * scale,
+          fontFamily: selectedFont,
+          fontWeight: "600",
+          fill: textColor,
+          originX: "left",
+          originY: "top",
+        });
+
+        const plText = new fabric.Text(".pl", {
+          left: konfyText.width || 0,
+          top: 0,
+          fontSize: 28 * scale,
+          fontFamily: selectedFont,
+          fontWeight: "600",
+          fill: "#2ED3B7",
+          originX: "left",
+          originY: "top",
+        });
+
+        logoGroup.add(konfyText, plText);
+        canvas.add(logoGroup);
+      }
 
       const specs = event.specializations
         .slice(0, 2)
@@ -325,8 +355,8 @@ export function SocialGraphicEditorModal({
 
       if (specs) {
         const specsText = new fabric.Text(specs.toUpperCase(), {
-          left: padding,
-          top: padding + 45 * scale,
+          left: (logoX[0] / 100) * width * scale,
+          top: (logoY[0] / 100) * height * scale + 40 * scale,
           fontSize: 14 * scale,
           fontFamily: selectedFont,
           fontWeight: "500",
@@ -338,11 +368,10 @@ export function SocialGraphicEditorModal({
         canvas.add(specsText);
       }
 
-      const titleY = format === "instagram" ? 0.28 : 0.25;
-      const maxTitleWidth = width * scale - padding * 2;
+      const maxTitleWidth = width * scale - (titleX[0] / 100) * width * scale - padding;
       const title = new fabric.Textbox(customTitle || event.title, {
-        left: padding,
-        top: height * scale * titleY,
+        left: (titleX[0] / 100) * width * scale,
+        top: (titleY[0] / 100) * height * scale,
         width: maxTitleWidth,
         fontSize: titleFontSize,
         fontFamily: selectedFont,
@@ -355,12 +384,11 @@ export function SocialGraphicEditorModal({
       });
       canvas.add(title);
 
-      const infoY = format === "instagram" ? 0.68 : 0.72;
       const lineSpacing = 8 * scale;
       
       const dateText = new fabric.Text(customDate, {
-        left: padding,
-        top: height * scale * infoY,
+        left: (infoX[0] / 100) * width * scale,
+        top: (infoY[0] / 100) * height * scale,
         fontSize: dateFontSize,
         fontFamily: selectedFont,
         fill: secondaryColor,
@@ -371,8 +399,8 @@ export function SocialGraphicEditorModal({
       canvas.add(dateText);
 
       const locationText = new fabric.Text(`Miejsce: ${customLocation}`, {
-        left: padding,
-        top: height * scale * infoY + dateFontSize + lineSpacing,
+        left: (infoX[0] / 100) * width * scale,
+        top: (infoY[0] / 100) * height * scale + dateFontSize + lineSpacing,
         fontSize: dateFontSize,
         fontFamily: selectedFont,
         fill: secondaryColor,
@@ -435,7 +463,7 @@ export function SocialGraphicEditorModal({
     }
 
     canvas.renderAll();
-  }, [event, format, selectedBackground, selectedFont, titleSize, dateSize, customTitle, customDate, customLocation, showPromotion, getScaleFactor]);
+  }, [event, format, selectedBackground, selectedFont, titleSize, dateSize, customTitle, customDate, customLocation, showPromotion, showLogo, logoX, logoY, titleX, titleY, infoX, infoY, getScaleFactor]);
 
   useEffect(() => {
     if (open && event) {
@@ -669,6 +697,107 @@ export function SocialGraphicEditorModal({
                       step={2}
                       className="mt-2"
                       data-testid="slider-title-size"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4 border-t pt-4">
+              <div className="flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-muted-foreground" />
+                <Label>Pozycja elementów (%)</Label>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <input
+                    type="checkbox"
+                    id="showLogo"
+                    checked={showLogo}
+                    onChange={(e) => setShowLogo(e.target.checked)}
+                    className="rounded"
+                  />
+                  <Label htmlFor="showLogo" className="text-sm cursor-pointer">Pokaż logo konfy.pl</Label>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Logo X: {logoX[0]}%</Label>
+                    <Slider
+                      value={logoX}
+                      onValueChange={setLogoX}
+                      min={0}
+                      max={80}
+                      step={1}
+                      className="mt-1"
+                      data-testid="slider-logo-x"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Logo Y: {logoY[0]}%</Label>
+                    <Slider
+                      value={logoY}
+                      onValueChange={setLogoY}
+                      min={0}
+                      max={50}
+                      step={1}
+                      className="mt-1"
+                      data-testid="slider-logo-y"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Tytuł X: {titleX[0]}%</Label>
+                    <Slider
+                      value={titleX}
+                      onValueChange={setTitleX}
+                      min={0}
+                      max={50}
+                      step={1}
+                      className="mt-1"
+                      data-testid="slider-title-x"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Tytuł Y: {titleY[0]}%</Label>
+                    <Slider
+                      value={titleY}
+                      onValueChange={setTitleY}
+                      min={10}
+                      max={70}
+                      step={1}
+                      className="mt-1"
+                      data-testid="slider-title-y"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Data/Miejsce X: {infoX[0]}%</Label>
+                    <Slider
+                      value={infoX}
+                      onValueChange={setInfoX}
+                      min={0}
+                      max={50}
+                      step={1}
+                      className="mt-1"
+                      data-testid="slider-info-x"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Data/Miejsce Y: {infoY[0]}%</Label>
+                    <Slider
+                      value={infoY}
+                      onValueChange={setInfoY}
+                      min={50}
+                      max={95}
+                      step={1}
+                      className="mt-1"
+                      data-testid="slider-info-y"
                     />
                   </div>
                 </div>
