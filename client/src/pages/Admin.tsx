@@ -149,7 +149,7 @@ function EventsTable({
   }
 
   return (
-    <div className="border rounded-lg overflow-hidden">
+    <div className="border rounded-lg overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
@@ -160,7 +160,7 @@ function EventsTable({
             <TableHead>Promocja</TableHead>
             <TableHead>Status</TableHead>
             {showApproval && <TableHead>AI</TableHead>}
-            <TableHead className="text-right">Akcje</TableHead>
+            <TableHead className="text-right min-w-[180px]">Akcje</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
