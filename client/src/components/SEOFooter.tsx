@@ -23,31 +23,36 @@ export function SEOFooter() {
             <p className="text-[#94A3B8] text-sm leading-relaxed mb-4">
               Agregator konferencji i szkoleń medycznych w Polsce. Automatycznie aktualizowana baza wydarzeń dla lekarzy wszystkich specjalizacji.
             </p>
-            <div className="flex gap-3 mt-2">
+            <div className="flex items-center gap-3 mb-3">
               <a 
                 href="https://www.facebook.com/profile.php?id=61586301957716" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 px-3 py-2 bg-[#1E293B] hover:bg-[#2ED3B7] text-[#94A3B8] hover:text-[#0F172A] rounded-lg transition-colors text-sm"
+                className="text-[#94A3B8] hover:text-[#2ED3B7] transition-colors"
                 data-testid="link-facebook"
+                aria-label="Facebook"
               >
-                <SiFacebook className="w-4 h-4" />
-                <span>Polub nas</span>
+                <SiFacebook className="w-5 h-5" />
               </a>
               <a 
                 href="https://www.instagram.com/konfy.pl/" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 px-3 py-2 bg-[#1E293B] hover:bg-[#2ED3B7] text-[#94A3B8] hover:text-[#0F172A] rounded-lg transition-colors text-sm"
+                className="text-[#94A3B8] hover:text-[#2ED3B7] transition-colors"
                 data-testid="link-instagram"
+                aria-label="Instagram"
               >
-                <SiInstagram className="w-4 h-4" />
-                <span>Obserwuj</span>
+                <SiInstagram className="w-5 h-5" />
               </a>
             </div>
-            <p className="text-[#64748B] text-xs mt-3 leading-relaxed">
-              Punkty edukacyjne, konferencje, webinary - wszystko w jednym miejscu z automatycznymi aktualizacjami!
-            </p>
+            <div className="flex flex-wrap gap-2">
+              <span className="px-3 py-1.5 bg-[#1E293B] text-[#2ED3B7] rounded-full text-xs font-medium">
+                Punkty edukacyjne
+              </span>
+              <span className="px-3 py-1.5 bg-[#1E293B] text-[#2ED3B7] rounded-full text-xs font-medium">
+                Automatyczne aktualizacje
+              </span>
+            </div>
           </div>
           
           <div>
