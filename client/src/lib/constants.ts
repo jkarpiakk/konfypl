@@ -1,42 +1,106 @@
 export const SPECIALIZATIONS = [
-  "cardiology",
-  "family_medicine",
-  "internal_medicine",
-  "anesthesiology",
-  "surgery",
+  // Chirurgiczne
+  "general_surgery",
   "orthopedics",
   "gynecology",
-  "pediatrics",
-  "neurology",
-  "psychiatry",
-  "radiology",
-  "emergency_medicine",
-  "laboratory_diagnostics",
-  "dentistry",
-  "dermatology",
+  "urology",
+  "neurosurgery",
+  "vascular_surgery",
+  "cardiac_surgery",
+  "pediatric_surgery",
+  "plastic_surgery",
+  "maxillofacial_surgery",
   "ophthalmology",
+  "otolaryngology",
+  "thoracic_surgery",
+  // Zachowawcze
+  "internal_medicine",
+  "pediatrics",
+  "family_medicine",
+  "cardiology",
+  "neurology",
+  "gastroenterology",
+  "pulmonology",
+  "endocrinology",
+  "nephrology",
+  "rheumatology",
+  "hematology",
   "oncology",
+  "diabetology",
+  "geriatrics",
+  "emergency_medicine",
+  "anesthesiology",
+  // Psychiatryczne
+  "psychiatry",
+  "child_psychiatry",
+  "sexology",
+  // Diagnostyczne
+  "radiology",
+  "laboratory_medicine",
+  "pathology",
+  "nuclear_medicine",
+  // Inne specjalizacje
+  "dermatology",
+  "allergology",
+  "infectious_diseases",
+  "occupational_medicine",
+  "sports_medicine",
+  "palliative_medicine",
+  "rehabilitation",
+  // Kategoria ogólna
   "interdisciplinary"
 ] as const;
 
 export const SPECIALIZATION_LABELS: Record<typeof SPECIALIZATIONS[number], string> = {
-  cardiology: "Kardiologia",
-  family_medicine: "Medycyna Rodzinna",
-  internal_medicine: "Interna",
-  anesthesiology: "Anestezjologia i Intensywna Terapia",
-  surgery: "Chirurgia",
-  orthopedics: "Ortopedia",
-  gynecology: "Ginekologia i Położnictwo",
-  pediatrics: "Pediatria",
-  neurology: "Neurologia",
-  psychiatry: "Psychiatria",
-  radiology: "Radiologia",
-  emergency_medicine: "Medycyna Ratunkowa",
-  laboratory_diagnostics: "Diagnostyka Laboratoryjna",
-  dentistry: "Stomatologia",
-  dermatology: "Dermatologia",
+  // Chirurgiczne
+  general_surgery: "Chirurgia ogólna",
+  orthopedics: "Ortopedia i traumatologia",
+  gynecology: "Położnictwo i ginekologia",
+  urology: "Urologia",
+  neurosurgery: "Neurochirurgia",
+  vascular_surgery: "Chirurgia naczyniowa",
+  cardiac_surgery: "Kardiochirurgia",
+  pediatric_surgery: "Chirurgia dziecięca",
+  plastic_surgery: "Chirurgia plastyczna",
+  maxillofacial_surgery: "Chirurgia szczękowo-twarzowa",
   ophthalmology: "Okulistyka",
-  oncology: "Onkologia",
+  otolaryngology: "Otorynolaryngologia (Laryngologia)",
+  thoracic_surgery: "Torakochirurgia",
+  // Zachowawcze
+  internal_medicine: "Choroby wewnętrzne",
+  pediatrics: "Pediatria",
+  family_medicine: "Medycyna rodzinna",
+  cardiology: "Kardiologia",
+  neurology: "Neurologia",
+  gastroenterology: "Gastroenterologia",
+  pulmonology: "Pulmonologia",
+  endocrinology: "Endokrynologia",
+  nephrology: "Nefrologia",
+  rheumatology: "Reumatologia",
+  hematology: "Hematologia",
+  oncology: "Onkologia kliniczna",
+  diabetology: "Diabetologia",
+  geriatrics: "Geriatria",
+  emergency_medicine: "Medycyna ratunkowa",
+  anesthesiology: "Anestezjologia i intensywna terapia",
+  // Psychiatryczne
+  psychiatry: "Psychiatria",
+  child_psychiatry: "Psychiatria dzieci i młodzieży",
+  sexology: "Seksuologia",
+  // Diagnostyczne
+  radiology: "Radiologia i diagnostyka obrazowa",
+  laboratory_medicine: "Medycyna laboratoryjna",
+  pathology: "Patomorfologia",
+  nuclear_medicine: "Medycyna nuklearna",
+  // Inne
+  dermatology: "Dermatologia i wenerologia",
+  allergology: "Alergologia",
+  infectious_diseases: "Choroby zakaźne",
+  occupational_medicine: "Medycyna pracy",
+  sports_medicine: "Medycyna sportowa",
+  palliative_medicine: "Medycyna paliatywna",
+  rehabilitation: "Rehabilitacja medyczna",
+  // Kategoria ogólna
   interdisciplinary: "Interdyscyplinarne / Inne"
 };
 
@@ -85,23 +149,55 @@ export const TAG_LABELS: Record<typeof EVENT_TAGS[number], string> = {
 };
 
 export const SPECIALIZATION_COLORS: Record<typeof SPECIALIZATIONS[number], string> = {
-  cardiology: "!bg-red-100 !text-red-700 border border-red-200",
-  family_medicine: "!bg-green-100 !text-green-700 border border-green-200",
-  internal_medicine: "!bg-blue-100 !text-blue-700 border border-blue-200",
-  anesthesiology: "!bg-purple-100 !text-purple-700 border border-purple-200",
-  surgery: "!bg-orange-100 !text-orange-700 border border-orange-200",
+  // Chirurgiczne - odcienie pomarańczowe/czerwone
+  general_surgery: "!bg-orange-100 !text-orange-700 border border-orange-200",
   orthopedics: "!bg-amber-100 !text-amber-700 border border-amber-200",
   gynecology: "!bg-pink-100 !text-pink-700 border border-pink-200",
-  pediatrics: "!bg-cyan-100 !text-cyan-700 border border-cyan-200",
-  neurology: "!bg-indigo-100 !text-indigo-700 border border-indigo-200",
-  psychiatry: "!bg-violet-100 !text-violet-700 border border-violet-200",
-  radiology: "!bg-slate-200 !text-slate-700 border border-slate-300",
-  emergency_medicine: "!bg-rose-100 !text-rose-700 border border-rose-200",
-  laboratory_diagnostics: "!bg-teal-100 !text-teal-700 border border-teal-200",
-  dentistry: "!bg-sky-100 !text-sky-700 border border-sky-200",
-  dermatology: "!bg-fuchsia-100 !text-fuchsia-700 border border-fuchsia-200",
+  urology: "!bg-yellow-100 !text-yellow-700 border border-yellow-200",
+  neurosurgery: "!bg-indigo-100 !text-indigo-700 border border-indigo-200",
+  vascular_surgery: "!bg-red-100 !text-red-700 border border-red-200",
+  cardiac_surgery: "!bg-rose-100 !text-rose-700 border border-rose-200",
+  pediatric_surgery: "!bg-cyan-100 !text-cyan-700 border border-cyan-200",
+  plastic_surgery: "!bg-fuchsia-100 !text-fuchsia-700 border border-fuchsia-200",
+  maxillofacial_surgery: "!bg-lime-100 !text-lime-700 border border-lime-200",
   ophthalmology: "!bg-emerald-100 !text-emerald-700 border border-emerald-200",
+  otolaryngology: "!bg-teal-100 !text-teal-700 border border-teal-200",
+  thoracic_surgery: "!bg-sky-100 !text-sky-700 border border-sky-200",
+  // Zachowawcze - odcienie niebieskie/zielone
+  internal_medicine: "!bg-blue-100 !text-blue-700 border border-blue-200",
+  pediatrics: "!bg-cyan-100 !text-cyan-700 border border-cyan-200",
+  family_medicine: "!bg-green-100 !text-green-700 border border-green-200",
+  cardiology: "!bg-red-100 !text-red-700 border border-red-200",
+  neurology: "!bg-indigo-100 !text-indigo-700 border border-indigo-200",
+  gastroenterology: "!bg-amber-100 !text-amber-700 border border-amber-200",
+  pulmonology: "!bg-sky-100 !text-sky-700 border border-sky-200",
+  endocrinology: "!bg-violet-100 !text-violet-700 border border-violet-200",
+  nephrology: "!bg-blue-100 !text-blue-700 border border-blue-200",
+  rheumatology: "!bg-purple-100 !text-purple-700 border border-purple-200",
+  hematology: "!bg-rose-100 !text-rose-700 border border-rose-200",
   oncology: "!bg-yellow-100 !text-yellow-700 border border-yellow-200",
+  diabetology: "!bg-orange-100 !text-orange-700 border border-orange-200",
+  geriatrics: "!bg-slate-200 !text-slate-700 border border-slate-300",
+  emergency_medicine: "!bg-rose-100 !text-rose-700 border border-rose-200",
+  anesthesiology: "!bg-purple-100 !text-purple-700 border border-purple-200",
+  // Psychiatryczne - odcienie fioletowe
+  psychiatry: "!bg-violet-100 !text-violet-700 border border-violet-200",
+  child_psychiatry: "!bg-purple-100 !text-purple-700 border border-purple-200",
+  sexology: "!bg-pink-100 !text-pink-700 border border-pink-200",
+  // Diagnostyczne - odcienie szare/niebieskie
+  radiology: "!bg-slate-200 !text-slate-700 border border-slate-300",
+  laboratory_medicine: "!bg-teal-100 !text-teal-700 border border-teal-200",
+  pathology: "!bg-stone-200 !text-stone-700 border border-stone-300",
+  nuclear_medicine: "!bg-zinc-200 !text-zinc-700 border border-zinc-300",
+  // Inne
+  dermatology: "!bg-fuchsia-100 !text-fuchsia-700 border border-fuchsia-200",
+  allergology: "!bg-lime-100 !text-lime-700 border border-lime-200",
+  infectious_diseases: "!bg-amber-100 !text-amber-700 border border-amber-200",
+  occupational_medicine: "!bg-blue-100 !text-blue-700 border border-blue-200",
+  sports_medicine: "!bg-green-100 !text-green-700 border border-green-200",
+  palliative_medicine: "!bg-neutral-200 !text-neutral-700 border border-neutral-300",
+  rehabilitation: "!bg-emerald-100 !text-emerald-700 border border-emerald-200",
+  // Kategoria ogólna
   interdisciplinary: "!bg-gray-200 !text-gray-700 border border-gray-300"
 };
 
@@ -271,3 +367,30 @@ export const CITY_TO_VOIVODESHIP: Record<typeof MAJOR_CITIES[number], typeof VOI
   legnica: "dolnoslaskie",
   grudziadz: "kujawsko_pomorskie"
 };
+
+export const SPECIALIZATION_CATEGORIES = {
+  surgical: {
+    label: "Chirurgiczne",
+    specializations: ["general_surgery", "orthopedics", "gynecology", "urology", "neurosurgery", "vascular_surgery", "cardiac_surgery", "pediatric_surgery", "plastic_surgery", "maxillofacial_surgery", "ophthalmology", "otolaryngology", "thoracic_surgery"]
+  },
+  conservative: {
+    label: "Zachowawcze",
+    specializations: ["internal_medicine", "pediatrics", "family_medicine", "cardiology", "neurology", "gastroenterology", "pulmonology", "endocrinology", "nephrology", "rheumatology", "hematology", "oncology", "diabetology", "geriatrics", "emergency_medicine", "anesthesiology"]
+  },
+  psychiatric: {
+    label: "Psychiatryczne",
+    specializations: ["psychiatry", "child_psychiatry", "sexology"]
+  },
+  diagnostic: {
+    label: "Diagnostyczne",
+    specializations: ["radiology", "laboratory_medicine", "pathology", "nuclear_medicine"]
+  },
+  other: {
+    label: "Inne specjalizacje",
+    specializations: ["dermatology", "allergology", "infectious_diseases", "occupational_medicine", "sports_medicine", "palliative_medicine", "rehabilitation"]
+  },
+  general: {
+    label: "Ogólne",
+    specializations: ["interdisciplinary"]
+  }
+} as const;

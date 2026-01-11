@@ -118,11 +118,20 @@ The backend implements a RESTful API pattern with routes for events, sources, an
 - PromotePage: Package selection with Stripe checkout and lead capture fallback
 
 **January 2026 - Geographic Filtering & New Specializations**
-- Added 4 new specializations: dentistry, dermatology, ophthalmology, oncology (18 total)
 - Geographic filtering: city and voivodeship columns on events table
 - Location filters in FiltersPanel: 16 voivodeships, 20 major Polish cities
-- AI extraction enhanced with exclusive keywords to prevent cross-specialization drift
-- SEO data updated with all 18 specializations for SEOFooter
+
+**January 2026 - Expanded Specializations (40+ Categories)**
+- Expanded from 18 to 43 medical specializations organized into 6 categories:
+  - **Chirurgiczne (13)**: general_surgery, orthopedics, gynecology, urology, neurosurgery, vascular_surgery, cardiac_surgery, pediatric_surgery, plastic_surgery, maxillofacial_surgery, ophthalmology, otolaryngology, thoracic_surgery
+  - **Zachowawcze (16)**: internal_medicine, pediatrics, family_medicine, cardiology, neurology, gastroenterology, pulmonology, endocrinology, nephrology, rheumatology, hematology, oncology, diabetology, geriatrics, emergency_medicine, anesthesiology
+  - **Psychiatryczne (3)**: psychiatry, child_psychiatry, sexology
+  - **Diagnostyczne (4)**: radiology, laboratory_medicine, pathology, nuclear_medicine
+  - **Inne (7)**: dermatology, allergology, infectious_diseases, occupational_medicine, sports_medicine, palliative_medicine, rehabilitation
+- Enhanced AI extractor with comprehensive SPECIALIZATION_KEYWORDS for accurate categorization
+- Updated EXCLUSIVE_KEYWORDS to prevent cross-specialization drift
+- Comprehensive SEO data for all specializations (meta tags, topics, FAQs, societies)
+- Updated color scheme: specialty-specific Tailwind colors by category
 
 **January 2026 - Social Media Graphics Generator**
 - Admin panel feature for creating shareable event cards

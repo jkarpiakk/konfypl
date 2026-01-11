@@ -39,30 +39,67 @@ interface ExtractionResult {
 }
 
 const SPECIALIZATION_KEYWORDS: Record<string, string[]> = {
-  cardiology: ["kardiolog", "serce", "cardiac", "arytmi", "zawał", "niewydolność serca", "echokardiografi", "ptk", "ekg", "holter"],
+  // Chirurgiczne
+  general_surgery: ["chirurg", "operacj", "zabieg", "laparoskop", "endoskop", "tchp", "chirurgii ogólnej"],
+  orthopedics: ["ortoped", "traumatolog", "kości", "staw", "kręgosłup", "endoprotez", "artroskop", "ptoitr"],
+  gynecology: ["ginekolog", "położnic", "ciąż", "poród", "kobiec", "macic", "ptgip"],
+  urology: ["urolog", "pęcherz", "prostata", "nerki", "moczow", "ptu", "endourolog"],
+  neurosurgery: ["neurochirurg", "mózgu operac", "kręgosłupa operac", "guz mózgu", "ptnch"],
+  vascular_surgery: ["naczyniow", "tętniak", "żylak", "endowaskular", "angiolog"],
+  cardiac_surgery: ["kardiochirurg", "cabg", "zastawka operac", "bypass", "pomostow", "tavi chirurg"],
+  pediatric_surgery: ["chirurg dziec", "wad wrodzonych", "chirurgii dziecięcej"],
+  plastic_surgery: ["plastyczn", "estetyczn chirurg", "rekonstrukcj", "mikrochirurg", "oparzeni"],
+  maxillofacial_surgery: ["szczękowo", "twarzow", "twarzoczaszk", "ortognatyczn"],
+  ophthalmology: ["okulista", "okulistyk", "oftalmolog", "oczu", "siatkówk", "jaskr", "zaćm", "soczewk", "laserowa korekcj", "optometr", "pto"],
+  otolaryngology: ["laryngolog", "otolaryngolog", "orl", "ucho", "gardł", "krtań", "audiolog", "foniatra", "ptorl", "fess"],
+  thoracic_surgery: ["torakochirurg", "klatki piersiowej", "płuca operac", "vats", "śródpiersie"],
+  // Zachowawcze
+  internal_medicine: ["intern", "wewnętrzn", "choroby wewnętrzne", "internist", "ptim"],
+  pediatrics: ["pediatr", "dziec", "niemowl", "noworod", "młodzież", "ptp"],
   family_medicine: ["rodzinn", "poz", "podstawow", "pierwszego kontaktu", "lekarz rodzinny", "medycyna rodzinna"],
-  internal_medicine: ["intern", "wewnętrzn", "choroby wewnętrzne", "internist"],
-  anesthesiology: ["anestezjolog", "intensywn", "znieczulen", "oit", "reanimac", "sedacj"],
-  surgery: ["chirurg", "operacj", "zabieg", "laparoskop", "endoskop"],
-  orthopedics: ["ortoped", "traumatolog", "kości", "staw", "kręgosłup", "endoprotez"],
-  gynecology: ["ginekolog", "położnic", "ciąż", "poród", "kobiec", "macic"],
-  pediatrics: ["pediatr", "dziec", "niemowl", "noworod", "młodzież"],
-  neurology: ["neurolog", "mózg", "nerwow", "udar", "padaczk", "stwardnieni"],
-  psychiatry: ["psychiatr", "psycholog", "depresj", "lęk", "zaburzeni", "psychoz"],
-  radiology: ["radiolog", "obrazow", "tomografi", "rezonans", "rtg", "usg", "mri", "ct"],
-  emergency_medicine: ["ratunk", "nagł", "sor", "emergenc", "resuscytacj"],
-  laboratory_diagnostics: ["laborator", "diagnostyk", "analityk", "badania krwi", "morfologi"],
-  dentistry: ["stomatolog", "dentysta", "dentystyczn", "ząb", "zęb", "ubytek", "endodont", "periodont", "ortodont", "implant", "protet", "stomatologii", "jamy ustnej", "protet", "wybielani", "ubytków", "odbudow", "korona", "most", "kanał", "licówk", "implantolog", "chirurgia stomatolog", "dziecięcej stomatolog"],
-  dermatology: ["dermatolog", "skór", "dermatozy", "łuszczyc", "egzem", "trądzik", "atopow", "melanom", "dermatoskop"],
-  ophthalmology: ["okulista", "okulistyk", "oftalmolog", "oczu", "siatkówk", "jaskr", "zaćm", "soczewk", "laserowa korekcj", "optometr"],
-  oncology: ["onkolog", "nowotw", "rak", "chemioter", "radioter", "przerzut", "guz"],
+  cardiology: ["kardiolog", "serce", "cardiac", "arytmi", "zawał", "niewydolność serca", "echokardiografi", "ptk", "ekg", "holter"],
+  neurology: ["neurolog", "mózg", "nerwow", "udar", "padaczk", "stwardnieni", "ptn"],
+  gastroenterology: ["gastroenterolog", "gastrolog", "przewód pokarmow", "endoskop", "kolonoskop", "wątrob", "trzustk", "ibd", "ptge"],
+  pulmonology: ["pulmonolog", "pneumonolog", "płuc", "pochp", "astma", "bronchoskop", "oddechow", "ptchp"],
+  endocrinology: ["endokrynolog", "hormon", "tarczyc", "przysadka", "nadnercz", "pte"],
+  nephrology: ["nefrolog", "nerek", "dializ", "przeszczep nerki", "kłębuszkow", "ptn nefrolog"],
+  rheumatology: ["reumatolog", "rzs", "toczeń", "autoimmunolog", "zapalenie stawów", "ptr"],
+  hematology: ["hematolog", "krew", "białaczk", "chłoniak", "szpiczak", "krwiotwór", "pthit"],
+  oncology: ["onkolog", "nowotw", "rak", "chemioter", "radioter", "przerzut", "guz", "pto", "esmo"],
+  diabetology: ["diabetolog", "cukrzyc", "insulin", "glukoz", "cgm", "pomp insulinow", "ptd"],
+  geriatrics: ["geriatr", "starszych", "starość", "wielochorobow", "zespoły geriatryczn"],
+  emergency_medicine: ["ratunk", "nagł", "sor", "emergenc", "resuscytacj", "als", "atls"],
+  anesthesiology: ["anestezjolog", "intensywn", "znieczulen", "oit", "reanimac", "sedacj", "ptaiit"],
+  // Psychiatryczne
+  psychiatry: ["psychiatr", "psycholog", "depresj", "lęk", "zaburzeni", "psychoz", "ptp psychiatr"],
+  child_psychiatry: ["psychiatr dziec", "adhd", "autyzm", "zaburzenia u dzieci", "młodzieży psychiatr"],
+  sexology: ["seksuolog", "dysfunkcj seksual", "seksualn", "terapia par"],
+  // Diagnostyczne
+  radiology: ["radiolog", "obrazow", "tomografi", "rezonans", "rtg", "usg", "mri", "ct", "pltr"],
+  laboratory_medicine: ["laborator", "diagnostyk lab", "analityk", "badania krwi", "morfologi", "ptdl"],
+  pathology: ["patomorfolog", "histopatolog", "cytolog", "immunohistochem", "biopsj"],
+  nuclear_medicine: ["nuklearn", "pet-ct", "scyntygrafi", "radioizotop", "teranostyk"],
+  // Inne specjalizacje
+  dermatology: ["dermatolog", "skór", "dermatozy", "łuszczyc", "egzem", "trądzik", "atopow", "melanom", "dermatoskop", "wenerol", "ptd dermatolog"],
+  allergology: ["alergolog", "alergii", "astma alergiczna", "immunoterapi", "anafilaksj", "pta"],
+  infectious_diseases: ["zakaźn", "infekcj", "antybiotyk", "hiv", "wirusow zapalen", "szczepieni"],
+  occupational_medicine: ["pracy medycyn", "profilaktyczn", "zawodow choroby", "orzecznictw"],
+  sports_medicine: ["sporto", "wydolność", "urazy sportow", "antydoping", "sportowców"],
+  palliative_medicine: ["paliatywn", "hospicyjn", "terminaln", "bólu leczeni", "schyłku życia"],
+  rehabilitation: ["rehabilitacj", "fizjoterap", "kinezyterapia", "ndt bobath", "pnf"],
+  // Kategoria ogólna
   interdisciplinary: ["interdyscyplinarn", "wielospecjalist", "holistyczn"]
 };
 
 const EXCLUSIVE_KEYWORDS: Record<string, string[]> = {
-  dentistry: ["ząb", "zęb", "stomatolog", "dentysta", "dentystyczn", "endodont", "periodont", "ortodont", "protet", "jamy ustnej", "ubytków", "odbudow"],
   ophthalmology: ["oczu", "okulistyk", "oftalmolog", "siatkówk", "jaskr", "zaćm", "optometr"],
-  dermatology: ["skór", "dermatolog", "łuszczyc", "egzem", "dermatozy"]
+  dermatology: ["skór", "dermatolog", "łuszczyc", "egzem", "dermatozy"],
+  otolaryngology: ["laryngolog", "otolaryngolog", "orl", "ucho", "gardł", "krtań"],
+  urology: ["urolog", "pęcherz", "prostata", "moczow"],
+  nephrology: ["nefrolog", "dializ", "kłębuszkow"],
+  rheumatology: ["reumatolog", "rzs", "toczeń", "autoimmunolog"],
+  allergology: ["alergolog", "alergii", "immunoterapi swoista"],
+  sexology: ["seksuolog", "dysfunkcj seksual"]
 };
 
 function hasExclusiveKeywords(text: string, spec: string): boolean {
@@ -228,30 +265,64 @@ DOSTĘPNE SPECJALIZACJE (użyj tylko tych ID):
 ${SPECIALIZATIONS.join(", ")}
 
 WSKAZÓWKI DO KATEGORYZACJI (BARDZO WAŻNE - PRZYPISUJ POPRAWNIE!):
-- Kardiologia: PTK, serce, arytmie, zawał, EKG, echo
-- Interna: choroby wewnętrzne, internista
-- Medycyna rodzinna: POZ, lekarz rodzinny, podstawowa opieka
-- Pediatria: dzieci, niemowlęta, noworodki (NIE stomatologia dziecięca!)
-- Chirurgia: operacje, zabiegi, laparoskopia (NIE chirurgia stomatologiczna!)
-- Neurologia: mózg, udar, stwardnienie, padaczka
-- Psychiatria: depresja, zaburzenia, psychozy
-- Anestezjologia: znieczulenie, OIT, intensywna terapia
-- Ginekologia: ciąża, poród, kobiece (NIE używaj dla stomatologii!)
-- Ortopedia: kości, stawy, endoprotezy
-- Radiologia: obrazowanie, RTG, MRI, USG, TK
-- Ratunkowa: SOR, nagłe, resuscytacja
-- Laboratoryjna: diagnostyka, analityka
-- STOMATOLOGIA: dentyści, zęby, ubytki, endodoncja, implanty, protetyka, ortodoncja, jama ustna - ZAWSZE przypisuj do "dentistry"!
-- Dermatologia: skóra, łuszczyca, egzema, dermatozy
-- Okulistyka: oczy, siatkówka, jaskra, zaćma
-- Onkologia: nowotwory, rak, chemioterapia
-- Interdyscyplinarne: wielospecjalistyczne, ogólnomedyczne
+CHIRURGICZNE:
+- general_surgery: chirurgia ogólna, laparoskopia, TChP
+- orthopedics: ortopedia, traumatologia, endoprotezy, artroskopia
+- gynecology: ginekologia, położnictwo, ciąża, poród
+- urology: urologia, pęcherz, prostata, endourologia
+- neurosurgery: neurochirurgia, operacje mózgu/kręgosłupa
+- vascular_surgery: chirurgia naczyniowa, tętniaki, żylaki
+- cardiac_surgery: kardiochirurgia, CABG, zastawki
+- pediatric_surgery: chirurgia dziecięca, wady wrodzone
+- plastic_surgery: chirurgia plastyczna, rekonstrukcyjna
+- maxillofacial_surgery: chirurgia szczękowo-twarzowa
+- ophthalmology: okulistyka, oczy, siatkówka, jaskra, zaćma
+- otolaryngology: laryngologia, ORL, ucho, gardło, krtań, FESS
+- thoracic_surgery: torakochirurgia, płuca, VATS
 
-KRYTYCZNE ZASADY KATEGORYZACJI:
-1. Jeśli wydarzenie dotyczy ZĘBÓW, UBYTKÓW, ENDODONCJI, PROTETYKI, IMPLANTÓW - to ZAWSZE jest "dentistry", NIGDY ginekologia czy pediatria!
-2. "Stomatologia dziecięca" = dentistry, NIE pediatrics!
-3. "Chirurgia stomatologiczna" = dentistry, NIE surgery!
-4. Nie mieszaj kategorii - wydarzenie o zębach NIE może mieć kategorii ginekologia!
+ZACHOWAWCZE:
+- internal_medicine: interna, choroby wewnętrzne
+- pediatrics: pediatria, dzieci, noworodki
+- family_medicine: medycyna rodzinna, POZ
+- cardiology: kardiologia, serce, EKG, echo
+- neurology: neurologia, udar, padaczka, SM
+- gastroenterology: gastroenterologia, endoskopia, IBD
+- pulmonology: pulmonologia, POChP, astma, płuca
+- endocrinology: endokrynologia, tarczyca, hormony
+- nephrology: nefrologia, nerki, dializa
+- rheumatology: reumatologia, RZS, toczeń
+- hematology: hematologia, białaczka, chłoniaki
+- oncology: onkologia, nowotwory, chemioterapia
+- diabetology: diabetologia, cukrzyca, insulina
+- geriatrics: geriatria, osoby starsze
+- emergency_medicine: medycyna ratunkowa, SOR, ALS
+- anesthesiology: anestezjologia, OIT, znieczulenie
+
+PSYCHIATRYCZNE:
+- psychiatry: psychiatria, depresja, psychozy
+- child_psychiatry: psychiatria dziecięca, ADHD, autyzm
+- sexology: seksuologia, dysfunkcje seksualne
+
+DIAGNOSTYCZNE:
+- radiology: radiologia, RTG, MRI, TK, USG
+- laboratory_medicine: diagnostyka laboratoryjna
+- pathology: patomorfologia, histopatologia
+- nuclear_medicine: medycyna nuklearna, PET-CT
+
+INNE:
+- dermatology: dermatologia, skóra, łuszczyca
+- allergology: alergologia, alergie, immunoterapia
+- infectious_diseases: choroby zakaźne, antybiotyki
+- occupational_medicine: medycyna pracy
+- sports_medicine: medycyna sportowa
+- palliative_medicine: medycyna paliatywna, hospicjum
+- rehabilitation: rehabilitacja, fizjoterapia
+- interdisciplinary: interdyscyplinarne, ogólne
+
+KRYTYCZNE ZASADY:
+1. Wybieraj NAJBARDZIEJ SPECYFICZNĄ kategorię
+2. Unikaj ogólnych kategorii jeśli istnieje specyficzna
+3. Przy wątpliwościach sprawdź organizatora i tematykę
 
 DOSTĘPNE TAGI (wybierz wszystkie pasujące):
 ${EVENT_TAGS.join(", ")}

@@ -44,16 +44,20 @@ export function SEOFooter() {
               Specjalizacje
             </h3>
             <ul className="space-y-2">
-              {topSpecializations.map(spec => (
-                <li key={spec}>
-                  <Link 
-                    href={`/${SPECIALIZATION_SEO[spec].slug}`} 
-                    className="text-[#CBD5E1] hover:text-[#2ED3B7] transition-colors text-sm"
-                  >
-                    {SPECIALIZATION_LABELS[spec]}
-                  </Link>
-                </li>
-              ))}
+              {topSpecializations.map(spec => {
+                const seoData = SPECIALIZATION_SEO[spec];
+                if (!seoData) return null;
+                return (
+                  <li key={spec}>
+                    <Link 
+                      href={`/${seoData.slug}`} 
+                      className="text-[#CBD5E1] hover:text-[#2ED3B7] transition-colors text-sm"
+                    >
+                      {SPECIALIZATION_LABELS[spec]}
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </div>
           
@@ -62,16 +66,20 @@ export function SEOFooter() {
               Więcej specjalizacji
             </h3>
             <ul className="space-y-2">
-              {SPECIALIZATIONS.slice(8).map(spec => (
-                <li key={spec}>
-                  <Link 
-                    href={`/${SPECIALIZATION_SEO[spec].slug}`} 
-                    className="text-[#CBD5E1] hover:text-[#2ED3B7] transition-colors text-sm"
-                  >
-                    {SPECIALIZATION_LABELS[spec]}
-                  </Link>
-                </li>
-              ))}
+              {SPECIALIZATIONS.slice(8, 16).map(spec => {
+                const seoData = SPECIALIZATION_SEO[spec];
+                if (!seoData) return null;
+                return (
+                  <li key={spec}>
+                    <Link 
+                      href={`/${seoData.slug}`} 
+                      className="text-[#CBD5E1] hover:text-[#2ED3B7] transition-colors text-sm"
+                    >
+                      {SPECIALIZATION_LABELS[spec]}
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         </div>
