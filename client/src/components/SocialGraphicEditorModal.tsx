@@ -435,10 +435,10 @@ export function SocialGraphicEditorModal({
         canvas.add(badge);
       }
 
-      const ctaY = format === "instagram" ? 0.82 : 0.85;
+      const ctaTopPosition = (infoY[0] / 100) * height * scale + dateFontSize * 2 + lineSpacing * 3;
       const cta = new fabric.Rect({
-        left: padding,
-        top: height * scale * ctaY,
+        left: (infoX[0] / 100) * width * scale,
+        top: ctaTopPosition,
         width: 200 * scale,
         height: 45 * scale,
         fill: "#2ED3B7",
@@ -449,8 +449,8 @@ export function SocialGraphicEditorModal({
       canvas.add(cta);
 
       const ctaText = new fabric.Text("Zapisz się →", {
-        left: padding + 100 * scale,
-        top: height * scale * ctaY + 13 * scale,
+        left: (infoX[0] / 100) * width * scale + 100 * scale,
+        top: ctaTopPosition + 13 * scale,
         fontSize: 16 * scale,
         fontFamily: selectedFont,
         fontWeight: "600",
