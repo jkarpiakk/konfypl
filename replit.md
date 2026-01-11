@@ -143,6 +143,17 @@ The backend implements a RESTful API pattern with routes for events, sources, an
 - Endpoint: POST /api/events/:id/social-copy for AI content generation
 - Component: SocialGraphicEditorModal.tsx (integrated in Admin panel)
 
+**January 2026 - Comprehensive SEO Optimization**
+- Dynamic meta tags: SEOHead component updates title, description, canonical, keywords, OG/Twitter for each page
+- JSON-LD structured data: Event, EventList, Breadcrumb, FAQ, Website schemas
+- Sitemap.xml endpoint with homepage (1.0), calendar (0.8), 43 specializations (0.9), up to 500 events (0.7)
+- robots.txt with proper directives (Allow /, Disallow /admin, /api/, /promote)
+- SEO-friendly URLs: /wydarzenia/{id} for events, /specjalizacja/{slug} for specializations, /calendar for calendar
+- Specialization hub pages with unique content, FAQs, related events, meta tags
+- Open Graph and Twitter Card tags for social sharing
+- Target keywords: "konferencje medyczne", "kongresy lekarskie", "szkolenia medyczne", "webinary dla lekarzy"
+- Proper H1-H6 heading hierarchy on all pages
+
 ## Project Structure
 
 ```
