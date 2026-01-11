@@ -117,6 +117,13 @@ The backend implements a RESTful API pattern with routes for events, sources, an
 - Stripe integration: Payment processing for promotion packages (Basic 199 PLN, Pro 499 PLN, Max 999 PLN)
 - PromotePage: Package selection with Stripe checkout and lead capture fallback
 
+**January 2026 - Geographic Filtering & New Specializations**
+- Added 4 new specializations: dentistry, dermatology, ophthalmology, oncology (18 total)
+- Geographic filtering: city and voivodeship columns on events table
+- Location filters in FiltersPanel: 16 voivodeships, 20 major Polish cities
+- AI extraction enhanced with exclusive keywords to prevent cross-specialization drift
+- SEO data updated with all 18 specializations for SEOFooter
+
 ## Project Structure
 
 ```

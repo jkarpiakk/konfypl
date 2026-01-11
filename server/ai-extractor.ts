@@ -52,8 +52,54 @@ const SPECIALIZATION_KEYWORDS: Record<string, string[]> = {
   radiology: ["radiolog", "obrazow", "tomografi", "rezonans", "rtg", "usg", "mri", "ct"],
   emergency_medicine: ["ratunk", "nagł", "sor", "emergenc", "resuscytacj"],
   laboratory_diagnostics: ["laborator", "diagnostyk", "analityk", "badania krwi", "morfologi"],
+  dentistry: ["stomatolog", "dentysta", "dentystyczn", "ząb", "zęb", "ubytek", "endodont", "periodont", "ortodont", "implant", "protet", "stomatologii", "jamy ustnej", "protet", "wybielani", "ubytków", "odbudow", "korona", "most", "kanał", "licówk", "implantolog", "chirurgia stomatolog", "dziecięcej stomatolog"],
+  dermatology: ["dermatolog", "skór", "dermatozy", "łuszczyc", "egzem", "trądzik", "atopow", "melanom", "dermatoskop"],
+  ophthalmology: ["okulista", "okulistyk", "oftalmolog", "oczu", "siatkówk", "jaskr", "zaćm", "soczewk", "laserowa korekcj", "optometr"],
+  oncology: ["onkolog", "nowotw", "rak", "chemioter", "radioter", "przerzut", "guz"],
   interdisciplinary: ["interdyscyplinarn", "wielospecjalist", "holistyczn"]
 };
+
+const EXCLUSIVE_KEYWORDS: Record<string, string[]> = {
+  dentistry: ["ząb", "zęb", "stomatolog", "dentysta", "dentystyczn", "endodont", "periodont", "ortodont", "protet", "jamy ustnej", "ubytków", "odbudow"],
+  ophthalmology: ["oczu", "okulistyk", "oftalmolog", "siatkówk", "jaskr", "zaćm", "optometr"],
+  dermatology: ["skór", "dermatolog", "łuszczyc", "egzem", "dermatozy"]
+};
+
+function hasExclusiveKeywords(text: string, spec: string): boolean {
+  const keywords = EXCLUSIVE_KEYWORDS[spec];
+  if (!keywords) return false;
+  const lowerText = text.toLowerCase();
+  return keywords.some(kw => lowerText.includes(kw.toLowerCase()));
+}
+
+function validateSpecializations(text: string, aiSpecs: string[]): string[] {
+  const lowerText = text.toLowerCase();
+  
+  for (const [exclusiveSpec, keywords] of Object.entries(EXCLUSIVE_KEYWORDS)) {
+    const hasExclusive = keywords.some(kw => lowerText.includes(kw.toLowerCase()));
+    
+    if (hasExclusive) {
+      const invalidSpecs = aiSpecs.filter(s => {
+        if (s === exclusiveSpec || s === "interdisciplinary") return false;
+        if (s === "surgery" && (lowerText.includes("chirurgia stomatolog") || lowerText.includes("chirurgii stomatolog"))) return true;
+        const hasOwnKeywords = EXCLUSIVE_KEYWORDS[s]?.some(kw => lowerText.includes(kw.toLowerCase()));
+        return !hasOwnKeywords;
+      });
+      
+      if (invalidSpecs.length > 0) {
+        console.log(`AI validation: Removing invalid specs ${invalidSpecs.join(", ")} for ${exclusiveSpec} event`);
+        aiSpecs = aiSpecs.filter(s => !invalidSpecs.includes(s));
+      }
+      
+      if (!aiSpecs.includes(exclusiveSpec)) {
+        console.log(`AI validation: Adding missing ${exclusiveSpec} specialization`);
+        aiSpecs.push(exclusiveSpec);
+      }
+    }
+  }
+  
+  return aiSpecs.length > 0 ? aiSpecs : ["interdisciplinary"];
+}
 
 const TAG_DETECTION_RULES: Record<string, (text: string) => boolean> = {
   webinar: (text) => /webinar|online.*szkoleni|szkoleni.*online|transmisj/i.test(text),
@@ -181,21 +227,31 @@ BARDZO WAŻNE - LINKI:
 DOSTĘPNE SPECJALIZACJE (użyj tylko tych ID):
 ${SPECIALIZATIONS.join(", ")}
 
-WSKAZÓWKI DO KATEGORYZACJI:
+WSKAZÓWKI DO KATEGORYZACJI (BARDZO WAŻNE - PRZYPISUJ POPRAWNIE!):
 - Kardiologia: PTK, serce, arytmie, zawał, EKG, echo
 - Interna: choroby wewnętrzne, internista
 - Medycyna rodzinna: POZ, lekarz rodzinny, podstawowa opieka
-- Pediatria: dzieci, niemowlęta, noworodki
-- Chirurgia: operacje, zabiegi, laparoskopia
+- Pediatria: dzieci, niemowlęta, noworodki (NIE stomatologia dziecięca!)
+- Chirurgia: operacje, zabiegi, laparoskopia (NIE chirurgia stomatologiczna!)
 - Neurologia: mózg, udar, stwardnienie, padaczka
 - Psychiatria: depresja, zaburzenia, psychozy
 - Anestezjologia: znieczulenie, OIT, intensywna terapia
-- Ginekologia: ciąża, poród, kobiece
+- Ginekologia: ciąża, poród, kobiece (NIE używaj dla stomatologii!)
 - Ortopedia: kości, stawy, endoprotezy
 - Radiologia: obrazowanie, RTG, MRI, USG, TK
 - Ratunkowa: SOR, nagłe, resuscytacja
 - Laboratoryjna: diagnostyka, analityka
+- STOMATOLOGIA: dentyści, zęby, ubytki, endodoncja, implanty, protetyka, ortodoncja, jama ustna - ZAWSZE przypisuj do "dentistry"!
+- Dermatologia: skóra, łuszczyca, egzema, dermatozy
+- Okulistyka: oczy, siatkówka, jaskra, zaćma
+- Onkologia: nowotwory, rak, chemioterapia
 - Interdyscyplinarne: wielospecjalistyczne, ogólnomedyczne
+
+KRYTYCZNE ZASADY KATEGORYZACJI:
+1. Jeśli wydarzenie dotyczy ZĘBÓW, UBYTKÓW, ENDODONCJI, PROTETYKI, IMPLANTÓW - to ZAWSZE jest "dentistry", NIGDY ginekologia czy pediatria!
+2. "Stomatologia dziecięca" = dentistry, NIE pediatrics!
+3. "Chirurgia stomatologiczna" = dentistry, NIE surgery!
+4. Nie mieszaj kategorii - wydarzenie o zębach NIE może mieć kategorii ginekologia!
 
 DOSTĘPNE TAGI (wybierz wszystkie pasujące):
 ${EVENT_TAGS.join(", ")}
@@ -287,7 +343,10 @@ FORMAT ODPOWIEDZI (JSON):
       const rawSpecs = Array.isArray(e.specializations) ? e.specializations : [];
       const rawTags = Array.isArray(e.tags) ? e.tags : [];
       
-      const validSpecs = rawSpecs.filter((s: string) => SPECIALIZATIONS.includes(s as any));
+      const eventText = `${e.title} ${e.description || ""}`;
+      let validSpecs = rawSpecs.filter((s: string) => SPECIALIZATIONS.includes(s as any));
+      validSpecs = validateSpecializations(eventText, validSpecs);
+      
       const validTags = rawTags.filter((t: string) => EVENT_TAGS.includes(t as any));
       
       if (e.isOnline && !validTags.includes("online")) {

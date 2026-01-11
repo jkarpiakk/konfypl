@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertEventSchema, insertSourceSchema, insertLeadSchema, SPECIALIZATIONS } from "@shared/schema";
+import { insertEventSchema, insertSourceSchema, insertLeadSchema, SPECIALIZATIONS, VOIVODESHIPS, VOIVODESHIP_LABELS, MAJOR_CITIES, CITY_LABELS, SPECIALIZATION_LABELS } from "@shared/schema";
 import { scanSingleSource, runScheduledScans } from "./scheduler";
 import { z } from "zod";
 import multer from "multer";
@@ -125,16 +125,30 @@ export async function registerRoutes(
     res.json({ authenticated: false, isAdmin: false });
   });
 
+  app.get("/api/metadata", async (req, res) => {
+    res.json({
+      specializations: SPECIALIZATIONS.map(s => ({ id: s, label: SPECIALIZATION_LABELS[s] })),
+      voivodeships: VOIVODESHIPS.map(v => ({ id: v, label: VOIVODESHIP_LABELS[v] })),
+      cities: MAJOR_CITIES.map(c => ({ id: c, label: CITY_LABELS[c] })),
+    });
+  });
+
   app.get("/api/events", async (req, res) => {
     try {
       const status = req.query.status as string | undefined;
       const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
       const upcoming = req.query.upcoming === "true";
+      const city = req.query.city as string | undefined;
+      const voivodeship = req.query.voivodeship as string | undefined;
+      const specialization = req.query.specialization as string | undefined;
       
-      const filters: { status?: string; limit?: number; upcoming?: boolean } = {};
+      const filters: { status?: string; limit?: number; upcoming?: boolean; city?: string; voivodeship?: string; specialization?: string } = {};
       if (status) filters.status = status;
       if (limit && !isNaN(limit)) filters.limit = limit;
       if (upcoming) filters.upcoming = true;
+      if (city) filters.city = city;
+      if (voivodeship) filters.voivodeship = voivodeship;
+      if (specialization) filters.specialization = specialization;
       
       const events = await storage.getEvents(Object.keys(filters).length > 0 ? filters : undefined);
       res.json(events);

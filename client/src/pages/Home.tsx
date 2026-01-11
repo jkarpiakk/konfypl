@@ -41,6 +41,8 @@ const defaultFilters: EventFilters = {
   tags: [],
   dateFrom: null,
   dateTo: null,
+  city: null,
+  voivodeship: null,
 };
 
 export default function Home() {
@@ -111,6 +113,10 @@ export default function Home() {
         if (eventDate > filters.dateTo) return false;
       }
 
+      if (filters.city && event.city !== filters.city) return false;
+      
+      if (filters.voivodeship && event.voivodeship !== filters.voivodeship) return false;
+
       return true;
     }).sort((a, b) => {
       const aActive = isPromotionActive(a);
@@ -149,7 +155,9 @@ export default function Home() {
     (filters.eventType !== "all" ? 1 : 0) +
     (filters.hasPoints !== null ? 1 : 0) +
     (filters.dateFrom ? 1 : 0) +
-    (filters.dateTo ? 1 : 0);
+    (filters.dateTo ? 1 : 0) +
+    (filters.city ? 1 : 0) +
+    (filters.voivodeship ? 1 : 0);
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">

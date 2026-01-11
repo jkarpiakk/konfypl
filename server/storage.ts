@@ -14,7 +14,7 @@ export interface IStorage {
   createUser(user: UpsertUser): Promise<User>;
   getAllUsers(): Promise<User[]>;
 
-  getEvents(filters?: { status?: string; limit?: number; upcoming?: boolean }): Promise<Event[]>;
+  getEvents(filters?: { status?: string; limit?: number; upcoming?: boolean; city?: string; voivodeship?: string; specialization?: string }): Promise<Event[]>;
   getEvent(id: number): Promise<Event | undefined>;
   createEvent(event: InsertEvent): Promise<Event>;
   updateEvent(id: number, event: Partial<InsertEvent>): Promise<Event | undefined>;
@@ -54,7 +54,7 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(users).orderBy(desc(users.createdAt));
   }
 
-  async getEvents(filters?: { status?: string; limit?: number; upcoming?: boolean }): Promise<Event[]> {
+  async getEvents(filters?: { status?: string; limit?: number; upcoming?: boolean; city?: string; voivodeship?: string; specialization?: string }): Promise<Event[]> {
     const conditions = [];
     
     if (filters?.status) {
@@ -64,6 +64,18 @@ export class DatabaseStorage implements IStorage {
     if (filters?.upcoming) {
       const today = new Date().toISOString().split('T')[0];
       conditions.push(gte(events.startDate, today));
+    }
+    
+    if (filters?.city) {
+      conditions.push(eq(events.city, filters.city));
+    }
+    
+    if (filters?.voivodeship) {
+      conditions.push(eq(events.voivodeship, filters.voivodeship));
+    }
+    
+    if (filters?.specialization) {
+      conditions.push(sql`${filters.specialization} = ANY(${events.specializations})`);
     }
     
     let query = db.select().from(events);

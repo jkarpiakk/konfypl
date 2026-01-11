@@ -11,6 +11,8 @@ export interface EventFilters {
   tags: EventTag[];
   dateFrom: Date | null;
   dateTo: Date | null;
+  city: string | null;
+  voivodeship: string | null;
 }
 
 export interface CalendarDay {

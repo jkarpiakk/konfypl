@@ -15,6 +15,10 @@ export const SPECIALIZATION_SLUGS: Record<typeof SPECIALIZATIONS[number], string
   emergency_medicine: "medycyna-ratunkowa",
   laboratory_diagnostics: "diagnostyka-laboratoryjna",
   interdisciplinary: "interdyscyplinarne",
+  dentistry: "stomatologia",
+  dermatology: "dermatologia",
+  ophthalmology: "okulistyka",
+  oncology: "onkologia",
 };
 
 export const SLUG_TO_SPECIALIZATION: Record<string, typeof SPECIALIZATIONS[number]> = 
@@ -234,6 +238,66 @@ export const SPECIALIZATION_SEO: Record<typeof SPECIALIZATIONS[number], Speciali
     ],
     societies: ["Naczelna Izba Lekarska", "Polskie Towarzystwo Medycyny Rodzinnej"],
     keywords: ["konferencje interdyscyplinarne", "szkolenia lekarskie", "prawo medyczne", "komunikacja"]
+  },
+  dentistry: {
+    slug: "stomatologia",
+    name: "Stomatologia",
+    metaTitle: "Konferencje Stomatologiczne 2025/2026 | Szkolenia dla Dentystów | Konfy.pl",
+    metaDescription: "Konferencje stomatologiczne w Polsce. Zjazdy PTS, szkolenia z implantologii, endodoncji, ortodoncji, stomatologii estetycznej.",
+    h1: "Konferencje i Szkolenia Stomatologiczne",
+    intro: "Stomatologia obejmuje diagnostykę i leczenie chorób jamy ustnej, zębów i przyzębia. Dynamiczny rozwój implantologii, endodoncji i stomatologii estetycznej wymaga ciągłego kształcenia.",
+    topics: ["Implantologia", "Endodoncja", "Ortodoncja", "Stomatologia estetyczna", "Periodontologia", "Protetyka stomatologiczna", "Chirurgia stomatologiczna"],
+    faqs: [
+      { question: "Jakie kursy są najważniejsze dla stomatologa?", answer: "Szkolenia z implantologii, endodoncji mikroskopowej, stomatologii cyfrowej CAD/CAM oraz periodontologii cieszą się największą popularnością." },
+      { question: "Czy dentyści muszą zdobywać punkty edukacyjne?", answer: "Tak, lekarze dentyści podlegają obowiązkowi kształcenia ustawicznego i muszą zdobywać punkty edukacyjne jak lekarze innych specjalności." }
+    ],
+    societies: ["Polskie Towarzystwo Stomatologiczne (PTS)", "European Federation of Periodontology (EFP)", "Polish Society of Implantology"],
+    keywords: ["konferencje stomatologiczne", "szkolenia dentystyczne", "implantologia", "endodoncja", "ortodoncja"]
+  },
+  dermatology: {
+    slug: "dermatologia",
+    name: "Dermatologia",
+    metaTitle: "Konferencje Dermatologiczne 2025/2026 | Szkolenia Dermatologia | Konfy.pl",
+    metaDescription: "Konferencje dermatologiczne w Polsce. Zjazdy PTD, szkolenia z dermatoskopii, dermatologii estetycznej, chorób autoimmunologicznych skóry.",
+    h1: "Konferencje i Szkolenia Dermatologiczne",
+    intro: "Dermatologia zajmuje się diagnostyką i leczeniem chorób skóry, włosów i paznokci. Obejmuje dermatoskopię, leczenie łuszczycy, AZS, chorób autoimmunologicznych oraz dermatologię estetyczną.",
+    topics: ["Dermatoskopia", "Łuszczyca", "Atopowe zapalenie skóry", "Dermatologia estetyczna", "Choroby autoimmunologiczne skóry", "Dermatochirurgia", "Dermatoonkologia"],
+    faqs: [
+      { question: "Jakie certyfikaty są ważne w dermatologii?", answer: "Certyfikat dermatoskopii, szkolenia z medycyny estetycznej oraz kursy z terapii biologicznych w chorobach zapalnych skóry." },
+      { question: "Gdzie szkolić się z dermatoskopii?", answer: "Kursy dermatoskopii organizują PTD, międzynarodowe towarzystwa oraz prywatne centra szkoleniowe z certyfikatem." }
+    ],
+    societies: ["Polskie Towarzystwo Dermatologiczne (PTD)", "European Academy of Dermatology and Venereology (EADV)"],
+    keywords: ["konferencje dermatologiczne", "szkolenia dermatologia", "dermatoskopia", "dermatologia estetyczna"]
+  },
+  ophthalmology: {
+    slug: "okulistyka",
+    name: "Okulistyka",
+    metaTitle: "Konferencje Okulistyczne 2025/2026 | Szkolenia Oftalmologia | Konfy.pl",
+    metaDescription: "Konferencje okulistyczne w Polsce. Zjazdy PTO, szkolenia z chirurgii zaćmy, siatkówki, jaskry, refrakcji laserowej.",
+    h1: "Konferencje i Szkolenia Okulistyczne",
+    intro: "Okulistyka (oftalmologia) zajmuje się diagnostyką i leczeniem chorób oczu. Obejmuje chirurgię zaćmy, leczenie jaskry, chorób siatkówki oraz korekcję wad wzroku.",
+    topics: ["Chirurgia zaćmy", "Jaskra", "Choroby siatkówki", "AMD", "Chirurgia refrakcyjna", "Okulistyka dziecięca", "OCT i diagnostyka obrazowa"],
+    faqs: [
+      { question: "Jakie kursy chirurgiczne są dostępne dla okulistów?", answer: "Kursy wet-lab z fakoemulsyfikacji, witrektomii, implantacji soczewek premium oraz chirurgii refrakcyjnej." },
+      { question: "Które konferencje okulistyczne są najważniejsze?", answer: "Kongres PTO, ESCRS, EURETINA oraz regionalne sympozja z najnowszymi technikami operacyjnymi." }
+    ],
+    societies: ["Polskie Towarzystwo Okulistyczne (PTO)", "European Society of Cataract and Refractive Surgeons (ESCRS)", "EURETINA"],
+    keywords: ["konferencje okulistyczne", "szkolenia oftalmologia", "chirurgia zaćmy", "jaskra", "siatkówka"]
+  },
+  oncology: {
+    slug: "onkologia",
+    name: "Onkologia",
+    metaTitle: "Konferencje Onkologiczne 2025/2026 | Szkolenia Onkologia | Konfy.pl",
+    metaDescription: "Konferencje onkologiczne w Polsce. Zjazdy PTO, ESMO, szkolenia z immunoterapii, terapii celowanych, onkologii klinicznej.",
+    h1: "Konferencje i Szkolenia Onkologiczne",
+    intro: "Onkologia zajmuje się diagnostyką i leczeniem nowotworów. Dynamiczny rozwój immunoterapii, terapii celowanych i medycyny personalizowanej wymaga ciągłego śledzenia najnowszych badań i wytycznych.",
+    topics: ["Immunoterapia", "Terapie celowane", "Onkologia kliniczna", "Radioterapia", "Hematoonkologia", "Opieka paliatywna", "Badania kliniczne"],
+    faqs: [
+      { question: "Jakie są najważniejsze konferencje onkologiczne?", answer: "ASCO, ESMO Congress, Kongres PTO, ESTRO oraz liczne sympozja subspecjalistyczne z poszczególnych typów nowotworów." },
+      { question: "Gdzie szkolić się z immunoterapii?", answer: "Szkolenia z immunoonkologii organizują PTO, ESMO oraz producenci leków w ramach programów edukacyjnych." }
+    ],
+    societies: ["Polskie Towarzystwo Onkologiczne (PTO)", "European Society for Medical Oncology (ESMO)", "ASCO"],
+    keywords: ["konferencje onkologiczne", "szkolenia onkologia", "immunoterapia", "terapie celowane", "ESMO"]
   }
 };
 

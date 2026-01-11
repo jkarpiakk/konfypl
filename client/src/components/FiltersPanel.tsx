@@ -15,7 +15,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { SPECIALIZATIONS, SPECIALIZATION_LABELS, EVENT_TAGS, TAG_LABELS } from "@/lib/constants";
+import { SPECIALIZATIONS, SPECIALIZATION_LABELS, EVENT_TAGS, TAG_LABELS, VOIVODESHIPS, VOIVODESHIP_LABELS, MAJOR_CITIES, CITY_LABELS } from "@/lib/constants";
 import type { EventFilters, Specialization, EventTag } from "@/lib/types";
 
 interface FiltersPanelProps {
@@ -27,6 +27,7 @@ interface FiltersPanelProps {
 function FilterContent({ filters, onFiltersChange }: FiltersPanelProps) {
   const [specOpen, setSpecOpen] = useState(true);
   const [tagsOpen, setTagsOpen] = useState(false);
+  const [locationOpen, setLocationOpen] = useState(false);
 
   const handleSpecChange = (spec: Specialization, checked: boolean) => {
     const newSpecs = checked
@@ -59,6 +60,8 @@ function FilterContent({ filters, onFiltersChange }: FiltersPanelProps) {
       tags: [],
       dateFrom: null,
       dateTo: null,
+      city: null,
+      voivodeship: null,
     });
   };
 
@@ -69,7 +72,9 @@ function FilterContent({ filters, onFiltersChange }: FiltersPanelProps) {
     (filters.eventType !== "all" ? 1 : 0) +
     (filters.hasPoints !== null ? 1 : 0) +
     (filters.dateFrom ? 1 : 0) +
-    (filters.dateTo ? 1 : 0);
+    (filters.dateTo ? 1 : 0) +
+    (filters.city ? 1 : 0) +
+    (filters.voivodeship ? 1 : 0);
 
   return (
     <div className="space-y-4">
@@ -245,6 +250,79 @@ function FilterContent({ filters, onFiltersChange }: FiltersPanelProps) {
           </div>
         </RadioGroup>
       </div>
+
+      <Separator className="bg-[#E2E8F0]" />
+
+      <Collapsible open={locationOpen} onOpenChange={setLocationOpen}>
+        <CollapsibleTrigger asChild>
+          <Button variant="ghost" className="w-full justify-between p-0 h-auto font-medium text-[#0F172A] hover:text-[#2ED3B7]">
+            <span>Lokalizacja</span>
+            {locationOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="pt-2">
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs text-[#64748B] mb-1">Województwo</Label>
+              <ScrollArea className="h-32">
+                <div className="space-y-2 pr-4">
+                  <div 
+                    className={cn(
+                      "flex items-center gap-2 px-2 py-1 rounded cursor-pointer",
+                      !filters.voivodeship && "bg-[#E6FAF7]"
+                    )}
+                    onClick={() => onFiltersChange({ ...filters, voivodeship: null })}
+                  >
+                    <span className="text-sm text-[#475569]">Wszystkie</span>
+                  </div>
+                  {VOIVODESHIPS.map((v) => (
+                    <div 
+                      key={v}
+                      className={cn(
+                        "flex items-center gap-2 px-2 py-1 rounded cursor-pointer hover:bg-[#F1F5F9]",
+                        filters.voivodeship === v && "bg-[#E6FAF7]"
+                      )}
+                      onClick={() => onFiltersChange({ ...filters, voivodeship: v })}
+                      data-testid={`voivodeship-${v}`}
+                    >
+                      <span className="text-sm text-[#475569]">{VOIVODESHIP_LABELS[v]}</span>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            </div>
+            <div>
+              <Label className="text-xs text-[#64748B] mb-1">Miasto</Label>
+              <ScrollArea className="h-32">
+                <div className="space-y-2 pr-4">
+                  <div 
+                    className={cn(
+                      "flex items-center gap-2 px-2 py-1 rounded cursor-pointer",
+                      !filters.city && "bg-[#E6FAF7]"
+                    )}
+                    onClick={() => onFiltersChange({ ...filters, city: null })}
+                  >
+                    <span className="text-sm text-[#475569]">Wszystkie</span>
+                  </div>
+                  {MAJOR_CITIES.slice(0, 20).map((c) => (
+                    <div 
+                      key={c}
+                      className={cn(
+                        "flex items-center gap-2 px-2 py-1 rounded cursor-pointer hover:bg-[#F1F5F9]",
+                        filters.city === c && "bg-[#E6FAF7]"
+                      )}
+                      onClick={() => onFiltersChange({ ...filters, city: c })}
+                      data-testid={`city-${c}`}
+                    >
+                      <span className="text-sm text-[#475569]">{CITY_LABELS[c]}</span>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            </div>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
 
       <Separator className="bg-[#E2E8F0]" />
 

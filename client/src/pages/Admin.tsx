@@ -76,7 +76,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { SPECIALIZATIONS, SPECIALIZATION_LABELS } from "@/lib/constants";
+import { SPECIALIZATIONS, SPECIALIZATION_LABELS, MAJOR_CITIES, CITY_LABELS, VOIVODESHIPS, VOIVODESHIP_LABELS } from "@/lib/constants";
 import type { Event, Source, Specialization, PromotionTier } from "@/lib/types";
 import {
   DropdownMenu,
@@ -110,6 +110,7 @@ function EventsTable({
   onEdit,
   onDelete,
   onSetPromotion,
+  onQuickUpdate,
 }: {
   events: Event[];
   isLoading: boolean;
@@ -119,6 +120,7 @@ function EventsTable({
   onEdit?: (event: Event) => void;
   onDelete?: (id: number) => void;
   onSetPromotion?: (id: number, tier: PromotionTier) => void;
+  onQuickUpdate?: (id: number, data: Partial<Event>) => void;
 }) {
   if (isLoading) {
     return (
@@ -149,6 +151,7 @@ function EventsTable({
             <TableHead className="w-[280px]">Tytuł</TableHead>
             <TableHead>Data</TableHead>
             <TableHead>Specjalizacja</TableHead>
+            <TableHead>Lokalizacja</TableHead>
             <TableHead>Promocja</TableHead>
             <TableHead>Status</TableHead>
             {showApproval && <TableHead>AI</TableHead>}
@@ -170,18 +173,75 @@ function EventsTable({
                 {format(new Date(event.startDate), "d MMM yyyy", { locale: pl })}
               </TableCell>
               <TableCell>
-                <div className="flex flex-wrap gap-1">
-                  {event.specializations.slice(0, 2).map((spec) => (
-                    <Badge key={spec} variant="outline" className="text-xs">
-                      {SPECIALIZATION_LABELS[spec as Specialization]?.slice(0, 8) || spec}
-                    </Badge>
-                  ))}
-                  {event.specializations.length > 2 && (
-                    <Badge variant="outline" className="text-xs">
-                      +{event.specializations.length - 2}
-                    </Badge>
-                  )}
-                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-auto p-1 gap-1" data-testid={`button-spec-${event.id}`}>
+                      <div className="flex flex-wrap gap-1">
+                        {event.specializations.slice(0, 2).map((spec) => (
+                          <Badge key={spec} variant="outline" className="text-xs">
+                            {SPECIALIZATION_LABELS[spec as Specialization]?.slice(0, 8) || spec}
+                          </Badge>
+                        ))}
+                        {event.specializations.length > 2 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{event.specializations.length - 2}
+                          </Badge>
+                        )}
+                      </div>
+                      <Edit className="w-3 h-3 opacity-50" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="max-h-[300px] overflow-y-auto">
+                    <DropdownMenuLabel className="text-xs">Zmień specjalizację</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {SPECIALIZATIONS.map((spec) => (
+                      <DropdownMenuItem
+                        key={spec}
+                        onClick={() => onQuickUpdate?.(event.id, { specializations: [spec] })}
+                        className="gap-2"
+                      >
+                        {event.specializations.includes(spec) && <Check className="w-3 h-3" />}
+                        {!event.specializations.includes(spec) && <span className="w-3" />}
+                        {SPECIALIZATION_LABELS[spec]}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </TableCell>
+              <TableCell>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-auto p-1 gap-1" data-testid={`button-city-${event.id}`}>
+                      <span className="text-xs text-muted-foreground">
+                        {(event as any).city ? CITY_LABELS[(event as any).city as keyof typeof CITY_LABELS] || (event as any).city : 
+                         event.location || (event.isOnline ? "Online" : "Brak")}
+                      </span>
+                      <Edit className="w-3 h-3 opacity-50" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="max-h-[300px] overflow-y-auto">
+                    <DropdownMenuLabel className="text-xs">Wybierz miasto</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => onQuickUpdate?.(event.id, { city: null, isOnline: true })}
+                      className="gap-2"
+                    >
+                      Online
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    {MAJOR_CITIES.slice(0, 20).map((city) => (
+                      <DropdownMenuItem
+                        key={city}
+                        onClick={() => onQuickUpdate?.(event.id, { city: city, isOnline: false })}
+                        className="gap-2"
+                      >
+                        {(event as any).city === city && <Check className="w-3 h-3" />}
+                        {(event as any).city !== city && <span className="w-3" />}
+                        {CITY_LABELS[city]}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </TableCell>
               <TableCell>
                 <DropdownMenu>
@@ -744,6 +804,18 @@ export default function Admin() {
     },
   });
 
+  const quickUpdateEvent = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Partial<Event> }) => 
+      apiRequest("PATCH", `/api/events/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/events"] });
+      toast({ title: "Zaktualizowano", description: "Zmiana zapisana" });
+    },
+    onError: () => {
+      toast({ title: "Błąd", description: "Nie udało się zapisać zmiany", variant: "destructive" });
+    },
+  });
+
   const rejectEvent = useMutation({
     mutationFn: (id: number) => apiRequest("DELETE", `/api/events/${id}`),
     onSuccess: () => {
@@ -1093,6 +1165,7 @@ export default function Admin() {
               onEdit={setEditingEvent}
               onDelete={setDeleteEventId}
               onSetPromotion={(id, tier) => openPromotionDialog(id, tier)}
+              onQuickUpdate={(id, data) => quickUpdateEvent.mutate({ id, data })}
             />
           </TabsContent>
 
@@ -1103,6 +1176,7 @@ export default function Admin() {
               onEdit={setEditingEvent}
               onDelete={setDeleteEventId}
               onSetPromotion={(id, tier) => openPromotionDialog(id, tier)}
+              onQuickUpdate={(id, data) => quickUpdateEvent.mutate({ id, data })}
             />
           </TabsContent>
 
