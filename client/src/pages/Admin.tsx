@@ -172,6 +172,17 @@ function EventsTable({
                   {event.isAiAdded && (
                     <Sparkles className="w-4 h-4 text-primary shrink-0" />
                   )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onGenerateSocial?.(event)}
+                    className="text-[#2ED3B7] border-[#2ED3B7] hover:bg-[#2ED3B7]/10 gap-1 shrink-0 h-7"
+                    title="Generuj grafikę social media"
+                    data-testid={`button-social-inline-${event.id}`}
+                  >
+                    <Share2 className="w-3 h-3" />
+                    <span className="text-xs">Grafika</span>
+                  </Button>
                 </div>
               </TableCell>
               <TableCell className="text-muted-foreground">
