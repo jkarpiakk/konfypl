@@ -35,6 +35,8 @@ import {
   Megaphone,
   GripVertical,
   Timer,
+  Share2,
+  Image,
 } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
 import { KonfyLogo } from "@/components/KonfyLogo";
@@ -86,6 +88,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { SocialGraphicEditorModal } from "@/components/SocialGraphicEditorModal";
 
 const PROMOTION_TIER_LABELS: Record<PromotionTier, string> = {
   none: "Brak",
@@ -111,6 +114,7 @@ function EventsTable({
   onDelete,
   onSetPromotion,
   onQuickUpdate,
+  onGenerateSocial,
 }: {
   events: Event[];
   isLoading: boolean;
@@ -121,6 +125,7 @@ function EventsTable({
   onDelete?: (id: number) => void;
   onSetPromotion?: (id: number, tier: PromotionTier) => void;
   onQuickUpdate?: (id: number, data: Partial<Event>) => void;
+  onGenerateSocial?: (event: Event) => void;
 }) {
   if (isLoading) {
     return (
@@ -338,6 +343,16 @@ function EventsTable({
                     data-testid={`button-edit-${event.id}`}
                   >
                     <Edit className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onGenerateSocial?.(event)}
+                    className="text-[#2ED3B7] hover:text-[#2ED3B7]"
+                    title="Generuj grafikę social media"
+                    data-testid={`button-social-${event.id}`}
+                  >
+                    <Share2 className="w-4 h-4" />
                   </Button>
                   <Button
                     variant="ghost"
@@ -749,6 +764,7 @@ export default function Admin() {
   const [promotionHoursInput, setPromotionHoursInput] = useState("24");
   const [promotionTierInput, setPromotionTierInput] = useState<PromotionTier>("basic");
   const [draggedEventId, setDraggedEventId] = useState<number | null>(null);
+  const [socialGraphicEvent, setSocialGraphicEvent] = useState<Event | null>(null);
 
   useEffect(() => {
     checkSession();
@@ -1166,6 +1182,7 @@ export default function Admin() {
               onDelete={setDeleteEventId}
               onSetPromotion={(id, tier) => openPromotionDialog(id, tier)}
               onQuickUpdate={(id, data) => quickUpdateEvent.mutate({ id, data })}
+              onGenerateSocial={setSocialGraphicEvent}
             />
           </TabsContent>
 
@@ -1177,6 +1194,7 @@ export default function Admin() {
               onDelete={setDeleteEventId}
               onSetPromotion={(id, tier) => openPromotionDialog(id, tier)}
               onQuickUpdate={(id, data) => quickUpdateEvent.mutate({ id, data })}
+              onGenerateSocial={setSocialGraphicEvent}
             />
           </TabsContent>
 
@@ -1492,6 +1510,12 @@ export default function Admin() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <SocialGraphicEditorModal
+        event={socialGraphicEvent}
+        open={!!socialGraphicEvent}
+        onClose={() => setSocialGraphicEvent(null)}
+      />
     </div>
   );
 }

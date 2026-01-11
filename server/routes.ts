@@ -317,6 +317,93 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/events/:id/social-copy", isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid event ID" });
+      }
+      
+      const event = await storage.getEvent(id);
+      if (!event) {
+        return res.status(404).json({ error: "Event not found" });
+      }
+
+      const OpenAI = (await import("openai")).default;
+      const openai = new OpenAI({
+        apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+        baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+      });
+
+      const eventDate = event.startDate ? new Date(event.startDate).toLocaleDateString('pl-PL', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      }) : '';
+
+      const specs = event.specializations?.map((s: string) => 
+        SPECIALIZATION_LABELS[s as keyof typeof SPECIALIZATION_LABELS] || s
+      ).join(', ') || '';
+
+      const location = event.isOnline ? 'Online' : (event.location || event.city || '');
+      
+      const prompt = `Jesteś ekspertem od social media w branży medycznej. Wygeneruj angażujący tekst posta i hashtagi dla polskiego wydarzenia medycznego.
+
+DANE WYDARZENIA:
+Tytuł: ${event.title}
+Data: ${eventDate}
+Lokalizacja: ${location}
+Specjalizacje: ${specs}
+Organizator: ${event.organizer || 'Nie podano'}
+Punkty edukacyjne: ${event.hasEducationalPoints ? (event.educationalPoints || 'Tak') : 'Brak'}
+Cena: ${event.price === 'free' ? 'Bezpłatne' : event.price === 'paid' ? 'Płatne' : 'Do ustalenia'}
+Opis: ${event.description || 'Brak opisu'}
+
+WYMAGANIA:
+1. Tekst posta (max 280 znaków) - angażujący, profesjonalny, informacyjny, zakończony CTA "Zapisz się już dziś!" NIE używaj emoji.
+2. Krótki opis (max 100 znaków) - do stories/szybkich postów, NIE używaj emoji
+3. Hashtagi (10-15) - polskie i angielskie, specjalistyczne dla danej dziedziny medycyny
+
+ODPOWIEDŹ W JSON:
+{
+  "postText": "tekst główny posta",
+  "shortText": "krótki tekst do stories",
+  "hashtags": ["#hashtag1", "#hashtag2", ...]
+}`;
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4.1-mini",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.7,
+        response_format: { type: "json_object" }
+      });
+
+      const content = response.choices[0]?.message?.content;
+      if (!content) {
+        return res.status(500).json({ error: "Failed to generate content" });
+      }
+
+      const parsed = JSON.parse(content);
+      res.json({
+        postText: parsed.postText || '',
+        shortText: parsed.shortText || '',
+        hashtags: parsed.hashtags || [],
+        event: {
+          id: event.id,
+          title: event.title,
+          date: eventDate,
+          location,
+          specs,
+          organizer: event.organizer,
+          promotionTier: event.promotionTier
+        }
+      });
+    } catch (error) {
+      console.error("Error generating social copy:", error);
+      res.status(500).json({ error: "Failed to generate social copy" });
+    }
+  });
+
   app.get("/api/users", isAdmin, async (req, res) => {
     try {
       const usersList = await storage.getAllUsers();
