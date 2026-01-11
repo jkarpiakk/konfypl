@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { KonfyLogo } from "./KonfyLogo";
 import { SPECIALIZATION_SEO, PILLAR_PAGES } from "@/lib/seo-data";
 import { SPECIALIZATIONS, SPECIALIZATION_LABELS } from "@shared/schema";
-import { SiFacebook } from "react-icons/si";
+import { SiFacebook, SiInstagram } from "react-icons/si";
 
 export function SEOFooter() {
   const topSpecializations = SPECIALIZATIONS.slice(0, 8);
@@ -23,16 +23,28 @@ export function SEOFooter() {
             <p className="text-[#94A3B8] text-sm leading-relaxed mb-4">
               Agregator konferencji i szkoleń medycznych w Polsce. Automatycznie aktualizowana baza wydarzeń dla lekarzy wszystkich specjalizacji.
             </p>
-            <a 
-              href="https://www.facebook.com/profile.php?id=61586301957716" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-[#94A3B8] hover:text-[#2ED3B7] transition-colors"
-              data-testid="link-facebook"
-            >
-              <SiFacebook className="w-5 h-5" />
-              <span className="text-sm">Obserwuj nas</span>
-            </a>
+            <div className="flex items-center gap-4">
+              <a 
+                href="https://www.facebook.com/profile.php?id=61586301957716" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-[#94A3B8] hover:text-[#2ED3B7] transition-colors"
+                data-testid="link-facebook"
+                aria-label="Facebook"
+              >
+                <SiFacebook className="w-5 h-5" />
+              </a>
+              <a 
+                href="https://www.instagram.com/konfy.pl/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-[#94A3B8] hover:text-[#2ED3B7] transition-colors"
+                data-testid="link-instagram"
+                aria-label="Instagram"
+              >
+                <SiInstagram className="w-5 h-5" />
+              </a>
+            </div>
           </div>
           
           <div>
