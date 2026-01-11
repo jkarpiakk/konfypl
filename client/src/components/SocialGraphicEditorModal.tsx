@@ -105,6 +105,9 @@ export function SocialGraphicEditorModal({
   const [titleY, setTitleY] = useState([25]);
   const [infoX, setInfoX] = useState([5]);
   const [infoY, setInfoY] = useState([72]);
+  const [ctaX, setCtaX] = useState([5]);
+  const [ctaY, setCtaY] = useState([88]);
+  const [ctaText, setCtaText] = useState("Zapisz się →");
 
   const generateCopyMutation = useMutation({
     mutationFn: async (eventId: number) => {
@@ -435,10 +438,11 @@ export function SocialGraphicEditorModal({
         canvas.add(badge);
       }
 
-      const ctaTopPosition = (infoY[0] / 100) * height * scale + dateFontSize * 2 + lineSpacing * 3;
+      const ctaLeftPos = (ctaX[0] / 100) * width * scale;
+      const ctaTopPos = (ctaY[0] / 100) * height * scale;
       const cta = new fabric.Rect({
-        left: (infoX[0] / 100) * width * scale,
-        top: ctaTopPosition,
+        left: ctaLeftPos,
+        top: ctaTopPos,
         width: 200 * scale,
         height: 45 * scale,
         fill: "#2ED3B7",
@@ -448,9 +452,9 @@ export function SocialGraphicEditorModal({
       });
       canvas.add(cta);
 
-      const ctaText = new fabric.Text("Zapisz się →", {
-        left: (infoX[0] / 100) * width * scale + 100 * scale,
-        top: ctaTopPosition + 13 * scale,
+      const ctaLabel = new fabric.Text(ctaText, {
+        left: ctaLeftPos + 100 * scale,
+        top: ctaTopPos + 13 * scale,
         fontSize: 16 * scale,
         fontFamily: selectedFont,
         fontWeight: "600",
@@ -459,11 +463,11 @@ export function SocialGraphicEditorModal({
         originY: "top",
         selectable: false,
       });
-      canvas.add(ctaText);
+      canvas.add(ctaLabel);
     }
 
     canvas.renderAll();
-  }, [event, format, selectedBackground, selectedFont, titleSize, dateSize, customTitle, customDate, customLocation, showPromotion, showLogo, logoX, logoY, titleX, titleY, infoX, infoY, getScaleFactor]);
+  }, [event, format, selectedBackground, selectedFont, titleSize, dateSize, customTitle, customDate, customLocation, showPromotion, showLogo, logoX, logoY, titleX, titleY, infoX, infoY, ctaX, ctaY, ctaText, getScaleFactor]);
 
   useEffect(() => {
     if (open && event) {
@@ -799,6 +803,45 @@ export function SocialGraphicEditorModal({
                       className="mt-1"
                       data-testid="slider-info-y"
                     />
+                  </div>
+                </div>
+
+                <div className="space-y-3 pt-3 border-t">
+                  <Label className="text-sm font-medium">Przycisk CTA</Label>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Tekst przycisku</Label>
+                    <Input
+                      value={ctaText}
+                      onChange={(e) => setCtaText(e.target.value)}
+                      className="mt-1"
+                      data-testid="input-cta-text"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-xs text-muted-foreground">CTA X: {ctaX[0]}%</Label>
+                      <Slider
+                        value={ctaX}
+                        onValueChange={setCtaX}
+                        min={0}
+                        max={60}
+                        step={1}
+                        className="mt-1"
+                        data-testid="slider-cta-x"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">CTA Y: {ctaY[0]}%</Label>
+                      <Slider
+                        value={ctaY}
+                        onValueChange={setCtaY}
+                        min={50}
+                        max={95}
+                        step={1}
+                        className="mt-1"
+                        data-testid="slider-cta-y"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
