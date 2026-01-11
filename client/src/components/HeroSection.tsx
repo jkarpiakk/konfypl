@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { KonfyLogo } from "@/components/KonfyLogo";
 import { SpecializationPicker } from "@/components/SpecializationPicker";
 import { motion } from "framer-motion";
+import { SiFacebook, SiInstagram } from "react-icons/si";
 import type { Specialization } from "@/lib/types";
 
 function AnimatedBlob({ className, delay = 0 }: { className: string; delay?: number }) {
@@ -132,6 +133,34 @@ export function HeroSection({ searchQuery, onSearchChange, onSearch, eventCount,
               </div>
               <span className="font-medium">Automatyczne aktualizacje</span>
             </motion.div>
+            <motion.a 
+              href="https://www.facebook.com/profile.php?id=61586301957716"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 group"
+              whileHover={{ scale: 1.05 }}
+              transition={{ type: "spring", stiffness: 400 }}
+              data-testid="link-hero-facebook"
+            >
+              <div className="p-2 rounded-full bg-[#E6FAF7] group-hover:bg-[#2ED3B7]/20 transition-colors">
+                <SiFacebook className="w-5 h-5 text-[#2ED3B7]" />
+              </div>
+              <span className="font-medium">Polub nas</span>
+            </motion.a>
+            <motion.a 
+              href="https://www.instagram.com/konfy.pl/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 group"
+              whileHover={{ scale: 1.05 }}
+              transition={{ type: "spring", stiffness: 400 }}
+              data-testid="link-hero-instagram"
+            >
+              <div className="p-2 rounded-full bg-[#E6FAF7] group-hover:bg-[#2ED3B7]/20 transition-colors">
+                <SiInstagram className="w-5 h-5 text-[#2ED3B7]" />
+              </div>
+              <span className="font-medium">Obserwuj</span>
+            </motion.a>
           </div>
         </div>
       </div>
