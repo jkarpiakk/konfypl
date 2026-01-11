@@ -133,6 +133,9 @@ export function HeroSection({ searchQuery, onSearchChange, onSearch, eventCount,
               </div>
               <span className="font-medium">Automatyczne aktualizacje</span>
             </motion.div>
+          </div>
+          
+          <div className="flex justify-center gap-6 text-sm text-[#475569] mt-4">
             <motion.a 
               href="https://www.facebook.com/profile.php?id=61586301957716"
               target="_blank"
