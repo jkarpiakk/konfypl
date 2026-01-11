@@ -346,13 +346,14 @@ function EventsTable({
                   </Button>
                   <Button
                     variant="ghost"
-                    size="icon"
+                    size="sm"
                     onClick={() => onGenerateSocial?.(event)}
-                    className="text-[#2ED3B7] hover:text-[#2ED3B7]"
+                    className="text-[#2ED3B7] hover:text-[#2ED3B7] hover:bg-[#2ED3B7]/10 gap-1"
                     title="Generuj grafikę social media"
                     data-testid={`button-social-${event.id}`}
                   >
                     <Share2 className="w-4 h-4" />
+                    <span className="text-xs">Grafika</span>
                   </Button>
                   <Button
                     variant="ghost"
