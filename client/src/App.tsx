@@ -23,6 +23,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/event/:id" component={EventDetail} />
+      <Route path="/wydarzenia/:id" component={EventDetail} />
       <Route path="/calendar" component={CalendarPage} />
       <Route path="/admin" component={Admin} />
       <Route path="/analytics" component={AnalyticsDashboard} />
@@ -44,11 +45,13 @@ function Router() {
         {() => <PillarPage pageType="calendar" />}
       </Route>
       
+      <Route path="/specjalizacja/:slug" component={SpecializationHub} />
+      
       <Route path="/kardiologia" component={SpecializationHub} />
       <Route path="/medycyna-rodzinna" component={SpecializationHub} />
       <Route path="/interna" component={SpecializationHub} />
       <Route path="/anestezjologia" component={SpecializationHub} />
-      <Route path="/chirurgia" component={SpecializationHub} />
+      <Route path="/chirurgia-ogolna" component={SpecializationHub} />
       <Route path="/ortopedia" component={SpecializationHub} />
       <Route path="/ginekologia" component={SpecializationHub} />
       <Route path="/pediatria" component={SpecializationHub} />

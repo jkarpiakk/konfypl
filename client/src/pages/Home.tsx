@@ -5,6 +5,7 @@ import { HeroSection } from "@/components/HeroSection";
 import { EventList } from "@/components/EventList";
 import { FiltersPanel } from "@/components/FiltersPanel";
 import { SEOFooter } from "@/components/SEOFooter";
+import { SEOHead, EventListSchema } from "@/components/SEOHead";
 import { OrganizerCTABlock } from "@/components/OrganizerCTABlock";
 import { NewsletterModal } from "@/components/NewsletterModal";
 import { getStoredPreferences } from "@/lib/preferences";
@@ -165,6 +166,23 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
+      <SEOHead
+        title="Konfy.pl - Konferencje, Kongresy i Szkolenia Medyczne w Polsce 2025/2026"
+        description="Znajdź konferencje medyczne, kongresy, webinary i szkolenia dla lekarzy w Polsce. Agregator wydarzeń z eksportem do kalendarza. Ponad 40 specjalizacji medycznych."
+        canonical="/"
+        keywords={[
+          "konferencje medyczne",
+          "kongresy lekarskie",
+          "szkolenia medyczne",
+          "webinary dla lekarzy",
+          "punkty edukacyjne",
+          "wydarzenia medyczne Polska"
+        ]}
+      />
+      {events.length > 0 && (
+        <EventListSchema events={events.slice(0, 20)} listName="Nadchodzące wydarzenia medyczne w Polsce" />
+      )}
+      
       <Navigation onSearch={handleNavSearch} searchQuery={filters.search} />
       
       <HeroSection

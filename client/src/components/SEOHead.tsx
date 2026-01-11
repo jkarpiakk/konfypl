@@ -6,35 +6,62 @@ interface SEOHeadProps {
   description: string;
   canonical?: string;
   noindex?: boolean;
+  ogImage?: string;
+  ogType?: "website" | "article" | "event";
+  keywords?: string[];
 }
 
-export function SEOHead({ title, description, canonical, noindex }: SEOHeadProps) {
+export function SEOHead({ 
+  title, 
+  description, 
+  canonical, 
+  noindex,
+  ogImage,
+  ogType = "website",
+  keywords = []
+}: SEOHeadProps) {
   useEffect(() => {
     document.title = title;
     
-    let metaDesc = document.querySelector('meta[name="description"]');
-    if (!metaDesc) {
-      metaDesc = document.createElement('meta');
-      metaDesc.setAttribute('name', 'description');
-      document.head.appendChild(metaDesc);
-    }
-    metaDesc.setAttribute('content', description);
+    const updateMeta = (selector: string, attr: string, value: string, attrName: string = "content") => {
+      let meta = document.querySelector(selector);
+      if (!meta) {
+        meta = document.createElement('meta');
+        const [attrType, attrValue] = attr.split('=');
+        meta.setAttribute(attrType, attrValue);
+        document.head.appendChild(meta);
+      }
+      meta.setAttribute(attrName, value);
+    };
 
-    let ogTitle = document.querySelector('meta[property="og:title"]');
-    if (!ogTitle) {
-      ogTitle = document.createElement('meta');
-      ogTitle.setAttribute('property', 'og:title');
-      document.head.appendChild(ogTitle);
+    updateMeta('meta[name="description"]', 'name=description', description);
+    
+    if (keywords.length > 0) {
+      updateMeta('meta[name="keywords"]', 'name=keywords', keywords.join(', '));
     }
-    ogTitle.setAttribute('content', title);
 
-    let ogDesc = document.querySelector('meta[property="og:description"]');
-    if (!ogDesc) {
-      ogDesc = document.createElement('meta');
-      ogDesc.setAttribute('property', 'og:description');
-      document.head.appendChild(ogDesc);
+    updateMeta('meta[property="og:title"]', 'property=og:title', title);
+    updateMeta('meta[property="og:description"]', 'property=og:description', description);
+    updateMeta('meta[property="og:type"]', 'property=og:type', ogType);
+    updateMeta('meta[property="og:site_name"]', 'property=og:site_name', 'Konfy.pl');
+    updateMeta('meta[property="og:locale"]', 'property=og:locale', 'pl_PL');
+    
+    if (ogImage) {
+      updateMeta('meta[property="og:image"]', 'property=og:image', ogImage);
+      updateMeta('meta[property="og:image:width"]', 'property=og:image:width', '1200');
+      updateMeta('meta[property="og:image:height"]', 'property=og:image:height', '630');
     }
-    ogDesc.setAttribute('content', description);
+
+    if (canonical) {
+      updateMeta('meta[property="og:url"]', 'property=og:url', `https://konfy.pl${canonical}`);
+    }
+
+    updateMeta('meta[name="twitter:card"]', 'name=twitter:card', 'summary_large_image');
+    updateMeta('meta[name="twitter:title"]', 'name=twitter:title', title);
+    updateMeta('meta[name="twitter:description"]', 'name=twitter:description', description);
+    if (ogImage) {
+      updateMeta('meta[name="twitter:image"]', 'name=twitter:image', ogImage);
+    }
 
     let robots = document.querySelector('meta[name="robots"]');
     if (noindex) {
@@ -44,7 +71,12 @@ export function SEOHead({ title, description, canonical, noindex }: SEOHeadProps
         document.head.appendChild(robots);
       }
       robots.setAttribute('content', 'noindex, follow');
-    } else if (robots) {
+    } else {
+      if (!robots) {
+        robots = document.createElement('meta');
+        robots.setAttribute('name', 'robots');
+        document.head.appendChild(robots);
+      }
       robots.setAttribute('content', 'index, follow');
     }
 
@@ -57,7 +89,7 @@ export function SEOHead({ title, description, canonical, noindex }: SEOHeadProps
       }
       canonicalLink.href = `https://konfy.pl${canonical}`;
     }
-  }, [title, description, canonical, noindex]);
+  }, [title, description, canonical, noindex, ogImage, ogType, keywords]);
 
   return null;
 }
@@ -87,8 +119,9 @@ export function EventSchema({ event }: EventSchemaProps) {
       price: event.price === "free" ? "0" : undefined,
       priceCurrency: "PLN",
       availability: "https://schema.org/InStock",
-      url: event.sourceUrl || `https://konfy.pl/event/${event.id}`
-    }
+      url: event.sourceUrl || `https://konfy.pl/wydarzenia/${event.id}`
+    },
+    url: `https://konfy.pl/wydarzenia/${event.id}`
   };
 
   return (
@@ -167,7 +200,7 @@ export function EventListSchema({ events, listName }: EventListSchemaProps) {
         "@type": "Event",
         name: event.title,
         startDate: event.startDate,
-        url: `https://konfy.pl/event/${event.id}`
+        url: `https://konfy.pl/wydarzenia/${event.id}`
       }
     }))
   };

@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { SPECIALIZATION_LABELS, SPECIALIZATION_COLORS, TAG_LABELS } from "@/lib/constants";
 import { downloadICSFile, getGoogleCalendarUrl, getOutlookCalendarUrl } from "@/lib/calendar";
+import { SEOHead, EventSchema, BreadcrumbSchema } from "@/components/SEOHead";
 import type { Event, Specialization, EventTag } from "@/lib/types";
 
 export default function EventDetail() {
@@ -105,8 +106,27 @@ export default function EventDetail() {
     }
   };
 
+  const metaTitle = `${event.title} | ${formatEventDate()} | Konfy.pl`;
+  const metaDescription = event.description 
+    ? event.description.slice(0, 155) + (event.description.length > 155 ? "..." : "")
+    : `Wydarzenie medyczne: ${event.title}. Data: ${formatEventDate()}. ${event.isOnline ? "Online" : event.location || "Polska"}.`;
+
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title={metaTitle}
+        description={metaDescription}
+        canonical={`/wydarzenia/${event.id}`}
+        ogType="event"
+        keywords={event.specializations.map(s => SPECIALIZATION_LABELS[s as Specialization] || s)}
+      />
+      <EventSchema event={event} />
+      <BreadcrumbSchema items={[
+        { name: "Konfy.pl", url: "/" },
+        { name: "Wydarzenia", url: "/" },
+        { name: event.title, url: `/wydarzenia/${event.id}` }
+      ]} />
+      
       <Navigation />
 
       <main className="max-w-5xl mx-auto px-4 md:px-6 py-8">

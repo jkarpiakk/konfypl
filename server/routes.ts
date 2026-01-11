@@ -2,6 +2,53 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertEventSchema, insertSourceSchema, insertLeadSchema, SPECIALIZATIONS, VOIVODESHIPS, VOIVODESHIP_LABELS, MAJOR_CITIES, CITY_LABELS, SPECIALIZATION_LABELS } from "@shared/schema";
+
+const SPECIALIZATION_SLUGS: Record<string, string> = {
+  general_surgery: "chirurgia-ogolna",
+  orthopedics: "ortopedia",
+  gynecology: "ginekologia",
+  urology: "urologia",
+  neurosurgery: "neurochirurgia",
+  vascular_surgery: "chirurgia-naczyniowa",
+  cardiac_surgery: "kardiochirurgia",
+  pediatric_surgery: "chirurgia-dziecieca",
+  plastic_surgery: "chirurgia-plastyczna",
+  maxillofacial_surgery: "chirurgia-szczekowo-twarzowa",
+  ophthalmology: "okulistyka",
+  otolaryngology: "laryngologia",
+  thoracic_surgery: "torakochirurgia",
+  internal_medicine: "interna",
+  pediatrics: "pediatria",
+  family_medicine: "medycyna-rodzinna",
+  cardiology: "kardiologia",
+  neurology: "neurologia",
+  gastroenterology: "gastroenterologia",
+  pulmonology: "pulmonologia",
+  endocrinology: "endokrynologia",
+  nephrology: "nefrologia",
+  rheumatology: "reumatologia",
+  hematology: "hematologia",
+  oncology: "onkologia",
+  diabetology: "diabetologia",
+  geriatrics: "geriatria",
+  emergency_medicine: "medycyna-ratunkowa",
+  anesthesiology: "anestezjologia",
+  psychiatry: "psychiatria",
+  child_psychiatry: "psychiatria-dziecieca",
+  sexology: "seksuologia",
+  radiology: "radiologia",
+  laboratory_medicine: "diagnostyka-laboratoryjna",
+  pathology: "patomorfologia",
+  nuclear_medicine: "medycyna-nuklearna",
+  dermatology: "dermatologia",
+  allergology: "alergologia",
+  infectious_diseases: "choroby-zakazne",
+  occupational_medicine: "medycyna-pracy",
+  sports_medicine: "medycyna-sportowa",
+  palliative_medicine: "medycyna-paliatywna",
+  rehabilitation: "rehabilitacja",
+  interdisciplinary: "interdyscyplinarne"
+};
 import { scanSingleSource, runScheduledScans } from "./scheduler";
 import { z } from "zod";
 import multer from "multer";
@@ -1144,6 +1191,88 @@ ODPOWIEDŹ W JSON:
     } catch (error) {
       console.error("Error fetching top events:", error);
       res.status(500).json({ error: "Failed to fetch top events" });
+    }
+  });
+
+  app.get("/robots.txt", (req, res) => {
+    const baseUrl = `https://${req.get("host")}`;
+    const robotsTxt = `# Robots.txt for Konfy.pl
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /promote
+
+# Sitemap
+Sitemap: ${baseUrl}/sitemap.xml
+
+# Crawl-delay for polite crawlers
+Crawl-delay: 1
+`;
+    res.type("text/plain").send(robotsTxt);
+  });
+
+  app.get("/sitemap.xml", async (req, res) => {
+    try {
+      const baseUrl = `https://${req.get("host")}`;
+      const today = new Date().toISOString().split("T")[0];
+      
+      const publishedEvents = await storage.getEvents();
+      const activeEvents = publishedEvents.filter(e => e.status === "published");
+      
+      let sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  
+  <!-- Strona główna -->
+  <url>
+    <loc>${baseUrl}/</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  
+  <!-- Kalendarz -->
+  <url>
+    <loc>${baseUrl}/calendar</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+`;
+
+      for (const [spec, slug] of Object.entries(SPECIALIZATION_SLUGS)) {
+        sitemap += `
+  <!-- Specjalizacja: ${slug} -->
+  <url>
+    <loc>${baseUrl}/specjalizacja/${slug}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>`;
+      }
+
+      for (const event of activeEvents.slice(0, 500)) {
+        const eventDate = event.updatedAt 
+          ? new Date(event.updatedAt).toISOString().split("T")[0]
+          : today;
+        sitemap += `
+  <!-- Wydarzenie: ${event.title.replace(/[<>&'"]/g, '')} -->
+  <url>
+    <loc>${baseUrl}/wydarzenia/${event.id}</loc>
+    <lastmod>${eventDate}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>`;
+      }
+
+      sitemap += `
+</urlset>`;
+
+      res.type("application/xml").send(sitemap);
+    } catch (error) {
+      console.error("Error generating sitemap:", error);
+      res.status(500).send("Error generating sitemap");
     }
   });
 

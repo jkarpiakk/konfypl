@@ -60,8 +60,10 @@ export default function SpecializationHub() {
       <SEOHead 
         title={seoData.metaTitle}
         description={seoData.metaDescription}
-        canonical={`/${seoData.slug}`}
+        canonical={`/specjalizacja/${seoData.slug}`}
         noindex={shouldNoindex}
+        ogType="website"
+        keywords={seoData.keywords}
       />
       <FAQSchema faqs={seoData.faqs} />
       {events.length > 0 && <EventListSchema events={upcomingEvents.slice(0, 10)} listName={`Konferencje ${seoData.name}`} />}
