@@ -194,8 +194,8 @@ async function initializeApp() {
   // Seed database
   await seedDatabase();
 
-  // Start scheduler
-  startScheduler();
+  // Scheduler disabled - uncomment to enable automatic source scanning
+  // startScheduler();
 
   // Mark server as fully ready
   serverReady = true;
