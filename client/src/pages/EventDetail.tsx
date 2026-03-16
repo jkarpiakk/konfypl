@@ -118,6 +118,7 @@ export default function EventDetail() {
         description={metaDescription}
         canonical={`/wydarzenia/${event.id}`}
         ogType="event"
+        ogImage={event.imageUrl || `https://konfy.pl/og-default.jpg`}
         keywords={event.specializations.map(s => SPECIALIZATION_LABELS[s as Specialization] || s)}
       />
       <EventSchema event={event} />
