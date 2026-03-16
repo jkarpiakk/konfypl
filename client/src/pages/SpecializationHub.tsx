@@ -21,13 +21,6 @@ export default function SpecializationHub() {
 
   const { data: events = [], isLoading } = useQuery<Event[]>({
     queryKey: ["/api/events", { status: "published", specialization: specializationKey }],
-    queryFn: async () => {
-      const res = await fetch(`/api/events?status=published`);
-      const allEvents = await res.json();
-      return specializationKey 
-        ? allEvents.filter((e: Event) => e.specializations?.includes(specializationKey))
-        : allEvents;
-    },
     enabled: !!specializationKey,
   });
 
