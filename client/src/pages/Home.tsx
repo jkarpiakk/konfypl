@@ -289,7 +289,7 @@ export default function Home() {
       {showBackToTop && (
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="fixed bottom-6 right-6 z-50 p-3 bg-[#2ED3B7] text-[#0F172A] rounded-full shadow-lg hover:bg-[#25B9A1] transition-all duration-200 hover:scale-110"
+          className="fixed bottom-20 right-6 z-40 p-3 bg-[#2ED3B7] text-[#0F172A] rounded-full shadow-lg hover:bg-[#25B9A1] transition-all duration-200 hover:scale-110"
           aria-label="Wróć na górę"
           data-testid="button-back-to-top"
         >
