@@ -1,0 +1,548 @@
+Dodaj moduł bloga do Konfy.pl. Obejmuje: tabelę w bazie danych, API, 
+zakładkę w panelu admina z edytorem, publiczne strony bloga z SEO.
+Wykonaj wszystkie kroki po kolei.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+KROK 1 — SCHEMAT BAZY DANYCH
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+W pliku `shared/schema.ts` dodaj nową tabelę po tabeli `leads`:
+
+export const blogPosts = pgTable("blog_posts", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  slug: text("slug").notNull().unique(),
+  excerpt: text("excerpt").notNull(),
+  content: text("content").notNull(),
+  metaTitle: text("meta_title"),
+  metaDescription: text("meta_description"),
+  coverImage: text("cover_image"),
+  specialization: text("specialization"),
+  tags: text("tags").array().default([]),
+  status: text("status").notNull().default("draft"),
+  authorName: text("author_name").default("Redakcja Konfy.pl"),
+  readingTimeMinutes: integer("reading_time_minutes").default(5),
+  publishedAt: timestamp("published_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertBlogPostSchema = createInsertSchema(blogPosts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type BlogPost = typeof blogPosts.$inferSelect;
+export type InsertBlogPost = z.infer<typeof insertBlogPostSchema>;
+
+Dodaj też migrację — wykonaj SQL bezpośrednio przez db.execute lub przez 
+drizzle push. Użyj mechanizmu migracji który już istnieje w projekcie.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+KROK 2 — STORAGE (server/storage.ts)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+W pliku `server/storage.ts` dodaj do interfejsu IStorage i jego implementacji
+następujące metody:
+
+getBlogPosts(status?: string): Promise<BlogPost[]>
+getBlogPost(id: number): Promise<BlogPost | undefined>
+getBlogPostBySlug(slug: string): Promise<BlogPost | undefined>
+createBlogPost(post: InsertBlogPost): Promise<BlogPost>
+updateBlogPost(id: number, data: Partial<InsertBlogPost>): Promise<BlogPost>
+deleteBlogPost(id: number): Promise<void>
+
+Implementacja używa Drizzle ORM tak jak pozostałe metody w tym pliku.
+getBlogPosts filtruje po status jeśli podany, sortuje po publishedAt DESC.
+updateBlogPost ustawia updatedAt: new Date().
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+KROK 3 — API ENDPOINTS (server/routes.ts)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+W pliku `server/routes.ts` dodaj endpointy bloga.
+Publiczne (bez autoryzacji):
+
+  GET /api/blog
+  - zwraca listę postów ze status="published"
+  - obsługuje query param ?specialization= do filtrowania
+  - zwraca pola: id, title, slug, excerpt, metaTitle, metaDescription,
+    coverImage, specialization, tags, authorName, readingTimeMinutes, publishedAt
+
+  GET /api/blog/:slug
+  - zwraca pojedynczy post po slug ze status="published"
+  - 404 jeśli nie znaleziony lub draft
+
+Chronione (isAdmin):
+
+  GET /api/admin/blog
+  - zwraca wszystkie posty (draft + published), sortowane createdAt DESC
+
+  POST /api/admin/blog
+  - tworzy nowy post
+  - body: { title, slug, excerpt, content, metaTitle, metaDescription,
+    coverImage?, specialization?, tags?, authorName?, readingTimeMinutes?,
+    status, publishedAt? }
+  - walidacja: title i content wymagane
+  - auto-generuj slug z title jeśli slug pusty:
+    slug = title.toLowerCase()
+      .replace(/ą/g,'a').replace(/ę/g,'e').replace(/ó/g,'o')
+      .replace(/ś/g,'s').replace(/ł/g,'l').replace(/ż/g,'z')
+      .replace(/ź/g,'z').replace(/ć/g,'c').replace(/ń/g,'n')
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+  - jeśli status="published" i brak publishedAt, ustaw publishedAt=new Date()
+
+  PUT /api/admin/blog/:id
+  - aktualizuje post
+  - te same pola co POST
+  - jeśli zmiana status z "draft" na "published" i brak publishedAt → ustaw now
+
+  DELETE /api/admin/blog/:id
+  - usuwa post, zwraca { success: true }
+
+Dodaj też wpisy do sitemap.xml — przed sekcją wydarzeń dodaj pętlę po 
+opublikowanych postach bloga:
+  for (const post of publishedPosts) {
+    sitemap += `
+  <url>
+    <loc>${baseUrl}/blog/${post.slug}</loc>
+    <lastmod>${post.updatedAt?.toISOString().split('T')[0] || today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>`;
+  }
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+KROK 4 — ROUTING (client/src/App.tsx)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+W pliku `client/src/App.tsx` dodaj importy i trasy:
+
+import BlogIndex from "@/pages/BlogIndex";
+import BlogPost from "@/pages/BlogPost";
+
+W Router() dodaj przed Route component={NotFound}:
+
+  <Route path="/blog" component={BlogIndex} />
+  <Route path="/blog/:slug" component={BlogPost} />
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+KROK 5 — STRONA BLOGA (client/src/pages/BlogIndex.tsx)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Stwórz plik `client/src/pages/BlogIndex.tsx`:
+
+- Pobiera GET /api/blog przez useQuery
+- SEOHead z title="Blog Medyczny | Konferencje i Szkolenia | Konfy.pl",
+  description="Artykuły o konferencjach medycznych, punktach edukacyjnych 
+  i rozwoju zawodowym lekarzy w Polsce.", canonical="/blog"
+- BreadcrumbSchema: [{name:"Konfy.pl",url:"/"},{name:"Blog",url:"/blog"}]
+- H1: "Blog — wiedza dla lekarzy"
+- Siatka kart artykułów (grid 1/2/3 kolumn, gap-6)
+  Każda karta zawiera:
+    - coverImage jeśli istnieje (img z object-cover, aspect-video, rounded-t-xl)
+    - Badge ze specjalizacją jeśli istnieje (styl bg-[#E6FAF7] text-[#0F766E])
+    - Tytuł (font-heading, font-semibold, line-clamp-2, link do /blog/:slug)
+    - excerpt (text-sm text-[#64748B], line-clamp-3)
+    - Stopka: data publikacji (format "d MMM yyyy" locale pl) + czas czytania
+    - "Czytaj więcej →" link
+- Empty state jeśli brak artykułów
+- Loading state z 6 skeleton cards
+- Używa Navigation i SEOFooter
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+KROK 6 — ARTYKUŁ (client/src/pages/BlogPost.tsx)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Stwórz plik `client/src/pages/BlogPost.tsx`:
+
+- Pobiera slug z useParams, GET /api/blog/:slug
+- SEOHead z metaTitle ?? title, metaDescription ?? excerpt,
+  canonical="/blog/${slug}", ogType="article", ogImage=coverImage
+- Schema JSON-LD typu Article:
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": post.title,
+    "description": post.excerpt,
+    "datePublished": post.publishedAt,
+    "dateModified": post.updatedAt,
+    "author": { "@type": "Person", "name": post.authorName },
+    "publisher": { "@type": "Organization", "name": "Konfy.pl",
+                   "url": "https://konfy.pl" },
+    "url": `https://konfy.pl/blog/${post.slug}`,
+    "image": post.coverImage || undefined
+  }
+- BreadcrumbSchema: 3 poziomy: Konfy.pl / Blog / tytuł artykułu
+- Layout: max-w-3xl mx-auto (artykuł wąski dla czytelności)
+- coverImage jako hero image (w-full, max-h-96, object-cover, rounded-xl, mb-8)
+- H1 z tytułem (font-heading, text-3xl md:text-4xl, font-bold)
+- Meta bar: autor | data | czas czytania | badge specjalizacji
+- Separator
+- Treść artykułu renderowana jako HTML:
+  <div 
+    className="prose prose-slate max-w-none
+      prose-headings:font-heading prose-headings:text-[#0F172A]
+      prose-a:text-[#2ED3B7] prose-a:no-underline hover:prose-a:underline
+      prose-strong:text-[#0F172A]"
+    dangerouslySetInnerHTML={{ __html: post.content }}
+  />
+- Instalacja @tailwindcss/typography jeśli nie ma w package.json,
+  dodaj plugin do tailwind.config.ts: plugins: [require('@tailwindcss/typography')]
+- Na końcu: sekcja "Powiązane konferencje" — link do /[specjalizacja-slug]
+  jeśli post.specialization istnieje
+- Przycisk "← Wróć do bloga" na górze
+- 404 page jeśli post nie znaleziony
+- Używa Navigation i SEOFooter
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+KROK 7 — ZAKŁADKA BLOG W ADMIN (client/src/pages/Admin.tsx)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+W pliku `client/src/pages/Admin.tsx` dodaj zakładkę Blog.
+
+CZĘŚĆ A — nowe importy na górze pliku:
+import { PenLine } from "lucide-react";
+
+CZĘŚĆ B — nowe stany w komponencie Admin:
+const [blogPosts, setBlogPosts] = useState<any[]>([]);
+const [blogLoading, setBlogLoading] = useState(false);
+const [blogDialogOpen, setBlogDialogOpen] = useState(false);
+const [editingPost, setEditingPost] = useState<any | null>(null);
+const [blogForm, setBlogForm] = useState({
+  title: "", slug: "", excerpt: "", content: "",
+  metaTitle: "", metaDescription: "", coverImage: "",
+  specialization: "", authorName: "Redakcja Konfy.pl",
+  readingTimeMinutes: 5, status: "draft", tags: ""
+});
+
+CZĘŚĆ C — funkcje fetch/save dla bloga:
+
+const fetchBlogPosts = async () => {
+  setBlogLoading(true);
+  try {
+    const res = await fetch("/api/admin/blog", { credentials: "include" });
+    const data = await res.json();
+    setBlogPosts(data);
+  } finally {
+    setBlogLoading(false);
+  }
+};
+
+const saveBlogPost = async () => {
+  const payload = {
+    ...blogForm,
+    tags: blogForm.tags.split(",").map(t => t.trim()).filter(Boolean),
+    readingTimeMinutes: Number(blogForm.readingTimeMinutes),
+  };
+  const url = editingPost ? `/api/admin/blog/${editingPost.id}` : "/api/admin/blog";
+  const method = editingPost ? "PUT" : "POST";
+  const res = await fetch(url, {
+    method, credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (res.ok) {
+    setBlogDialogOpen(false);
+    setEditingPost(null);
+    fetchBlogPosts();
+    toast({ title: editingPost ? "Post zaktualizowany" : "Post utworzony" });
+  }
+};
+
+const deleteBlogPost = async (id: number) => {
+  await fetch(`/api/admin/blog/${id}`, { method: "DELETE", credentials: "include" });
+  fetchBlogPosts();
+};
+
+const openNewPost = () => {
+  setEditingPost(null);
+  setBlogForm({
+    title: "", slug: "", excerpt: "", content: "",
+    metaTitle: "", metaDescription: "", coverImage: "",
+    specialization: "", authorName: "Redakcja Konfy.pl",
+    readingTimeMinutes: 5, status: "draft", tags: ""
+  });
+  setBlogDialogOpen(true);
+};
+
+const openEditPost = (post: any) => {
+  setEditingPost(post);
+  setBlogForm({
+    title: post.title, slug: post.slug, excerpt: post.excerpt,
+    content: post.content, metaTitle: post.metaTitle || "",
+    metaDescription: post.metaDescription || "",
+    coverImage: post.coverImage || "",
+    specialization: post.specialization || "",
+    authorName: post.authorName || "Redakcja Konfy.pl",
+    readingTimeMinutes: post.readingTimeMinutes || 5,
+    status: post.status, tags: (post.tags || []).join(", ")
+  });
+  setBlogDialogOpen(true);
+};
+
+Wywołaj fetchBlogPosts() gdy użytkownik przejdzie na zakładkę "blog"
+(użyj onValueChange na komponencie Tabs lub useEffect z warunkiem).
+
+CZĘŚĆ D — nowy TabsTrigger (dodaj PO zakładce "promotions"):
+
+<TabsTrigger value="blog" className="gap-2" data-testid="tab-blog">
+  <PenLine className="w-4 h-4" />
+  Blog
+</TabsTrigger>
+
+CZĘŚĆ E — nowy TabsContent (dodaj PO </TabsContent> promotions):
+
+<TabsContent value="blog">
+  <div className="flex items-center justify-between mb-6">
+    <div>
+      <h2 className="text-xl font-semibold">Artykuły blogowe</h2>
+      <p className="text-sm text-muted-foreground">
+        Zarządzaj treściami SEO dla Konfy.pl
+      </p>
+    </div>
+    <Button onClick={openNewPost} className="gap-2 bg-[#2ED3B7] text-[#0F172A] hover:bg-[#25B9A1]">
+      <Plus className="w-4 h-4" />
+      Nowy artykuł
+    </Button>
+  </div>
+
+  {blogLoading ? (
+    <div className="space-y-2">
+      {[1,2,3].map(i => <Skeleton key={i} className="h-16 w-full" />)}
+    </div>
+  ) : blogPosts.length === 0 ? (
+    <Card className="border-dashed">
+      <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+        <PenLine className="w-10 h-10 text-muted-foreground mb-4" />
+        <p className="text-muted-foreground mb-4">Brak artykułów</p>
+        <Button onClick={openNewPost} variant="outline">Napisz pierwszy artykuł</Button>
+      </CardContent>
+    </Card>
+  ) : (
+    <div className="space-y-3">
+      {blogPosts.map(post => (
+        <Card key={post.id} className="bg-white">
+          <CardContent className="p-4 flex items-center justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <Badge variant={post.status === "published" ? "default" : "secondary"}
+                  className={post.status === "published"
+                    ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+                    : "bg-slate-100 text-slate-600"}>
+                  {post.status === "published" ? "Opublikowany" : "Szkic"}
+                </Badge>
+                {post.specialization && (
+                  <Badge variant="outline" className="text-xs">
+                    {post.specialization}
+                  </Badge>
+                )}
+              </div>
+              <p className="font-semibold text-[#0F172A] truncate">{post.title}</p>
+              <p className="text-xs text-muted-foreground">
+                /blog/{post.slug} · {post.readingTimeMinutes} min czytania
+                {post.publishedAt && ` · ${new Date(post.publishedAt).toLocaleDateString('pl-PL')}`}
+              </p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <Button variant="ghost" size="sm" asChild>
+                <a href={`/blog/${post.slug}`} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="w-4 h-4" />
+                </a>
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => openEditPost(post)}>
+                <Edit className="w-4 h-4" />
+              </Button>
+              <Button variant="ghost" size="sm"
+                className="text-destructive hover:text-destructive"
+                onClick={() => deleteBlogPost(post.id)}>
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  )}
+</TabsContent>
+
+CZĘŚĆ F — Dialog edytora (dodaj na końcu komponentu przed ostatnim </div>):
+
+<Dialog open={blogDialogOpen} onOpenChange={setBlogDialogOpen}>
+  <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+    <DialogHeader>
+      <DialogTitle>{editingPost ? "Edytuj artykuł" : "Nowy artykuł"}</DialogTitle>
+      <DialogDescription>
+        Artykuły są indeksowane przez Google — wypełnij wszystkie pola SEO.
+      </DialogDescription>
+    </DialogHeader>
+
+    <div className="grid gap-4 py-4">
+
+      {/* Wiersz 1: Tytuł + Status */}
+      <div className="grid grid-cols-3 gap-4">
+        <div className="col-span-2 space-y-1">
+          <Label>Tytuł artykułu *</Label>
+          <Input value={blogForm.title}
+            onChange={e => setBlogForm(p => ({ ...p, title: e.target.value }))}
+            placeholder="np. Jak zaplanować rok konferencji kardiologicznych" />
+        </div>
+        <div className="space-y-1">
+          <Label>Status</Label>
+          <Select value={blogForm.status}
+            onValueChange={v => setBlogForm(p => ({ ...p, status: v }))}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="draft">Szkic</SelectItem>
+              <SelectItem value="published">Opublikowany</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Wiersz 2: Slug + Specjalizacja + Czas czytania */}
+      <div className="grid grid-cols-3 gap-4">
+        <div className="space-y-1">
+          <Label>Slug URL</Label>
+          <Input value={blogForm.slug}
+            onChange={e => setBlogForm(p => ({ ...p, slug: e.target.value }))}
+            placeholder="auto-generowany z tytułu" />
+          <p className="text-xs text-muted-foreground">konfy.pl/blog/{blogForm.slug || "slug"}</p>
+        </div>
+        <div className="space-y-1">
+          <Label>Specjalizacja</Label>
+          <Select value={blogForm.specialization || "none"}
+            onValueChange={v => setBlogForm(p => ({ ...p, specialization: v === "none" ? "" : v }))}>
+            <SelectTrigger><SelectValue placeholder="Wybierz..." /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Brak / Ogólny</SelectItem>
+              {SPECIALIZATIONS.map(s => (
+                <SelectItem key={s} value={s}>{SPECIALIZATION_LABELS[s]}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1">
+          <Label>Czas czytania (min)</Label>
+          <Input type="number" min={1} max={60}
+            value={blogForm.readingTimeMinutes}
+            onChange={e => setBlogForm(p => ({ ...p, readingTimeMinutes: Number(e.target.value) }))} />
+        </div>
+      </div>
+
+      {/* Wiersz 3: Autor + Cover image */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-1">
+          <Label>Autor</Label>
+          <Input value={blogForm.authorName}
+            onChange={e => setBlogForm(p => ({ ...p, authorName: e.target.value }))} />
+        </div>
+        <div className="space-y-1">
+          <Label>Cover image URL</Label>
+          <Input value={blogForm.coverImage}
+            onChange={e => setBlogForm(p => ({ ...p, coverImage: e.target.value }))}
+            placeholder="https://..." />
+        </div>
+      </div>
+
+      {/* Excerpt */}
+      <div className="space-y-1">
+        <Label>Zajawka (excerpt) * — widoczna na liście i w Google</Label>
+        <Textarea value={blogForm.excerpt} rows={2}
+          onChange={e => setBlogForm(p => ({ ...p, excerpt: e.target.value }))}
+          placeholder="Krótki opis artykułu, 1-2 zdania, max 160 znaków dla SEO" />
+        <p className="text-xs text-muted-foreground">{blogForm.excerpt.length}/160 znaków</p>
+      </div>
+
+      {/* Treść */}
+      <div className="space-y-1">
+        <Label>Treść artykułu * (HTML)</Label>
+        <Textarea value={blogForm.content} rows={16}
+          onChange={e => setBlogForm(p => ({ ...p, content: e.target.value }))}
+          className="font-mono text-sm"
+          placeholder="<h2>Nagłówek sekcji</h2>&#10;<p>Treść akapitu...</p>" />
+        <p className="text-xs text-muted-foreground">
+          Wpisuj HTML. Nagłówki: &lt;h2&gt;, &lt;h3&gt;. Akapity: &lt;p&gt;. 
+          Pogrubienie: &lt;strong&gt;. Lista: &lt;ul&gt;&lt;li&gt;.
+        </p>
+      </div>
+
+      {/* Separator SEO */}
+      <div className="border-t pt-4">
+        <p className="text-sm font-semibold text-[#0F172A] mb-3">
+          SEO — wypełnij dla lepszego rankingu
+        </p>
+        <div className="grid gap-3">
+          <div className="space-y-1">
+            <Label>Meta title (max 60 znaków)</Label>
+            <Input value={blogForm.metaTitle}
+              onChange={e => setBlogForm(p => ({ ...p, metaTitle: e.target.value }))}
+              placeholder="Domyślnie: tytuł artykułu" />
+            <p className="text-xs text-muted-foreground">{blogForm.metaTitle.length}/60</p>
+          </div>
+          <div className="space-y-1">
+            <Label>Meta description (max 155 znaków)</Label>
+            <Textarea value={blogForm.metaDescription} rows={2}
+              onChange={e => setBlogForm(p => ({ ...p, metaDescription: e.target.value }))}
+              placeholder="Domyślnie: excerpt" />
+            <p className="text-xs text-muted-foreground">{blogForm.metaDescription.length}/155</p>
+          </div>
+          <div className="space-y-1">
+            <Label>Tagi (oddzielone przecinkiem)</Label>
+            <Input value={blogForm.tags}
+              onChange={e => setBlogForm(p => ({ ...p, tags: e.target.value }))}
+              placeholder="np. kardiologia, konferencje, punkty edukacyjne" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <DialogFooter className="gap-2">
+      <Button variant="outline" onClick={() => setBlogDialogOpen(false)}>
+        Anuluj
+      </Button>
+      <Button
+        onClick={() => { saveBlogPost(); setBlogForm(p => ({ ...p, status: "draft" })); }}
+        variant="outline"
+        className="border-[#2ED3B7] text-[#2ED3B7]">
+        Zapisz szkic
+      </Button>
+      <Button
+        onClick={() => { setBlogForm(p => ({ ...p, status: "published" })); saveBlogPost(); }}
+        className="bg-[#2ED3B7] text-[#0F172A] hover:bg-[#25B9A1]">
+        {editingPost?.status === "published" ? "Zaktualizuj" : "Opublikuj"}
+      </Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+KROK 8 — LINK DO BLOGA W NAWIGACJI
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+W pliku `client/src/components/Navigation.tsx` dodaj link "Blog"
+do głównego menu nawigacyjnego, obok istniejących linków.
+Styl identyczny z pozostałymi linkami w nav.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+KROK 9 — LINK DO BLOGA W SEOFooter
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+W pliku `client/src/components/SEOFooter.tsx` w sekcji "Kategorie"
+dodaj link do /blog jako pierwszą pozycję listy:
+  <li>
+    <Link href="/blog" className="text-[#CBD5E1] hover:text-[#2ED3B7] transition-colors text-sm">
+      Blog medyczny
+    </Link>
+  </li>
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+UWAGI KOŃCOWE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+- Zainstaluj @tailwindcss/typography jeśli nie ma w package.json
+- Uruchom migrację bazy danych (drizzle push lub odpowiednik)
+- Nie modyfikuj żadnej istniejącej logiki wydarzeń, źródeł ani użytkowników
+- Jeśli jakaś zmienna lub import jest już dostępny w pliku — użyj istniejącego
+- Wszystkie nowe pliki w client/src/pages/ twórz jako default export
