@@ -17,6 +17,8 @@ import AddEventPage from "@/pages/AddEventPage";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import Terms from "@/pages/Terms";
 import AnalyticsDashboard from "@/pages/AnalyticsDashboard";
+import BlogIndex from "@/pages/BlogIndex";
+import BlogPost from "@/pages/BlogPost";
 
 function Router() {
   return (
@@ -62,6 +64,9 @@ function Router() {
       <Route path="/diagnostyka-laboratoryjna" component={SpecializationHub} />
       <Route path="/interdyscyplinarne" component={SpecializationHub} />
       
+      <Route path="/blog" component={BlogIndex} />
+      <Route path="/blog/:slug" component={BlogPost} />
+
       <Route path="/:slug" component={SpecializationHub} />
       
       <Route component={NotFound} />

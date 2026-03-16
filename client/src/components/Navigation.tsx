@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Calendar, Home, Settings, Search, Menu, X, LogIn, LogOut, Megaphone, Plus, BarChart3 } from "lucide-react";
+import { Calendar, Home, Settings, Search, Menu, X, LogIn, LogOut, Megaphone, Plus, BarChart3, PenLine } from "lucide-react";
 import { KonfyLogo, KonfyIcon } from "@/components/KonfyLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,6 +37,7 @@ export function Navigation({ onSearch, searchQuery = "" }: NavigationProps) {
   const navLinks = [
     { href: "/", label: "Wydarzenia", icon: Home },
     { href: "/calendar", label: "Kalendarz", icon: Calendar },
+    { href: "/blog", label: "Blog", icon: PenLine },
   ];
 
   const handleSearchSubmit = (e: React.FormEvent) => {

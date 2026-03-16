@@ -70,6 +70,11 @@ export function SEOFooter() {
               Kategorie
             </h3>
             <ul className="space-y-2">
+              <li>
+                <Link href="/blog" className="text-[#CBD5E1] hover:text-[#2ED3B7] transition-colors text-sm">
+                  Blog medyczny
+                </Link>
+              </li>
               {Object.values(PILLAR_PAGES).map(page => (
                 <li key={page.slug}>
                   <Link href={`/${page.slug}`} className="text-[#CBD5E1] hover:text-[#2ED3B7] transition-colors text-sm">

@@ -72,6 +72,14 @@ The backend implements a RESTful API pattern with routes for events, sources, an
 - **embla-carousel**: Carousel functionality
 - **react-day-picker**: Calendar component
 
+## Blog Module
+
+- **Database**: `blog_posts` table with title, slug, excerpt, content, coverImage, specialization, tags, status (draft/published), authorName, readingTimeMinutes, publishedAt
+- **Public pages**: `/blog` (listing with grid cards), `/blog/:slug` (article with prose styling via @tailwindcss/typography)
+- **Admin endpoints**: CRUD at `/api/admin/blog` (protected by isAdmin), auto-slug generation from Polish titles
+- **SEO**: BlogPosting JSON-LD schema, BreadcrumbSchema, meta tags, sitemap integration
+- **Navigation**: Blog link in main nav and footer "Kategorie" section
+
 ## Recent Changes
 
 **January 2026 - Initial Implementation**

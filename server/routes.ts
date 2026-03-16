@@ -1194,6 +1194,106 @@ ODPOWIEDŹ W JSON:
     }
   });
 
+  app.get("/api/blog", async (req, res) => {
+    try {
+      const posts = await storage.getBlogPosts("published");
+      const specializationFilter = req.query.specialization as string | undefined;
+      let filtered = posts;
+      if (specializationFilter) {
+        filtered = posts.filter(p => p.specialization === specializationFilter);
+      }
+      const result = filtered.map(({ content, ...rest }) => rest);
+      res.json(result);
+    } catch (error) {
+      console.error("Error fetching blog posts:", error);
+      res.status(500).json({ error: "Failed to fetch blog posts" });
+    }
+  });
+
+  app.get("/api/blog/:slug", async (req, res) => {
+    try {
+      const post = await storage.getBlogPostBySlug(req.params.slug);
+      if (!post || post.status !== "published") {
+        return res.status(404).json({ error: "Post not found" });
+      }
+      res.json(post);
+    } catch (error) {
+      console.error("Error fetching blog post:", error);
+      res.status(500).json({ error: "Failed to fetch blog post" });
+    }
+  });
+
+  app.get("/api/admin/blog", isAdmin, async (_req, res) => {
+    try {
+      const posts = await storage.getBlogPosts();
+      res.json(posts);
+    } catch (error) {
+      console.error("Error fetching admin blog posts:", error);
+      res.status(500).json({ error: "Failed to fetch blog posts" });
+    }
+  });
+
+  app.post("/api/admin/blog", isAdmin, async (req, res) => {
+    try {
+      const { title, content, excerpt, slug, ...rest } = req.body;
+      if (!title || !content) {
+        return res.status(400).json({ error: "Title and content are required" });
+      }
+      const generatedSlug = slug || title.toLowerCase()
+        .replace(/ą/g,'a').replace(/ę/g,'e').replace(/ó/g,'o')
+        .replace(/ś/g,'s').replace(/ł/g,'l').replace(/ż/g,'z')
+        .replace(/ź/g,'z').replace(/ć/g,'c').replace(/ń/g,'n')
+        .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      const publishedAt = rest.status === "published" && !rest.publishedAt ? new Date() : rest.publishedAt ? new Date(rest.publishedAt) : null;
+      const post = await storage.createBlogPost({
+        title, content, excerpt: excerpt || "", slug: generatedSlug,
+        ...rest, publishedAt,
+      });
+      res.json(post);
+    } catch (error) {
+      console.error("Error creating blog post:", error);
+      res.status(500).json({ error: "Failed to create blog post" });
+    }
+  });
+
+  app.put("/api/admin/blog/:id", isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ error: "Invalid ID" });
+      const { title, content, slug, ...rest } = req.body;
+      const existing = await storage.getBlogPost(id);
+      if (!existing) return res.status(404).json({ error: "Post not found" });
+      const generatedSlug = slug || (title ? title.toLowerCase()
+        .replace(/ą/g,'a').replace(/ę/g,'e').replace(/ó/g,'o')
+        .replace(/ś/g,'s').replace(/ł/g,'l').replace(/ż/g,'z')
+        .replace(/ź/g,'z').replace(/ć/g,'c').replace(/ń/g,'n')
+        .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') : existing.slug);
+      let publishedAt = rest.publishedAt ? new Date(rest.publishedAt) : existing.publishedAt;
+      if (rest.status === "published" && existing.status === "draft" && !publishedAt) {
+        publishedAt = new Date();
+      }
+      const updated = await storage.updateBlogPost(id, {
+        title, content, slug: generatedSlug, ...rest, publishedAt,
+      });
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating blog post:", error);
+      res.status(500).json({ error: "Failed to update blog post" });
+    }
+  });
+
+  app.delete("/api/admin/blog/:id", isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ error: "Invalid ID" });
+      await storage.deleteBlogPost(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting blog post:", error);
+      res.status(500).json({ error: "Failed to delete blog post" });
+    }
+  });
+
   app.get("/robots.txt", (req, res) => {
     const baseUrl = `https://${req.get("host")}`;
     const robotsTxt = `# Robots.txt for Konfy.pl
@@ -1267,6 +1367,17 @@ Crawl-delay: 1
     <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
+  </url>`;
+      }
+
+      const publishedBlogPosts = await storage.getBlogPosts("published");
+      for (const post of publishedBlogPosts) {
+        sitemap += `
+  <url>
+    <loc>${baseUrl}/blog/${post.slug}</loc>
+    <lastmod>${post.updatedAt?.toISOString().split('T')[0] || today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
   </url>`;
       }
 
