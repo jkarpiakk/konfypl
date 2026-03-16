@@ -38,7 +38,7 @@ export default function SpecializationHub() {
     );
   }
 
-  const shouldNoindex = events.length < 3;
+  const shouldNoindex = events.length < 5;
   
   const upcomingEvents = events
     .filter(e => new Date(e.startDate) >= new Date())

@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { KonfyLogo } from "./KonfyLogo";
 import { SPECIALIZATION_SEO, PILLAR_PAGES } from "@/lib/seo-data";
 import { SPECIALIZATIONS, SPECIALIZATION_LABELS } from "@shared/schema";
-import { SiFacebook, SiInstagram } from "react-icons/si";
+import { SiFacebook, SiInstagram, SiLinkedin } from "react-icons/si";
 
 export function SEOFooter() {
   const topSpecializations = SPECIALIZATIONS.slice(0, 8);
@@ -43,6 +43,16 @@ export function SEOFooter() {
                 aria-label="Instagram"
               >
                 <SiInstagram className="w-5 h-5" />
+              </a>
+              <a 
+                href="https://www.linkedin.com/company/konfy-pl" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-[#94A3B8] hover:text-[#2ED3B7] transition-colors"
+                aria-label="LinkedIn"
+                data-testid="link-linkedin"
+              >
+                <SiLinkedin className="w-5 h-5" />
               </a>
             </div>
             <div className="flex flex-wrap gap-2">
