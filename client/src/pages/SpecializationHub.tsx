@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, Link } from "wouter";
 import { Calendar, GraduationCap, MapPin, ExternalLink, ChevronRight } from "lucide-react";
@@ -6,6 +7,7 @@ import { EventCard } from "@/components/EventCard";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { SEOHead, FAQSchema, EventListSchema } from "@/components/SEOHead";
 import { SEOFooter } from "@/components/SEOFooter";
+import { NewsletterModal } from "@/components/NewsletterModal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +17,7 @@ import type { Event } from "@/lib/types";
 export default function SpecializationHub() {
   const params = useParams<{ slug: string }>();
   const slug = params.slug || "";
+  const [newsletterOpen, setNewsletterOpen] = useState(false);
   
   const specializationKey = SLUG_TO_SPECIALIZATION[slug];
   const seoData = specializationKey ? SPECIALIZATION_SEO[specializationKey] : null;
@@ -146,8 +149,21 @@ export default function SpecializationHub() {
             </div>
           ) : (
             <Card className="bg-white border-[#E2E8F0]">
-              <CardContent className="p-8 text-center text-[#64748B]">
-                Brak nadchodzących wydarzeń w tej specjalizacji. Sprawdź inne kategorie.
+              <CardContent className="p-8 text-center">
+                <p className="text-[#64748B] mb-4">
+                  Brak nadchodzących wydarzeń w tej specjalizacji.
+                </p>
+                <p className="text-sm text-[#94A3B8] mb-6">
+                  Zapisz się na powiadomienie — poinformujemy Cię gdy pojawią się nowe wydarzenia 
+                  z {seoData.name.toLowerCase()}.
+                </p>
+                <Button 
+                  onClick={() => setNewsletterOpen(true)}
+                  className="bg-[#2ED3B7] hover:bg-[#25B9A1] text-[#0F172A] font-semibold rounded-full px-6"
+                  data-testid="button-notify-empty-state"
+                >
+                  Powiadom mnie o nowych wydarzeniach
+                </Button>
               </CardContent>
             </Card>
           )}
@@ -161,6 +177,12 @@ export default function SpecializationHub() {
               </Link>
             </div>
           )}
+
+          <NewsletterModal 
+            open={newsletterOpen} 
+            onOpenChange={setNewsletterOpen} 
+            mode="newsletter"
+          />
         </section>
 
         <section className="mb-10">
