@@ -1201,7 +1201,7 @@ User-agent: *
 Allow: /
 Disallow: /admin
 Disallow: /api/
-Disallow: /promote
+Disallow: /promuj
 
 # Sitemap
 Sitemap: ${baseUrl}/sitemap.xml
