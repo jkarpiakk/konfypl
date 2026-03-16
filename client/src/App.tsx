@@ -69,9 +69,45 @@ function Router() {
   );
 }
 
+function WebsiteSchema() {
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Konfy.pl",
+    "url": "https://konfy.pl",
+    "description": "Agregator wydarzeń medycznych w Polsce — konferencje, kongresy, webinary i szkolenia dla lekarzy wszystkich specjalności.",
+    "inLanguage": "pl-PL",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate": "https://konfy.pl/?search={search_term_string}"
+      },
+      "query-input": "required name=search_term_string"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Konfy.pl",
+      "url": "https://konfy.pl",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://konfy.pl/favicon.svg"
+      }
+    }
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+    />
+  );
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      <WebsiteSchema />
       <ThemeProvider>
         <TooltipProvider>
           <Toaster />
