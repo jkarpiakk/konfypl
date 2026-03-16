@@ -171,7 +171,7 @@ export function EventCard({ event, compact = false }: EventCardProps) {
   return (
     <Card 
       className={cn(
-        "bg-white border rounded-2xl card-hover-optimized hover:shadow-card-hover",
+        "bg-white border rounded-2xl card-hover-optimized hover:shadow-card-hover group",
         promotionStyles.cardClass
       )}
       data-testid={`card-event-${event.id}`}
@@ -212,6 +212,58 @@ export function EventCard({ event, compact = false }: EventCardProps) {
                 AI
               </Badge>
             )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="w-7 h-7 text-[#94A3B8] hover:text-[#2ED3B7] hover:bg-[#E6FAF7] opacity-0 group-hover:opacity-100 transition-opacity"
+                  data-testid={`button-share-${event.id}`}
+                >
+                  <Share2 className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="bg-white border-[#E2E8F0] shadow-lg rounded-lg">
+                <DropdownMenuItem 
+                  onClick={() => {
+                    const url = encodeURIComponent(`${window.location.origin}/event/${event.id}?utm_source=facebook`);
+                    const text = encodeURIComponent(event.title);
+                    window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${text}`, "_blank", "width=600,height=400");
+                    trackEvent("share");
+                  }}
+                  className="cursor-pointer hover:bg-[#F1F5F9]"
+                >
+                  Facebook
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => {
+                    const url = encodeURIComponent(`${window.location.origin}/event/${event.id}?utm_source=twitter`);
+                    const text = encodeURIComponent(`${event.title} - ${window.location.origin}/event/${event.id}`);
+                    window.open(`https://twitter.com/intent/tweet?text=${text}`, "_blank", "width=600,height=400");
+                    trackEvent("share");
+                  }}
+                  className="cursor-pointer hover:bg-[#F1F5F9]"
+                >
+                  X (Twitter)
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => {
+                    const url = encodeURIComponent(`${window.location.origin}/event/${event.id}?utm_source=linkedin`);
+                    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, "_blank", "width=600,height=400");
+                    trackEvent("share");
+                  }}
+                  className="cursor-pointer hover:bg-[#F1F5F9]"
+                >
+                  LinkedIn
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={handleShare}
+                  className="cursor-pointer hover:bg-[#F1F5F9]"
+                >
+                  Kopiuj link
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
@@ -297,59 +349,6 @@ export function EventCard({ event, compact = false }: EventCardProps) {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-[#64748B] hover:text-[#2ED3B7] hover:bg-[#E6FAF7]"
-              data-testid={`button-share-${event.id}`}
-            >
-              <Share2 className="w-4 h-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="bg-white border-[#E2E8F0] shadow-lg rounded-lg">
-            <DropdownMenuItem 
-              onClick={() => {
-                const url = encodeURIComponent(`${window.location.origin}/event/${event.id}?utm_source=facebook`);
-                const text = encodeURIComponent(event.title);
-                window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${text}`, "_blank", "width=600,height=400");
-                trackEvent("share");
-              }}
-              className="cursor-pointer hover:bg-[#F1F5F9]"
-            >
-              Facebook
-            </DropdownMenuItem>
-            <DropdownMenuItem 
-              onClick={() => {
-                const url = encodeURIComponent(`${window.location.origin}/event/${event.id}?utm_source=twitter`);
-                const text = encodeURIComponent(`${event.title} - ${window.location.origin}/event/${event.id}`);
-                window.open(`https://twitter.com/intent/tweet?text=${text}`, "_blank", "width=600,height=400");
-                trackEvent("share");
-              }}
-              className="cursor-pointer hover:bg-[#F1F5F9]"
-            >
-              X (Twitter)
-            </DropdownMenuItem>
-            <DropdownMenuItem 
-              onClick={() => {
-                const url = encodeURIComponent(`${window.location.origin}/event/${event.id}?utm_source=linkedin`);
-                window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, "_blank", "width=600,height=400");
-                trackEvent("share");
-              }}
-              className="cursor-pointer hover:bg-[#F1F5F9]"
-            >
-              LinkedIn
-            </DropdownMenuItem>
-            <DropdownMenuItem 
-              onClick={handleShare}
-              className="cursor-pointer hover:bg-[#F1F5F9]"
-            >
-              Kopiuj link
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
             <Button 
               variant="outline" 
               size="sm" 
@@ -395,17 +394,6 @@ export function EventCard({ event, compact = false }: EventCardProps) {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <Button
-          variant="outline"
-          size="sm"
-          className="gap-1 rounded-full border-[#2ED3B7] text-[#2ED3B7] hover:bg-[#E6FAF7] hover:text-[#0F766E]"
-          onClick={() => setReminderOpen(true)}
-          data-testid={`button-remind-me-${event.id}`}
-        >
-          <Bell className="w-4 h-4" />
-          <span className="hidden sm:inline">Przypomnij mi</span>
-        </Button>
-
         <NewsletterModal
           open={reminderOpen}
           onOpenChange={setReminderOpen}
@@ -416,13 +404,13 @@ export function EventCard({ event, compact = false }: EventCardProps) {
 
         {event.sourceUrl && (
           <Button 
-            size="sm"
-            className="gap-1 rounded-full bg-[#2ED3B7] text-[#0F172A] hover:bg-[#25B9A1]"
+            size="default"
+            className="gap-1 rounded-full bg-[#2ED3B7] text-[#0F172A] hover:bg-[#25B9A1] w-full sm:w-auto"
             onClick={handleRegistrationClick}
             data-testid={`button-registration-${event.id}`}
           >
             <ExternalLink className="w-4 h-4" />
-            <span className="hidden sm:inline">Strona wydarzenia</span>
+            Strona wydarzenia
           </Button>
         )}
       </CardFooter>
