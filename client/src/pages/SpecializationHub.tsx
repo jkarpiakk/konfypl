@@ -60,7 +60,7 @@ export default function SpecializationHub() {
       <SEOHead 
         title={seoData.metaTitle}
         description={seoData.metaDescription}
-        canonical={`/specjalizacja/${seoData.slug}`}
+        canonical={`/${seoData.slug}`}
         noindex={shouldNoindex}
         ogType="website"
         keywords={seoData.keywords}

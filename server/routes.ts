@@ -1232,12 +1232,30 @@ Crawl-delay: 1
     <priority>1.0</priority>
   </url>
   
-  <!-- Kalendarz -->
+  <!-- Pillar pages -->
   <url>
-    <loc>${baseUrl}/calendar</loc>
+    <loc>${baseUrl}/konferencje-medyczne</loc>
     <lastmod>${today}</lastmod>
     <changefreq>daily</changefreq>
-    <priority>0.8</priority>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/webinary-medyczne</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/szkolenia-medyczne</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/kalendarz-konferencji-medycznych</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
   </url>
 `;
 
@@ -1245,7 +1263,7 @@ Crawl-delay: 1
         sitemap += `
   <!-- Specjalizacja: ${slug} -->
   <url>
-    <loc>${baseUrl}/specjalizacja/${slug}</loc>
+    <loc>${baseUrl}/${slug}</loc>
     <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
