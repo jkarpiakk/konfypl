@@ -114,7 +114,7 @@ export function EventCard({ event, compact = false }: EventCardProps) {
   };
 
   const handleShare = async () => {
-    const eventUrl = `${window.location.origin}/event/${event.id}`;
+    const eventUrl = `${window.location.origin}/wydarzenia/${event.id}`;
     try {
       await navigator.clipboard.writeText(eventUrl);
       trackEvent("share");
@@ -191,7 +191,7 @@ export function EventCard({ event, compact = false }: EventCardProps) {
       )}
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-2">
-          <Link href={`/event/${event.id}`} className="flex-1 min-w-0">
+          <Link href={`/wydarzenia/${event.id}`} className="flex-1 min-w-0">
             <h3 
               className="font-heading font-semibold text-lg leading-tight line-clamp-2 text-[#0F172A] hover:text-[#2ED3B7] transition-colors cursor-pointer"
               data-testid={`text-event-title-${event.id}`}
@@ -226,7 +226,7 @@ export function EventCard({ event, compact = false }: EventCardProps) {
               <DropdownMenuContent align="end" className="bg-white border-[#E2E8F0] shadow-lg rounded-lg">
                 <DropdownMenuItem 
                   onClick={() => {
-                    const url = encodeURIComponent(`${window.location.origin}/event/${event.id}?utm_source=facebook`);
+                    const url = encodeURIComponent(`${window.location.origin}/wydarzenia/${event.id}?utm_source=facebook`);
                     const text = encodeURIComponent(event.title);
                     window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${text}`, "_blank", "width=600,height=400");
                     trackEvent("share");
@@ -237,8 +237,8 @@ export function EventCard({ event, compact = false }: EventCardProps) {
                 </DropdownMenuItem>
                 <DropdownMenuItem 
                   onClick={() => {
-                    const url = encodeURIComponent(`${window.location.origin}/event/${event.id}?utm_source=twitter`);
-                    const text = encodeURIComponent(`${event.title} - ${window.location.origin}/event/${event.id}`);
+                    const url = encodeURIComponent(`${window.location.origin}/wydarzenia/${event.id}?utm_source=twitter`);
+                    const text = encodeURIComponent(`${event.title} - ${window.location.origin}/wydarzenia/${event.id}`);
                     window.open(`https://twitter.com/intent/tweet?text=${text}`, "_blank", "width=600,height=400");
                     trackEvent("share");
                   }}
@@ -248,7 +248,7 @@ export function EventCard({ event, compact = false }: EventCardProps) {
                 </DropdownMenuItem>
                 <DropdownMenuItem 
                   onClick={() => {
-                    const url = encodeURIComponent(`${window.location.origin}/event/${event.id}?utm_source=linkedin`);
+                    const url = encodeURIComponent(`${window.location.origin}/wydarzenia/${event.id}?utm_source=linkedin`);
                     window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, "_blank", "width=600,height=400");
                     trackEvent("share");
                   }}
