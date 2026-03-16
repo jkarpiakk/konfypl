@@ -566,6 +566,34 @@ export const insertLeadSchema = createInsertSchema(leads).omit({
   createdAt: true,
 });
 
+export const blogPosts = pgTable("blog_posts", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  slug: text("slug").notNull().unique(),
+  excerpt: text("excerpt").notNull(),
+  content: text("content").notNull(),
+  metaTitle: text("meta_title"),
+  metaDescription: text("meta_description"),
+  coverImage: text("cover_image"),
+  specialization: text("specialization"),
+  tags: text("tags").array().default([]),
+  status: text("status").notNull().default("draft"),
+  authorName: text("author_name").default("Redakcja Konfy.pl"),
+  readingTimeMinutes: integer("reading_time_minutes").default(5),
+  publishedAt: timestamp("published_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertBlogPostSchema = createInsertSchema(blogPosts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type BlogPost = typeof blogPosts.$inferSelect;
+export type InsertBlogPost = z.infer<typeof insertBlogPostSchema>;
+
 export type Specialization = typeof SPECIALIZATIONS[number];
 export type EventTag = typeof EVENT_TAGS[number];
 export type PlacementType = typeof PLACEMENT_TYPES[number];

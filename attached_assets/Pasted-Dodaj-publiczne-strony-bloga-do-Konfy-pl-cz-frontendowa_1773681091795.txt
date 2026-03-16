@@ -1,0 +1,124 @@
+Dodaj publiczne strony bloga do Konfy.pl — część frontendowa.
+Backend (API, baza) jest już gotowy z poprzedniego kroku.
+
+━━━ KROK 1: ROUTING (client/src/App.tsx) ━━━
+
+Dodaj importy:
+import BlogIndex from "@/pages/BlogIndex";
+import BlogPost from "@/pages/BlogPost";
+
+W Router() dodaj przed <Route component={NotFound}>:
+<Route path="/blog" component={BlogIndex} />
+<Route path="/blog/:slug" component={BlogPost} />
+
+━━━ KROK 2: LISTA ARTYKUŁÓW (client/src/pages/BlogIndex.tsx) ━━━
+
+Stwórz nowy plik. Struktura:
+
+- useQuery → GET /api/blog
+- SEOHead:
+    title="Blog Medyczny | Konferencje i Szkolenia | Konfy.pl"
+    description="Artykuły o konferencjach medycznych, punktach edukacyjnych
+    i rozwoju zawodowym lekarzy w Polsce."
+    canonical="/blog"
+- BreadcrumbSchema z komponentu SEOHead:
+    [{name:"Konfy.pl",url:"/"},{name:"Blog",url:"/blog"}]
+- H1: "Blog — wiedza dla lekarzy"
+- Grid kart (1/2/3 kolumn, gap-6). Każda karta (Card z bg-white):
+    · coverImage jeśli istnieje: <img> w-full aspect-video object-cover rounded-t-xl
+    · Badge specjalizacji jeśli istnieje: bg-[#E6FAF7] text-[#0F766E] text-xs
+    · Tytuł: font-heading font-semibold line-clamp-2,
+      owinięty w <Link href={`/blog/${post.slug}`}>
+    · Excerpt: text-sm text-[#64748B] line-clamp-3 mt-2
+    · Stopka karty: data (format "d MMM yyyy" locale pl) · czas czytania min
+    · Link "Czytaj dalej →" text-[#2ED3B7] text-sm mt-3
+- Loading state: 6 skeleton cards (Skeleton h-64 w-full rounded-2xl)
+- Empty state: ikona PenLine, tekst "Brak artykułów", bez CTA
+- Używa Navigation i SEOFooter (zaimportowane jak w innych stronach)
+
+━━━ KROK 3: POJEDYNCZY ARTYKUŁ (client/src/pages/BlogPost.tsx) ━━━
+
+Stwórz nowy plik. Struktura:
+
+- slug z useParams, useQuery → GET /api/blog/:slug
+- SEOHead:
+    title={post.metaTitle ?? post.title}
+    description={post.metaDescription ?? post.excerpt}
+    canonical={`/blog/${post.slug}`}
+    ogType="article"
+    ogImage={post.coverImage}
+- Schema JSON-LD BlogPosting (przez <script type="application/ld+json">):
+    {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "headline": post.title,
+      "description": post.excerpt,
+      "datePublished": post.publishedAt,
+      "dateModified": post.updatedAt,
+      "author": { "@type": "Person", "name": post.authorName },
+      "publisher": { "@type": "Organization", "name": "Konfy.pl",
+                     "url": "https://konfy.pl" },
+      "url": `https://konfy.pl/blog/${post.slug}`,
+      "image": post.coverImage || undefined
+    }
+- BreadcrumbSchema: 3 poziomy:
+    Konfy.pl(/) → Blog(/blog) → tytuł artykułu(/blog/slug)
+- Layout: max-w-3xl mx-auto px-4 py-8
+
+Zawartość strony od góry:
+  1. Link "← Wróć do bloga" href="/blog" (text-[#2ED3B7], mb-6)
+  2. Badge specjalizacji jeśli istnieje
+  3. H1 z tytułem (font-heading text-3xl md:text-4xl font-bold text-[#0F172A])
+  4. Meta bar (text-sm text-[#64748B] flex gap-4 mt-3):
+       autor · data publikacji · X min czytania
+  5. <Separator className="my-6" />
+  6. coverImage jeśli istnieje:
+       <img> w-full max-h-96 object-cover rounded-xl mb-8
+  7. Treść HTML:
+       <div
+         className="prose prose-slate max-w-none
+           prose-headings:font-heading prose-headings:text-[#0F172A]
+           prose-a:text-[#2ED3B7] prose-a:no-underline
+           hover:prose-a:underline prose-strong:text-[#0F172A]"
+         dangerouslySetInnerHTML={{ __html: post.content }}
+       />
+  8. Jeśli post.specialization istnieje — sekcja pod treścią:
+       <div className="mt-12 p-6 bg-[#E6FAF7] rounded-xl">
+         <p className="font-semibold text-[#0F172A] mb-2">
+           Szukasz konferencji z tej dziedziny?
+         </p>
+         <Link href={`/${SPECIALIZATION_SLUGS[post.specialization]}`}>
+           <Button className="bg-[#2ED3B7] text-[#0F172A] hover:bg-[#25B9A1] rounded-full">
+             Zobacz konferencje — {SPECIALIZATION_LABELS[post.specialization]}
+           </Button>
+         </Link>
+       </div>
+       (zaimportuj SPECIALIZATION_SLUGS z "@/lib/seo-data"
+        i SPECIALIZATION_LABELS z "@/lib/constants")
+
+- 404 state jeśli post nie znaleziony (analogicznie do EventDetail)
+- Używa Navigation i SEOFooter
+
+━━━ KROK 4: INSTALACJA BIBLIOTEKI ━━━
+
+Zainstaluj @tailwindcss/typography:
+  npm install @tailwindcss/typography
+
+W tailwind.config.ts dodaj do plugins:
+  require('@tailwindcss/typography')
+
+━━━ KROK 5: NAWIGACJA I FOOTER ━━━
+
+W client/src/components/Navigation.tsx dodaj link "Blog"
+do głównego menu, styl identyczny z istniejącymi linkami.
+
+W client/src/components/SEOFooter.tsx w sekcji "Kategorie"
+dodaj jako pierwszą pozycję:
+  <li>
+    <Link href="/blog"
+      className="text-[#CBD5E1] hover:text-[#2ED3B7] transition-colors text-sm">
+      Blog medyczny
+    </Link>
+  </li>
+
+Nie modyfikuj żadnej innej logiki.

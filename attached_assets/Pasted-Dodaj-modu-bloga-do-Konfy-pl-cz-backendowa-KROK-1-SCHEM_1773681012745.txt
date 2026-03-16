@@ -1,0 +1,106 @@
+Dodaj moduł bloga do Konfy.pl — część backendowa.
+
+━━━ KROK 1: SCHEMAT BAZY (shared/schema.ts) ━━━
+
+Dodaj po tabeli `leads`:
+
+export const blogPosts = pgTable("blog_posts", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  slug: text("slug").notNull().unique(),
+  excerpt: text("excerpt").notNull(),
+  content: text("content").notNull(),
+  metaTitle: text("meta_title"),
+  metaDescription: text("meta_description"),
+  coverImage: text("cover_image"),
+  specialization: text("specialization"),
+  tags: text("tags").array().default([]),
+  status: text("status").notNull().default("draft"),
+  authorName: text("author_name").default("Redakcja Konfy.pl"),
+  readingTimeMinutes: integer("reading_time_minutes").default(5),
+  publishedAt: timestamp("published_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertBlogPostSchema = createInsertSchema(blogPosts).omit({
+  id: true, createdAt: true, updatedAt: true,
+});
+
+export type BlogPost = typeof blogPosts.$inferSelect;
+export type InsertBlogPost = z.infer<typeof insertBlogPostSchema>;
+
+Następnie wykonaj migrację — użyj mechanizmu który już istnieje w projekcie
+(drizzle push lub db.execute z CREATE TABLE IF NOT EXISTS).
+
+━━━ KROK 2: STORAGE (server/storage.ts) ━━━
+
+Dodaj do interfejsu IStorage i jego implementacji:
+
+getBlogPosts(status?: string): Promise<BlogPost[]>
+  → filtruje po status jeśli podany, sortuje po publishedAt DESC
+
+getBlogPost(id: number): Promise<BlogPost | undefined>
+
+getBlogPostBySlug(slug: string): Promise<BlogPost | undefined>
+
+createBlogPost(post: InsertBlogPost): Promise<BlogPost>
+
+updateBlogPost(id: number, data: Partial<InsertBlogPost>): Promise<BlogPost>
+  → ustawia updatedAt: new Date()
+
+deleteBlogPost(id: number): Promise<void>
+
+Implementacja używa Drizzle ORM tak jak pozostałe metody w tym pliku.
+
+━━━ KROK 3: API ENDPOINTS (server/routes.ts) ━━━
+
+Publiczne (bez autoryzacji):
+
+GET /api/blog
+  → posty ze status="published", obsługuje ?specialization=
+  → zwraca: id, title, slug, excerpt, metaTitle, metaDescription,
+    coverImage, specialization, tags, authorName, readingTimeMinutes, publishedAt
+
+GET /api/blog/:slug
+  → pojedynczy post po slug, tylko status="published"
+  → 404 jeśli nie znaleziony lub draft
+
+Chronione (isAdmin):
+
+GET /api/admin/blog
+  → wszystkie posty (draft + published), sortowane createdAt DESC
+
+POST /api/admin/blog
+  → tworzy post, walidacja: title i content wymagane
+  → auto-generuj slug z title jeśli slug pusty:
+    slug = title.toLowerCase()
+      .replace(/ą/g,'a').replace(/ę/g,'e').replace(/ó/g,'o')
+      .replace(/ś/g,'s').replace(/ł/g,'l').replace(/ż/g,'z')
+      .replace(/ź/g,'z').replace(/ć/g,'c').replace(/ń/g,'n')
+      .replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')
+  → jeśli status="published" i brak publishedAt → publishedAt = new Date()
+
+PUT /api/admin/blog/:id
+  → aktualizuje post, te same zasady co POST
+  → zmiana draft→published bez publishedAt → ustaw now()
+
+DELETE /api/admin/blog/:id
+  → usuwa post, zwraca { success: true }
+
+━━━ KROK 4: SITEMAP (server/routes.ts) ━━━
+
+W generatorze sitemap.xml, przed pętlą po wydarzeniach, dodaj:
+
+const publishedBlogPosts = await storage.getBlogPosts("published");
+for (const post of publishedBlogPosts) {
+  sitemap += `
+  <url>
+    <loc>${baseUrl}/blog/${post.slug}</loc>
+    <lastmod>${post.updatedAt?.toISOString().split('T')[0] || today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>`;
+}
+
+Nie modyfikuj żadnej innej logiki.
