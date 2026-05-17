@@ -386,7 +386,7 @@ FORMAT ODPOWIEDZI (JSON):
 }`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4.1",
+      model: "gpt-4.1-mini",
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: `Przeanalizuj tekst i wyodrębnij wszystkie wydarzenia medyczne:\n\n${content.slice(0, 12000)}` }
