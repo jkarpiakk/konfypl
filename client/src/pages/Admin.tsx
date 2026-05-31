@@ -832,6 +832,32 @@ export default function Admin() {
     },
   });
 
+  const approveAllEvents = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/events/publish-all-pending");
+      return res.json() as Promise<{ count: number }>;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/events"] });
+      const n = data.count;
+      const mod10 = n % 10;
+      const mod100 = n % 100;
+      const noun =
+        n === 1
+          ? "wydarzenie"
+          : mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)
+          ? "wydarzenia"
+          : "wydarzeń";
+      toast({
+        title: "Zatwierdzono wszystkie",
+        description: `Opublikowano ${n} ${noun}`,
+      });
+    },
+    onError: () => {
+      toast({ title: "Błąd", description: "Nie udało się zatwierdzić wydarzeń", variant: "destructive" });
+    },
+  });
+
   const quickUpdateEvent = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<Event> }) => 
       apiRequest("PATCH", `/api/events/${id}`, data),
@@ -1184,6 +1210,28 @@ export default function Admin() {
           </div>
 
           <TabsContent value="pending">
+            {pendingEvents.length > 0 && (
+              <div className="flex justify-end mb-4">
+                <Button
+                  onClick={() => approveAllEvents.mutate()}
+                  disabled={approveAllEvents.isPending}
+                  className="bg-[#2ED3B7] hover:bg-[#26b89e] text-white"
+                  data-testid="button-approve-all-events"
+                >
+                  {approveAllEvents.isPending ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      Zatwierdzanie...
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-4 h-4 mr-2" />
+                      Zatwierdź wszystkie ({pendingEvents.length})
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
             <EventsTable
               events={pendingEvents}
               isLoading={loadingPending}

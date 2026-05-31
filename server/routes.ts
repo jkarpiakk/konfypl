@@ -263,6 +263,16 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/events/publish-all-pending", isAdmin, async (_req, res) => {
+    try {
+      const count = await storage.publishAllPendingEvents();
+      res.json({ count });
+    } catch (error) {
+      console.error("Error publishing all pending events:", error);
+      res.status(500).json({ error: "Failed to publish pending events" });
+    }
+  });
+
   app.delete("/api/events/:id", isAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);

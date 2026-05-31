@@ -20,6 +20,7 @@ export interface IStorage {
   getEvent(id: number): Promise<Event | undefined>;
   createEvent(event: InsertEvent): Promise<Event>;
   updateEvent(id: number, event: Partial<InsertEvent>): Promise<Event | undefined>;
+  publishAllPendingEvents(): Promise<number>;
   deleteEvent(id: number): Promise<void>;
   findDuplicateEvent(title: string, startDate: string): Promise<Event | undefined>;
 
@@ -152,6 +153,15 @@ export class DatabaseStorage implements IStorage {
       .where(eq(events.id, id))
       .returning();
     return updated;
+  }
+
+  async publishAllPendingEvents(): Promise<number> {
+    const updated = await db
+      .update(events)
+      .set({ status: "published", updatedAt: sql`CURRENT_TIMESTAMP` })
+      .where(eq(events.status, "pending"))
+      .returning({ id: events.id });
+    return updated.length;
   }
 
   async deleteEvent(id: number): Promise<void> {
