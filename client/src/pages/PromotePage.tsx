@@ -108,6 +108,9 @@ export default function PromotePage() {
   }, [searchParams, toast]);
 
   const handleSelectPackage = (pkg: typeof packages[0]) => {
+    if (typeof window !== "undefined" && (window as any).gtag) {
+      (window as any).gtag("event", "select_package", { package_name: pkg.name, package_price: pkg.price });
+    }
     setSelectedPackage(pkg);
     setIsCheckoutOpen(true);
   };
@@ -130,6 +133,13 @@ export default function PromotePage() {
       if (checkoutResponse.ok) {
         const { url } = await checkoutResponse.json();
         if (url) {
+          if (typeof window !== "undefined" && (window as any).gtag) {
+            (window as any).gtag("event", "begin_checkout", {
+              package_name: selectedPackage.name,
+              package_price: selectedPackage.price,
+              currency: "PLN",
+            });
+          }
           window.location.href = url;
           return;
         }

@@ -279,7 +279,12 @@ export default function EventDetail() {
                 {event.sourceUrl ? (
                   <Button
                     className="w-full gap-2 bg-[#2ED3B7] hover:bg-[#25B9A1] text-[#0F172A] font-semibold"
-                    onClick={() => window.open(event.sourceUrl!, "_blank")}
+                    onClick={() => {
+                      if (typeof window !== "undefined" && (window as any).gtag) {
+                        (window as any).gtag("event", "registration_click", { event_id: event.id, event_title: event.title });
+                      }
+                      window.open(event.sourceUrl!, "_blank");
+                    }}
                     data-testid="button-event-website"
                   >
                     <ExternalLink className="w-4 h-4" />
@@ -299,15 +304,30 @@ export default function EventDetail() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-56">
-                    <DropdownMenuItem onClick={() => window.open(getGoogleCalendarUrl(event), "_blank")}>
+                    <DropdownMenuItem onClick={() => {
+                      if (typeof window !== "undefined" && (window as any).gtag) {
+                        (window as any).gtag("event", "calendar_add", { event_id: event.id, event_title: event.title, calendar_type: "google" });
+                      }
+                      window.open(getGoogleCalendarUrl(event), "_blank");
+                    }}>
                       <SiGooglecalendar className="w-4 h-4 mr-2" />
                       Google Calendar
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => window.open(getOutlookCalendarUrl(event), "_blank")}>
+                    <DropdownMenuItem onClick={() => {
+                      if (typeof window !== "undefined" && (window as any).gtag) {
+                        (window as any).gtag("event", "calendar_add", { event_id: event.id, event_title: event.title, calendar_type: "outlook" });
+                      }
+                      window.open(getOutlookCalendarUrl(event), "_blank");
+                    }}>
                       <Calendar className="w-4 h-4 mr-2" />
                       Outlook
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => downloadICSFile(event)}>
+                    <DropdownMenuItem onClick={() => {
+                      if (typeof window !== "undefined" && (window as any).gtag) {
+                        (window as any).gtag("event", "calendar_add", { event_id: event.id, event_title: event.title, calendar_type: "ics" });
+                      }
+                      downloadICSFile(event);
+                    }}>
                       <SiApple className="w-4 h-4 mr-2" />
                       Apple Calendar (.ics)
                     </DropdownMenuItem>

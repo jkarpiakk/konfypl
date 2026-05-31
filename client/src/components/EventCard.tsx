@@ -106,6 +106,13 @@ export function EventCard({ event, compact = false }: EventCardProps) {
   const [reminderOpen, setReminderOpen] = useState(false);
 
   const trackEvent = (action: string) => {
+    if (typeof window !== "undefined" && (window as any).gtag) {
+      (window as any).gtag("event", action, {
+        event_id: event.id,
+        event_title: event.title,
+        event_category: "event",
+      });
+    }
     fetch("/api/track", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
