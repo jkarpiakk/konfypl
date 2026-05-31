@@ -109,7 +109,7 @@ export default function PromotePage() {
 
   const handleSelectPackage = (pkg: typeof packages[0]) => {
     if (typeof window !== "undefined" && (window as any).gtag) {
-      (window as any).gtag("event", "select_package", { package_name: pkg.name, package_price: pkg.price });
+      (window as any).gtag("event", "select_package", { package_name: pkg.name });
     }
     setSelectedPackage(pkg);
     setIsCheckoutOpen(true);
@@ -120,29 +120,10 @@ export default function PromotePage() {
     
     setIsLoading(true);
     try {
-      const checkoutResponse = await fetch("/api/stripe/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          priceId: selectedPackage.priceId,
-          email,
-          packageName: selectedPackage.name,
-        }),
-      });
-
-      if (checkoutResponse.ok) {
-        const { url } = await checkoutResponse.json();
-        if (url) {
-          if (typeof window !== "undefined" && (window as any).gtag) {
-            (window as any).gtag("event", "begin_checkout", {
-              package_name: selectedPackage.name,
-              package_price: selectedPackage.price,
-              currency: "PLN",
-            });
-          }
-          window.location.href = url;
-          return;
-        }
+      if (typeof window !== "undefined" && (window as any).gtag) {
+        (window as any).gtag("event", "price_inquiry", {
+          package_name: selectedPackage.name,
+        });
       }
 
       await fetch("/api/leads", {
@@ -150,15 +131,15 @@ export default function PromotePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email,
-          type: "promotion_purchase",
-          message: `Pakiet: ${selectedPackage.name} - ${selectedPackage.price} PLN`,
+          type: "promotion_inquiry",
+          message: `Zapytanie o cene - pakiet: ${selectedPackage.name}`,
           utmSource: "promote-page",
         }),
       });
 
       toast({
         title: "Dziekujemy za zainteresowanie!",
-        description: "Skontaktujemy sie z Toba w ciagu 24 godzin z informacjami o platnosci.",
+        description: "Skontaktujemy sie z Toba w ciagu 24 godzin z indywidualna wycena.",
       });
       setIsCheckoutOpen(false);
       setEmail("");
@@ -249,8 +230,7 @@ export default function PromotePage() {
                   <CardTitle className="text-2xl">{pkg.name}</CardTitle>
                   <CardDescription>{pkg.description}</CardDescription>
                   <div className="mt-4">
-                    <span className="text-4xl font-bold text-[#0F172A]">{pkg.price}</span>
-                    <span className="text-[#64748B]"> PLN / {pkg.period}</span>
+                    <span className="text-3xl font-bold text-[#0F172A]">Zapytaj o cene</span>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -448,7 +428,7 @@ export default function PromotePage() {
               {selectedPackage ? `Zapytaj o pakiet ${selectedPackage.name}` : 'Zapytaj o promocje'}
             </DialogTitle>
             <DialogDescription>
-              {selectedPackage && `Cena: ${selectedPackage.price} PLN / ${selectedPackage.period}`}
+              Zostaw email, a przygotujemy indywidualna wycene
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
