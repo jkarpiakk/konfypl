@@ -777,6 +777,7 @@ export default function Admin() {
   const [promotionTierInput, setPromotionTierInput] = useState<PromotionTier>("basic");
   const [draggedEventId, setDraggedEventId] = useState<number | null>(null);
   const [socialGraphicEvent, setSocialGraphicEvent] = useState<Event | null>(null);
+  const [rejectAllConfirmOpen, setRejectAllConfirmOpen] = useState(false);
 
   useEffect(() => {
     checkSession();
@@ -855,6 +856,32 @@ export default function Admin() {
     },
     onError: () => {
       toast({ title: "Błąd", description: "Nie udało się zatwierdzić wydarzeń", variant: "destructive" });
+    },
+  });
+
+  const rejectAllEvents = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/events/reject-all-pending");
+      return res.json() as Promise<{ count: number }>;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/events"] });
+      const n = data.count;
+      const mod10 = n % 10;
+      const mod100 = n % 100;
+      const noun =
+        n === 1
+          ? "wydarzenie"
+          : mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)
+          ? "wydarzenia"
+          : "wydarzeń";
+      toast({
+        title: "Odrzucono wszystkie",
+        description: `Usunięto ${n} ${noun}`,
+      });
+    },
+    onError: () => {
+      toast({ title: "Błąd", description: "Nie udało się odrzucić wydarzeń", variant: "destructive" });
     },
   });
 
@@ -1211,7 +1238,26 @@ export default function Admin() {
 
           <TabsContent value="pending">
             {pendingEvents.length > 0 && (
-              <div className="flex justify-end mb-4">
+              <div className="flex justify-end gap-2 mb-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setRejectAllConfirmOpen(true)}
+                  disabled={rejectAllEvents.isPending}
+                  className="border-destructive text-destructive hover:bg-destructive/10"
+                  data-testid="button-reject-all-events"
+                >
+                  {rejectAllEvents.isPending ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      Odrzucanie...
+                    </>
+                  ) : (
+                    <>
+                      <X className="w-4 h-4 mr-2" />
+                      Odrzuć wszystkie ({pendingEvents.length})
+                    </>
+                  )}
+                </Button>
                 <Button
                   onClick={() => approveAllEvents.mutate()}
                   disabled={approveAllEvents.isPending}
@@ -1451,6 +1497,27 @@ export default function Admin() {
         open={isImportingSource}
         onOpenChange={setIsImportingSource}
       />
+
+      <AlertDialog open={rejectAllConfirmOpen} onOpenChange={setRejectAllConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Odrzucić wszystkie oczekujące wydarzenia?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Ta akcja jest nieodwracalna. Wszystkie oczekujące wydarzenia ({pendingEvents.length}) zostaną trwale usunięte.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Anuluj</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => rejectAllEvents.mutate()}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              data-testid="button-confirm-reject-all"
+            >
+              Odrzuć wszystkie
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={!!deleteEventId} onOpenChange={() => setDeleteEventId(null)}>
         <AlertDialogContent>

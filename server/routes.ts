@@ -274,6 +274,16 @@ export async function registerRoutes(
     }
   });
 
+  app.post("/api/events/reject-all-pending", isAdmin, async (_req, res) => {
+    try {
+      const count = await storage.rejectAllPendingEvents();
+      res.json({ count });
+    } catch (error) {
+      console.error("Error rejecting all pending events:", error);
+      res.status(500).json({ error: "Failed to reject pending events" });
+    }
+  });
+
   app.delete("/api/events/:id", isAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
