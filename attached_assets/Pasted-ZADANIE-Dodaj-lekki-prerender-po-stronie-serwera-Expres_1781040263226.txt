@@ -1,0 +1,59 @@
+ZADANIE: Dodaj lekki prerender po stronie serwera (Express) dla crawlerów. NIE migruj na SSR/Next. Zostajemy na obecnym stacku (Express + Vite + React SPA + Drizzle + Postgres).
+
+CEL: Googlebot dziś dostaje pustą skorupę SPA i indeksuje tylko homepage. Serwer ma wstrzykiwać prawdziwe meta tagi, JSON-LD i widoczną treść do HTML ZANIM odda stronę — dla tras crawlowalnych. React ma się montować normalnie po stronie klienta (nie ruszaj klienta, SEOHead zostaje jako uzupełnienie).
+
+TRASY DO OBSŁUGI (GET, tylko HTML — nie dotykaj /api ani assetów):
+- /                         → homepage
+- /specjalizacja/:slug      → hub specjalizacji
+- /wydarzenia/:id           → pojedyncze wydarzenie
+- /wydarzenia               → lista wydarzeń (katalog linków)
+- /blog/:slug               → artykuł
+- /blog                     → lista artykułów
+
+IMPLEMENTACJA:
+1. W client/index.html dodaj dwa markery w sekcji head i w body:
+   - w <head>: <!--SSR_HEAD-->
+   - w <div id="root">: <!--SSR_BODY--> (czyli <div id="root"><!--SSR_BODY--></div>)
+
+2. Utwórz server/prerender.ts:
+   - Funkcja getTemplate(req): zwraca HTML index.html. Obsłuż OBA tryby:
+     * dev: pobierz przez vite.transformIndexHtml(url, raw_index_html)
+     * prod: czytaj zbudowany index.html z katalogu dist (ścieżka jak w obecnym serwowaniu statycznym)
+   - Funkcje buildHead(type, data) i buildBody(type, data) generujące stringi HTML.
+   - Dane pobieraj WYŁĄCZNIE przez istniejący IStorage z server/storage.ts (getEvent, getEventsBySpecialization, getBlogPostBySlug, getEvents itd. — użyj tego co jest, nie pisz nowego dostępu do DB).
+   - WSZYSTKIE wartości od użytkownika/DB escapuj (HTML-escape) przy wstawianiu w treść/atrybuty.
+
+3. buildHead ma zwracać dla każdej trasy:
+   - <title> i <meta name="description"> z realnymi danymi
+   - <link rel="canonical" href="https://konfy.pl{ścieżka}">
+   - OG: og:title, og:description, og:type, og:url, og:image
+   - Twitter card
+   - JSON-LD <script type="application/ld+json">:
+     * /wydarzenia/:id → schema Event: name, startDate, endDate, eventAttendanceMode, location (Place + address: miasto/województwo), organizer (Organization), description, offers (price + priceCurrency PLN, lub "free"), url
+     * /blog/:slug → schema BlogPosting: headline, datePublished, author, image, description
+     * /specjalizacja/:slug → schema CollectionPage + ItemList nadchodzących wydarzeń
+     * / → Website + Organization
+
+4. buildBody ma zwracać WIDOCZNĄ treść z crawlowalnymi linkami <a href> (nie onClick):
+   - /wydarzenia/:id → <h1>tytuł</h1>, data, miasto/województwo, organizator, opis, punkty edukacyjne, cena; <a href="/specjalizacja/{slug}">powrót do specjalizacji</a> + 3-5 linków do innych wydarzeń tej specjalizacji.
+   - /specjalizacja/:slug → <h1>, opis huba, <ul> linków <a href="/wydarzenia/{id}"> do nadchodzących wydarzeń (min. 20), linki do powiązanych artykułów bloga.
+   - /wydarzenia → <ul> linków do wszystkich opublikowanych wydarzeń (paginacja po 100, ?page=N, każda strona z linkami next/prev jako <a href>).
+   - /blog/:slug → <h1>, treść artykułu, linki do hubów/wydarzeń wymienionych w poście.
+   - /blog → lista linków do artykułów.
+   - / → <h1>, krótki opis, linki <a href="/specjalizacja/{slug}"> do WSZYSTKICH 43 specjalizacji + link do /wydarzenia i /blog.
+
+5. Złóż odpowiedź: template.replace('<!--SSR_HEAD-->', head).replace('<!--SSR_BODY-->', body) → res.send(). Domyślnie serwuj head WSZYSTKIM (meta/JSON-LD nie powodują migotania). SSR_BODY wstrzykuj do #root też wszystkim — React i tak wyczyści root przy mount. (Opcjonalny przełącznik: jeśli zmienna env PRERENDER_BOTS_ONLY=true, wstrzykuj SSR_BODY tylko gdy User-Agent zawiera googlebot/bingbot/duckduckbot/yandex/slurp; reszcie pusty.)
+
+6. Cache: in-memory Map<path, {html, ts}> z TTL 10 minut, żeby nie uderzać w DB co request. Klucz = pełna ścieżka z query. Pomijaj cache w dev.
+
+7. Wpięcie w Express: zarejestruj te trasy w server/routes.ts PRZED catch-all serwującym SPA i PO trasach /api oraz statycznych assetach. Jeśli storage zwróci 404 (np. brak eventu), oddaj zwykłą skorupę SPA (fallback na obecne zachowanie), nie wywalaj błędu.
+
+CZEGO NIE ROBIĆ:
+- Nie zmieniaj client/src (poza dodaniem markera w index.html). SEOHead zostaje.
+- Nie ruszaj routingu klienta (Wouter), TanStack Query, hydratacji.
+- Nie zmieniaj schematu DB ani /api.
+
+TEST AKCEPTACYJNY (pokaż wynik):
+- curl -A "Googlebot" https://<replit-url>/wydarzenia/<istniejące-id> → w SUROWYM HTML widać <title> z tytułem wydarzenia, <meta description>, JSON-LD Event i <h1> z tytułem.
+- curl -A "Googlebot" https://<replit-url>/specjalizacja/<slug> → widać listę <a href="/wydarzenia/..."> w surowym HTML.
+- Otwarcie tych samych URL w przeglądarce działa jak wcześniej (React montuje się, brak błędów w konsoli).

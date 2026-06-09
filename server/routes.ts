@@ -50,6 +50,7 @@ const SPECIALIZATION_SLUGS: Record<string, string> = {
   interdisciplinary: "interdyscyplinarne"
 };
 import { scanSingleSource, runScheduledScans } from "./scheduler";
+import { registerPrerenderRoutes } from "./prerender";
 import { z } from "zod";
 import multer from "multer";
 import { parse } from "csv-parse/sync";
@@ -1414,6 +1415,8 @@ Crawl-delay: 1
       res.status(500).send("Error generating sitemap");
     }
   });
+
+  registerPrerenderRoutes(app);
 
   return httpServer;
 }
