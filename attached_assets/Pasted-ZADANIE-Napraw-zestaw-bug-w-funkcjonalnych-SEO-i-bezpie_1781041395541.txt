@@ -1,0 +1,51 @@
+ZADANIE: Napraw zestaw bugów funkcjonalnych, SEO i bezpieczeństwa w aplikacji Konfy.pl (Express + React/Wouter SPA + Drizzle). Wprowadź WSZYSTKIE poniższe zmiany. Nie zmieniaj designu ani schematu DB poza tym, co wprost napisane. Po każdej grupie pokaż, że działa.
+
+=== BUG 1: ~800 eventów uwięzionych w status "pending" ===
+- W storage.ts dodaj metodę publishQualifiedPending(): ustawia status="published" TYLKO dla eventów pending spełniających WSZYSTKIE warunki: startDate >= dzisiaj ORAZ title niepusty ORAZ tablica specializations niepusta ORAZ (sourceUrl lub website) niepuste. Pozostałe zostają pending. Zwraca { published, remaining }.
+- Dodaj endpoint POST /api/events/publish-qualified (middleware isAdmin) wołający tę metodę i zwracający liczby.
+- NIE ruszaj istniejącego publishAllPendingEvents / publish-all-pending.
+(UWAGA: jeśli wcześniej implementowałeś "publish-qualified" z innego promptu — nie duplikuj, zostaw jedną wersję.)
+
+=== BUG 2: catch-all routing serwuje hub dla losowych URL-i ===
+- W shared/schema.ts wyeksportuj (jeśli nie istnieje) tablicę VALID_SPEC_SLUGS = wartości z SPECIALIZATION_SLUGS.
+- W client/src/App.tsx USUŃ trasę catch-all `<Route path="/:slug" component={SpecializationHub} />`.
+- Zamiast 14 zahardkodowanych tras specjalizacji wygeneruj WSZYSTKIE 43 programowo z SPECIALIZATION_SLUGS: {Object.values(SPECIALIZATION_SLUGS).map(slug => <Route key={slug} path={`/${slug}`} component={SpecializationHub} />)}.
+- Zostaw `<Route component={NotFound} />` jako ostatni (łapie nieznane ścieżki -> 404).
+- W komponencie NotFound ustaw w SEOHead meta robots="noindex".
+
+=== BUG 3: zduplikowane URL-e (server-side 301) ===
+- W server/routes.ts dodaj PRZED catch-allem SPA przekierowania 301:
+  * GET /event/:id  -> 301 na /wydarzenia/:id
+  * GET /specjalizacja/:slug -> 301 na /:slug (wersja root-level, zgodna z sitemap)
+- Upewnij się, że komponent SpecializationHub i EventDetail ustawiają w SEOHead canonical na wersję docelową (root-level dla specjalizacji, /wydarzenia/:id dla eventu).
+
+=== BUG 4: publiczny /api/events zwraca pending ===
+- W GET /api/events (routes.ts): jeśli żądanie NIE jest od admina (brak req.session.adminAuthenticated i brak zalogowanego usera z isAdmin), WYMUŚ filters.status = "published" oraz domyślnie filters.upcoming = true, ignorując parametry status/upcoming z query.
+- Admin (sesja admin lub user.isAdmin) może nadal podać dowolny status/upcoming.
+- Dodaj domyślny limit dla zapytań publicznych: jeśli brak limit w query, ustaw filters.limit = 200.
+
+=== BUG 5: sitemap — martwe URL-e, limit 500, wydajność ===
+- W GET /sitemap.xml zamień `await storage.getEvents()` + filtr JS na: `await storage.getEvents({ status: "published", upcoming: true })`.
+- Jeśli liczba eventów > 1000, NIE tnij na 500 — wygeneruj sitemap index: /sitemap.xml jako indeks wskazujący /sitemap-events-1.xml, -2.xml (po 1000 URL-i na plik), /sitemap-static.xml (homepage + pillar + 43 specjalizacje + blog). Dodaj odpowiednie endpointy GET dla każdego pliku. Jeśli <=1000, jeden plik wystarczy.
+- Specjalizacje w sitemap generuj z SPECIALIZATION_SLUGS jako /${slug} (spójne z routingiem po BUG 2).
+
+=== BUG 6: rate-limiting na logowaniu admina ===
+- Dodaj zależność express-rate-limit. Załóż limiter: 5 żądań / 15 min / IP, i nałóż go TYLKO na POST /api/admin/login. Po przekroczeniu zwróć 429.
+
+=== BUG 7: utwardzenie sesji i uploadu ===
+- W konfiguracji session() (replit_integrations/auth/replitAuth.ts) dodaj do cookie: sameSite: "lax".
+- W multer upload (routes.ts) dodaj fileFilter akceptujący tylko text/csv i application/vnd.ms-excel (CSV); inne typy odrzucaj z 400.
+
+=== BUG 8: scheduler (opcjonalnie, env-gated) ===
+- W server/index.ts odkomentuj startScheduler(), ale owiń warunkiem: if (process.env.ENABLE_SCHEDULER === "true") startScheduler();
+- W server/scheduler.ts zmień harmonogram z "0 */6 * * *" na "0 6 * * *" (raz dziennie o 6:00).
+- Nie włączaj domyślnie — uruchamia się tylko gdy ENABLE_SCHEDULER=true w Secrets.
+
+=== TESTY AKCEPTACYJNE (pokaż wynik każdego) ===
+1. POST /api/events/publish-qualified -> zwraca { published, remaining }; w bazie ŻADEN przeszły event nie ma statusu published.
+2. GET /losowy-nieistniejacy-adres -> renderuje NotFound (nie hub); w HTML jest meta robots noindex.
+3. curl -sI .../event/5 -> 301 Location: /wydarzenia/5. curl -sI .../specjalizacja/kardiologia -> 301 Location: /kardiologia.
+4. GET /api/events (bez nagłówka admina) -> w odpowiedzi ZERO eventów ze statusem innym niż published; max 200 rekordów.
+5. GET /sitemap.xml -> brak eventów z przeszłą datą; jeśli >1000 eventów, jest to indeks linkujący do sub-sitemap.
+6. 6x POST /api/admin/login ze złym hasłem z jednego IP -> 6. zwraca 429.
+7. Build przechodzi, strona ładuje się bez błędów w konsoli, istniejące strony działają.
